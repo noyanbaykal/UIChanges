@@ -17,6 +17,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
+local TIMER_INTERVAL = 0.08 -- Seconds
+
 local C = UI_CHANGES_CONSTANTS
 
 -- Forward declaring modules
@@ -36,7 +38,7 @@ local function OnShow()
     loadedAH = true
   end
   
-  trackingTimer = C_Timer.NewTicker(C.TIMER_INTERVAL, CheckFrames)
+  trackingTimer = C_Timer.NewTicker(TIMER_INTERVAL, CheckFrames)
 end
 
 local function HideTooltips()
@@ -61,16 +63,18 @@ AHTooltips.Initialize = function(isTBC)
   hoverTooltip = HoverTooltip.new(isTBC)
   buyoutTooltip = BuyoutTooltip.new()
 
-  mainFrame:RegisterEvent(C.EVENT_AH_SHOW)
-  mainFrame:RegisterEvent(C.EVENT_AH_CLOSED)
+  mainFrame:RegisterEvent('AUCTION_HOUSE_SHOW')
+  mainFrame:RegisterEvent('AUCTION_HOUSE_CLOSED')
+  mainFrame:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
+  mainFrame:RegisterEvent('AUCTION_BIDDER_LIST_UPDATE')
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)
-    if event == C.EVENT_AH_SHOW then
+    if event == 'AUCTION_HOUSE_SHOW' then
       OnShow(...)
-    elseif event == C.EVENT_AH_CLOSED then
+    elseif event == 'AUCTION_HOUSE_CLOSED' then
       OnClosed(...)
-    elseif event == C.EVENT_AH_LIST_UPDATE or event == C.EVENT_AH_BIDDER_UPDATE then
-      buyoutTooltip.Hide(true)
+    elseif event == 'AUCTION_ITEM_LIST_UPDATE' or event == 'AUCTION_BIDDER_LIST_UPDATE' then
+      HideTooltips()
     end
   end)
 end

@@ -19,18 +19,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 -- The addon entry is right here
 
--- TODO: encapsulate constants per module
--- TODO: add single buyout price text
--- TODO: port pingAnnouncer
 -- TODO: OPTIONS: initialize modules based on stored variables
+-- TODO: port pingAnnouncer
 -- TODO: port PPF
+
+local L = UI_CHANGES_LOCALE
 
 local isClassic = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 local isTBC = WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC
 local isRetail = not (isClassic or isTBC)
 
 if isRetail then
-  DEFAULT_CHAT_FRAME:AddMessage(PPF_L.TXT_NOT_CLASSIC) -- TODO language file!
+  DEFAULT_CHAT_FRAME:AddMessage(L.TXT_NOT_CLASSIC)
   return
 end
 

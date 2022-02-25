@@ -19,4 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 UI_CHANGES_LOCALE = {}
 
+UI_CHANGES_LOCALE.TXT_NOT_CLASSIC = 'UI Changes supports classic only!'
+
+UI_CHANGES_LOCALE.SINGLE_BUYOUT = 'Single buyout price: '
+
 return UI_CHANGES_LOCALE

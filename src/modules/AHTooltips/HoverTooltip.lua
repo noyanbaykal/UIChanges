@@ -18,27 +18,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
 local C = UI_CHANGES_CONSTANTS
+local L = UI_CHANGES_LOCALE
 
 local warningFrame, singleBuyoutFrame
 
 local SIZE_Y = 30
-
-local SINGLE_BUYOUT_BACKDROP_INFO = {
-	bgFile = 'Interface\\Tooltips\\UI-Tooltip-Background',
- 	edgeFile = 'Interface\\Tooltips\\UI-Tooltip-Border',
- 	edgeSize = 8,
- 	insets = { left = 1, right = 1, top = 1, bottom = 1 },
-}
 
 local CalculateSingleBuyout = function(count, buyout)
   if count == 1 then
     return nil
   end
 
+  local buyoutText = WrapTextInColorCode(L.SINGLE_BUYOUT, 'FFFFFFFF')
+
   local singleCost = buyout / count
   singleCost = tonumber(string.format('%.2f', singleCost))
 
-  return GetCoinTextureString(singleCost)
+  return buyoutText..GetCoinTextureString(singleCost)
 end
 
 local UpdateWarning = function(index, warningLabel)
@@ -102,7 +98,7 @@ end
 
 local InitializeFrames = function()
   singleBuyoutFrame = CreateFrame('Frame', 'UIC_HoverTooltipBuyout', _G['AuctionFrame'], 'BackdropTemplate')
-  singleBuyoutFrame:SetBackdrop(SINGLE_BUYOUT_BACKDROP_INFO)
+  singleBuyoutFrame:SetBackdrop(C.BACKDROP_INFO('Interface\\Tooltips\\UI-Tooltip-Background'))
   singleBuyoutFrame:SetBackdropColor(0, 0, 0, 1)
   singleBuyoutFrame:SetSize(125, SIZE_Y)
   singleBuyoutFrame:SetFrameStrata('TOOLTIP')

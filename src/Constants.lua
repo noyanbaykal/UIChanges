@@ -21,12 +21,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -- Bundling all constants in a single object to avoid possible conflicts.
 UI_CHANGES_CONSTANTS = {}
 
-UI_CHANGES_CONSTANTS.EVENT_AH_SHOW =          'AUCTION_HOUSE_SHOW'
-UI_CHANGES_CONSTANTS.EVENT_AH_CLOSED =        'AUCTION_HOUSE_CLOSED'
-UI_CHANGES_CONSTANTS.EVENT_AH_LIST_UPDATE =   'AUCTION_ITEM_LIST_UPDATE'
-UI_CHANGES_CONSTANTS.EVENT_AH_BIDDER_UPDATE = 'AUCTION_BIDDER_LIST_UPDATE'
+UI_CHANGES_CONSTANTS.BACKDROP_INFO = function(bgFileName)
+  return {
+    bgFile = bgFileName,
+    edgeFile = 'Interface\\Tooltips\\UI-Tooltip-Border',
+    edgeSize = 8,
+  }
+end
 
-UI_CHANGES_CONSTANTS.TIMER_INTERVAL = 0.08 -- Seconds
+-- AH Tooltips
 UI_CHANGES_CONSTANTS.AH_ENTRY_COUNT = 8
 
 UI_CHANGES_CONSTANTS.MULTIPLIER_GOLD = 10000
@@ -65,15 +68,10 @@ UI_CHANGES_CONSTANTS.CheckScam = function(bid, buyout)
   end
 end
 
-local WARNING_BACKDROP_INFO = {
-	bgFile = 'Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew',
-	edgeFile = 'Interface\\Tooltips\\UI-Tooltip-Border',
- 	edgeSize = 8,
-}
-
 UI_CHANGES_CONSTANTS.CreateWarningFrame = function(frameName)
   local warningFrame = CreateFrame('Frame', frameName, _G['AuctionFrame'], 'BackdropTemplate')
-  warningFrame:SetBackdrop(WARNING_BACKDROP_INFO)
+  local backdropInfo = UI_CHANGES_CONSTANTS.BACKDROP_INFO('Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew')
+  warningFrame:SetBackdrop(backdropInfo)
   warningFrame:SetSize(30, 30)
   warningFrame:SetFrameStrata('TOOLTIP')
   warningFrame:Hide()
@@ -88,5 +86,6 @@ UI_CHANGES_CONSTANTS.ReturnWarningBackdropColor = function(warningLabel)
     return 1, 1, 1
   end
 end
+-- ~AH Tooltips
 
 return UI_CHANGES_CONSTANTS

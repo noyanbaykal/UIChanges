@@ -17,9 +17,11 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
+local C = UI_CHANGES_CONSTANTS
+
 local mainFrame, errorFrame, attackTimer
 
-  -- Attack out of range or wrong direction or spellcast while moving
+-- Attack out of range or wrong direction or spellcast while moving
 local ERROR_FAILURE = 50
 local ERROR_DIRECTION = 254
 local ERROR_RANGE_MELEE = 255
@@ -31,14 +33,6 @@ local SPELL_ID_SHOOT_GUN = 7918
 local SPELL_ID_SHOOT_CROSSBOW = 7919
 
 local TIMER_INTERVAL = 4 -- Seconds
-
-local BACKDROP_INFO = function(bgFileName)
-  return {
-    bgFile = bgFileName,
-    edgeFile = 'Interface\\Tooltips\\UI-Tooltip-Border',
-    edgeSize = 8,
-  }
-end
 
 local IsDamageTaken = function(type)
   return type == 'DODGE' or type == 'BLOCK' or type == 'WOUND' or type == 'PARRY'
@@ -69,7 +63,7 @@ local SetErrorFrame = function(errorType, message)
   end
 
   if backdropBG then
-    errorFrame:SetBackdrop(BACKDROP_INFO(backdropBG))
+    errorFrame:SetBackdrop(C.BACKDROP_INFO(backdropBG))
     errorFrame:SetBackdropBorderColor(1, 0, 0)
     errorFrame:Show()
   end

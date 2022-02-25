@@ -27,4 +27,5 @@ src\modules\AHTooltips\AHTooltips.lua
 src\modules\AHTooltips\BuyoutTooltip.lua
 src\modules\AHTooltips\HoverTooltip.lua
 src\modules\AttackRange\AttackRange.lua
+src\modules\PingAnnouncer\PingAnnouncer.lua
 src\UIChanges.lua

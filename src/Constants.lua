@@ -29,7 +29,7 @@ UI_CHANGES_CONSTANTS.BACKDROP_INFO = function(bgFileName)
   }
 end
 
--- AH Tooltips
+-- AHTooltips
 UI_CHANGES_CONSTANTS.AH_ENTRY_COUNT = 8
 
 UI_CHANGES_CONSTANTS.MULTIPLIER_GOLD = 10000
@@ -86,6 +86,6 @@ UI_CHANGES_CONSTANTS.ReturnWarningBackdropColor = function(warningLabel)
     return 1, 1, 1
   end
 end
--- ~AH Tooltips
+-- ~AHTooltips
 
 return UI_CHANGES_CONSTANTS

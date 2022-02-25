@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -- The addon entry is right here
 
 -- TODO: OPTIONS: initialize modules based on stored variables
--- TODO: port pingAnnouncer
+-- TODO: improve PA with raid/bg/arena checks using ctrl click
 -- TODO: port PPF
 
 local L = UI_CHANGES_LOCALE
@@ -36,3 +36,4 @@ end
 
 AHTooltips.Initialize(isTBC)
 AttackRange.Initialize()
+PingAnnouncer.Initialize()

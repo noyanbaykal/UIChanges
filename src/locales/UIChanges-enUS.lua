@@ -21,6 +21,19 @@ UI_CHANGES_LOCALE = {}
 
 UI_CHANGES_LOCALE.TXT_NOT_CLASSIC = 'UI Changes supports classic only!'
 
+-- AHTooltips
 UI_CHANGES_LOCALE.SINGLE_BUYOUT = 'Single buyout price: '
+-- ~AHTooltips
+
+-- PingAnnouncer
+UI_CHANGES_LOCALE.PINGED = 'Pinged'
+UI_CHANGES_LOCALE.NEARBY = 'in the immediate vicinity!'
+UI_CHANGES_LOCALE.DIRECTION = 'to the'
+
+UI_CHANGES_LOCALE.EAST = 'East'
+UI_CHANGES_LOCALE.WEST = 'West'
+UI_CHANGES_LOCALE.NORTH = 'North'
+UI_CHANGES_LOCALE.SOUTH = 'South'
+-- ~PingAnnouncer
 
 return UI_CHANGES_LOCALE

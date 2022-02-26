@@ -17,13 +17,34 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
--- The addon entry is right here
-
--- TODO: OPTIONS: initialize modules based on stored variables
+-- TODO: implement options screen to toggle modules
 -- TODO: improve PA with raid/bg/arena checks using ctrl click
 -- TODO: port PPF
 
 local L = UI_CHANGES_LOCALE
+
+local Initialize = function(isTBC)
+  if not UIC_AHT_IsEnabled then -- First load on this character
+    UIC_AHT_IsEnabled = true
+    UIC_AR_IsEnabled = false
+    UIC_PPF_IsEnabled = false
+    UIC_PA_IsEnabled = true
+  end
+
+  if UIC_AHT_IsEnabled then
+    AHTooltips.Initialize(isTBC)
+  end
+
+  if UIC_AR_IsEnabled then
+    AttackRange.Initialize()
+  end
+
+  if UIC_PA_IsEnabled then
+    PingAnnouncer.Initialize()
+  end
+end
+
+-- The addon entry is right here
 
 local isClassic = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 local isTBC = WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC
@@ -34,6 +55,13 @@ if isRetail then
   return
 end
 
-AHTooltips.Initialize(isTBC)
-AttackRange.Initialize()
-PingAnnouncer.Initialize()
+local mainFrame = CreateFrame('Frame', 'UIC_Main', UIParent)
+mainFrame:Hide()
+
+mainFrame:RegisterEvent('PLAYER_LOGIN')
+
+mainFrame:SetScript('OnEvent', function(self, event, ...)
+  if (event == 'PLAYER_LOGIN') then
+    Initialize(isTBC)
+  end
+end)

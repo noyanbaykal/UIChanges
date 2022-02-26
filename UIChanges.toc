@@ -19,6 +19,7 @@
 ## Title: UIChanges
 ## Version: 1.0.0
 ## Notes: Simple additions to the classic UI to make it nicer.
+## SavedVariablesPerCharacter: UIC_AHT_IsEnabled, UIC_AR_IsEnabled, UIC_PPF_IsEnabled, UIC_PA_IsEnabled
 
 src\locales\UIChanges-enUS.lua
 src\Constants.lua

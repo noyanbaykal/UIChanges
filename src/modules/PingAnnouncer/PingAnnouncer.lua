@@ -108,7 +108,6 @@ PingAnnouncer.Initialize = function()
     end
   end)
 
-
   lastPingTime = time()
 end
 

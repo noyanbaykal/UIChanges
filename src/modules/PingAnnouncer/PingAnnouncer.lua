@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local DIRECTION_MARGIN = 0.02
 local MINIMUM_SECONDS = 4
 
+local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 
 local mainFrame, lastPingTime
@@ -94,6 +95,11 @@ local handlePing = function(unitId, x, y)
   SendChatMessage(messageText, 'PARTY');
 end
 
+local EVENTS = {}
+EVENTS['MINIMAP_PING'] = function(...)
+  handlePing(...)
+end
+
 PingAnnouncer = {}
 
 PingAnnouncer.Initialize = function()
@@ -103,12 +109,18 @@ PingAnnouncer.Initialize = function()
   mainFrame:RegisterEvent('MINIMAP_PING')
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)
-    if (event == 'MINIMAP_PING') then
-      handlePing(...)
-    end
+    EVENTS[event](...)
   end)
 
   lastPingTime = time()
+end
+
+PingAnnouncer.Enable = function()
+  C.REGISTER_EVENTS(mainFrame, EVENTS)
+end
+
+PingAnnouncer.Disable = function()
+  C.UNREGISTER_EVENTS(mainFrame, EVENTS)
 end
 
 return PingAnnouncer

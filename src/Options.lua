@@ -17,14 +17,50 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local optionsPanel = CreateFrame('Frame', 'UIC_Options', UIParent)
-optionsPanel.name = 'UIChanges' -- TODO: read from constants
-optionsPanel:Hide()
+local changes = {}
 
-local headerText = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-headerText:SetText('UIChanges')
-headerText:SetPoint("TOPLEFT", optionsPanel, 16, -16)
--- 
+UIC_Options = {}
 
--- TODO: implement options!
-InterfaceOptions_AddCategory(optionsPanel)
+UIC_Options.Initialize = function(modules)
+  local optionsPanel = CreateFrame('Frame', 'UIC_Options', UIParent)
+  optionsPanel.name = 'UIChanges'
+  optionsPanel:Hide()
+
+  optionsPanel.okay = function(...)
+    for k, v in pairs(table) do
+      print(k, v) -- TEST
+
+      _G[k] = v
+
+      if v then
+        modules[k]:Enable()
+      else
+        modules[k]:Disable()
+      end
+    end
+  end
+
+  optionsPanel.cancel = function(...)
+    changes = {}
+  end
+
+  local headerText = optionsPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormalLarge')
+  headerText:SetText('UIChanges')
+  headerText:SetPoint('TOPLEFT', optionsPanel, 16, -16)
+
+  -- TODO: implement options!
+
+
+  -- TODO: implement a generic cb generator. with sound
+  local cb = CreateFrame('CheckButton', 'UIC_Options_CB_AHT', optionsPanel, 'InterfaceOptionsCheckButtonTemplate')
+  cb:SetPoint('TOPLEFT', 20, -20)
+  cb.Text:SetText('Print when you jump')
+  cb.SetValue = function(_, value)
+    local asd = (value == '1') -- value can be either '0' or '1'
+  end
+  cb:SetChecked(false) -- set the initial checked state
+
+  InterfaceOptions_AddCategory(optionsPanel)
+end
+
+return UIC_Options

@@ -54,6 +54,23 @@ local function OnClosed()
   HideTooltips()
 end
 
+local EVENTS = {}
+EVENTS['AUCTION_HOUSE_SHOW'] = function(...)
+  OnShow(...)
+end
+
+EVENTS['AUCTION_HOUSE_CLOSED'] = function(...)
+  OnClosed(...)
+end
+
+EVENTS['AUCTION_ITEM_LIST_UPDATE'] = function()
+  HideTooltips()
+end
+
+EVENTS['AUCTION_BIDDER_LIST_UPDATE'] = function()
+  HideTooltips()
+end
+
 AHTooltips = {}
 
 AHTooltips.Initialize = function(isTBC)
@@ -63,20 +80,17 @@ AHTooltips.Initialize = function(isTBC)
   hoverTooltip = HoverTooltip.new(isTBC)
   buyoutTooltip = BuyoutTooltip.new()
 
-  mainFrame:RegisterEvent('AUCTION_HOUSE_SHOW')
-  mainFrame:RegisterEvent('AUCTION_HOUSE_CLOSED')
-  mainFrame:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
-  mainFrame:RegisterEvent('AUCTION_BIDDER_LIST_UPDATE')
-
   mainFrame:SetScript('OnEvent', function(self, event, ...)
-    if event == 'AUCTION_HOUSE_SHOW' then
-      OnShow(...)
-    elseif event == 'AUCTION_HOUSE_CLOSED' then
-      OnClosed(...)
-    elseif event == 'AUCTION_ITEM_LIST_UPDATE' or event == 'AUCTION_BIDDER_LIST_UPDATE' then
-      HideTooltips()
-    end
+    EVENTS[event](...)
   end)
+end
+
+AHTooltips.Enable = function()
+  C.REGISTER_EVENTS(mainFrame, EVENTS)
+end
+
+AHTooltips.Disable = function()
+  C.UNREGISTER_EVENTS(mainFrame, EVENTS)
 end
 
 return AHTooltips

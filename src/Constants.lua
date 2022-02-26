@@ -21,6 +21,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -- Bundling all constants in a single object to avoid possible conflicts.
 UI_CHANGES_CONSTANTS = {}
 
+UI_CHANGES_CONSTANTS.REGISTER_EVENTS = function(frame, eventsTable)
+  for event, _ in pairs(eventsTable) do
+    frame:RegisterEvent(event)
+  end
+end
+
+UI_CHANGES_CONSTANTS.UNREGISTER_EVENTS = function(frame, eventsTable)
+  for event, _ in pairs(eventsTable) do
+    frame:UnregisterEvent(event)
+  end
+end
+
 UI_CHANGES_CONSTANTS.BACKDROP_INFO = function(bgFileName)
   return {
     bgFile = bgFileName,

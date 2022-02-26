@@ -23,7 +23,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 local L = UI_CHANGES_LOCALE
 
+local modules
+
 local Initialize = function(isTBC)
+  AHTooltips.Initialize(isTBC)
+  AttackRange.Initialize()
+  PingAnnouncer.Initialize()
+
   if not UIC_AHT_IsEnabled then -- First load on this character
     UIC_AHT_IsEnabled = true
     UIC_AR_IsEnabled = false
@@ -31,16 +37,23 @@ local Initialize = function(isTBC)
     UIC_PA_IsEnabled = true
   end
 
+  modules = {}
+  modules['UIC_AHT_IsEnabled'] = AHTooltips
+  modules['UIC_AR_IsEnabled'] = AttackRange
+  modules['UIC_PA_IsEnabled'] = PingAnnouncer
+
+  UIC_Options.Initialize(modules)
+
   if UIC_AHT_IsEnabled then
-    AHTooltips.Initialize(isTBC)
+    AHTooltips.Enable()
   end
 
   if UIC_AR_IsEnabled then
-    AttackRange.Initialize()
+    AttackRange.Enable()
   end
 
   if UIC_PA_IsEnabled then
-    PingAnnouncer.Initialize()
+    PingAnnouncer.Enable()
   end
 end
 

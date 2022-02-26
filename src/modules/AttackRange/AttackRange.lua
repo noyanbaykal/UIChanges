@@ -106,6 +106,23 @@ local GotUIErrorMessage = function(errorType, message)
   end
 end
 
+local EVENTS = {}
+EVENTS['UI_ERROR_MESSAGE'] = function(...)
+  GotUIErrorMessage(...)
+end
+
+EVENTS['UNIT_SPELLCAST_SUCCEEDED'] = function(...)
+  SpellCastSuccess(...)
+end
+
+EVENTS['UNIT_COMBAT'] = function(...)
+  CombatEvent(...)
+end
+
+EVENTS['PLAYER_TARGET_CHANGED'] = function()
+  HideTooltips()
+end
+
 AttackRange = {}
 
 AttackRange.Initialize = function()
@@ -125,22 +142,17 @@ AttackRange.Initialize = function()
   errorFrame:SetPoint('LEFT', uiErrorsFrame, 'LEFT', offsetX, 0)
   errorFrame:Hide()
 
-  mainFrame:RegisterEvent('UI_ERROR_MESSAGE')
-  mainFrame:RegisterEvent('PLAYER_TARGET_CHANGED')
-  mainFrame:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
-  mainFrame:RegisterEvent('UNIT_COMBAT')
-  
   mainFrame:SetScript('OnEvent', function(self, event, ...)
-    if event == 'UI_ERROR_MESSAGE' then
-      GotUIErrorMessage(...)
-    elseif event == 'UNIT_SPELLCAST_SUCCEEDED' then
-      SpellCastSuccess(...)
-    elseif event == 'UNIT_COMBAT' then
-      CombatEvent(...)
-    elseif event == 'PLAYER_TARGET_CHANGED' then
-      StopTimer()
-    end
+    EVENTS[event](...)
   end)
+end
+
+AttackRange.Enable = function()
+  C.REGISTER_EVENTS(mainFrame, EVENTS)
+end
+
+AttackRange.Disable = function()
+  C.UNREGISTER_EVENTS(mainFrame, EVENTS)
 end
 
 return AttackRange

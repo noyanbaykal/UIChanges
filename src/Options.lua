@@ -70,6 +70,7 @@ UIC_Options.Initialize = function()
 
   optionsPanel.cancel = function(...)
     changes = {}
+    DEFAULT_CHAT_FRAME:AddMessage(L.CHANGES_CANCELLED)
   end
 
   -- Header text

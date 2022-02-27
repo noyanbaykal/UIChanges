@@ -17,7 +17,6 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
--- TODO: rename AR to AFR
 -- TODO: improve PA with raid/bg/arena checks using ctrl click
 -- TODO: port PPF
 
@@ -28,19 +27,20 @@ local modules
 
 local Initialize = function(isTBC)
   AHTooltips.Initialize(isTBC)
-  AttackRange.Initialize()
+  AttackFailureReminder.Initialize()
   PingAnnouncer.Initialize()
 
   if not UIC_AHT_IsEnabled then -- First load on this character
-    -- TODO: print first time message!
     UIC_AHT_IsEnabled = true
-    UIC_AR_IsEnabled = false
+    UIC_AFR_IsEnabled = false
     UIC_PPF_IsEnabled = false
     UIC_PA_IsEnabled = true
+
+    DEFAULT_CHAT_FRAME:AddMessage(L.FIRST_TIME)
   end
 
   C.MODULES[C.MODULE_VARIABLES[1]]['frame'] = AHTooltips
-  C.MODULES[C.MODULE_VARIABLES[2]]['frame'] = AttackRange
+  C.MODULES[C.MODULE_VARIABLES[2]]['frame'] = AttackFailureReminder
   C.MODULES[C.MODULE_VARIABLES[3]]['frame'] = PingAnnouncer
 
   UIC_Options.Initialize()
@@ -49,8 +49,8 @@ local Initialize = function(isTBC)
     AHTooltips.Enable()
   end
 
-  if UIC_AR_IsEnabled then
-    AttackRange.Enable()
+  if UIC_AFR_IsEnabled then
+    AttackFailureReminder.Enable()
   end
 
   if UIC_PA_IsEnabled then

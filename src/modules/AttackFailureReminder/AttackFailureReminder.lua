@@ -123,13 +123,13 @@ EVENTS['PLAYER_TARGET_CHANGED'] = function()
   StopTimer()
 end
 
-AttackRange = {}
+AttackFailureReminder = {}
 
-AttackRange.Initialize = function()
-  mainFrame = CreateFrame('Frame', 'UIC_AttackRange', UIParent)
+AttackFailureReminder.Initialize = function()
+  mainFrame = CreateFrame('Frame', 'UIC_AttackFailureReminder', UIParent)
   mainFrame:Hide()
 
-  errorFrame = CreateFrame('Frame', 'UIC_AttackRange_Error', UIParent, 'BackdropTemplate')
+  errorFrame = CreateFrame('Frame', 'UIC_AttackFailureReminder_Error', UIParent, 'BackdropTemplate')
   errorFrame:SetSize(56, 56)
   errorFrame:SetFrameStrata('TOOLTIP')
   errorFrame:SetBackdropColor(0, 0, 0)
@@ -147,13 +147,13 @@ AttackRange.Initialize = function()
   end)
 end
 
-AttackRange.Enable = function()
+AttackFailureReminder.Enable = function()
   C.REGISTER_EVENTS(mainFrame, EVENTS)
 end
 
-AttackRange.Disable = function()
+AttackFailureReminder.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
   StopTimer()
 end
 
-return AttackRange
+return AttackFailureReminder

@@ -50,11 +50,7 @@ UIC_Options.Initialize = function()
   optionsPanel:Hide()
 
   optionsPanel:SetScript("OnShow", function()
-    print('onShow') -- TEST
-
     for i = 1, #toggleFrames do
-      print('setting initialState for i: ', i, ', ', _G[C.MODULE_VARIABLES[i]]) -- TEST
-
       toggleFrames[i]:SetChecked(_G[C.MODULE_VARIABLES[i]])
     end
     
@@ -62,8 +58,6 @@ UIC_Options.Initialize = function()
 
   optionsPanel.okay = function(...)
     for moduleVariable, newValue in pairs(changes) do
-      print(moduleVariable, newValue) -- TEST
-
       _G[moduleVariable] = newValue
 
       if newValue then

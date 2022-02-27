@@ -20,21 +20,25 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 
-local warningFrame, singleBuyoutFrame
+local warningFrame, singleCostFrame
 
 local SIZE_Y = 30
 
-local CalculateSingleBuyout = function(count, buyout)
+local CalculateSingleCost = function(count, bid, buyout)
   if count == 1 then
-    return nil
+    return nil, nil
   end
 
-  local buyoutText = WrapTextInColorCode(L.SINGLE_BUYOUT, 'FFFFFFFF')
+  local singleBid = bid / count
+  singleBid = tonumber(string.format('%.2f', singleBid))
 
-  local singleCost = buyout / count
-  singleCost = tonumber(string.format('%.2f', singleCost))
+  local singleBuyout = buyout / count
+  singleBuyout = tonumber(string.format('%.2f', singleBuyout))
 
-  return buyoutText..GetCoinTextureString(singleCost)
+  local bidText = WrapTextInColorCode(L.SINGLE_BID, 'FFFFFFFF')..GetCoinTextureString(singleBid)
+  local buyoutText = WrapTextInColorCode(L.SINGLE_BUYOUT, 'FFFFFFFF')..GetCoinTextureString(singleBuyout)
+
+  return bidText, buyoutText
 end
 
 local UpdateWarning = function(index, warningLabel)
@@ -45,9 +49,9 @@ local UpdateWarning = function(index, warningLabel)
 
   local relativeFrameX, relativeFrameY
 
-  if singleBuyoutFrame:IsVisible() then
-    relativeFrameX = singleBuyoutFrame
-    relativeFrameY = singleBuyoutFrame
+  if singleCostFrame:IsVisible() then
+    relativeFrameX = singleCostFrame
+    relativeFrameY = singleCostFrame
   else
     relativeFrameX = _G['AuctionFrame']
     relativeFrameY = _G['BrowseButton'..index]
@@ -60,19 +64,26 @@ local UpdateWarning = function(index, warningLabel)
   warningFrame:Show()
 end
 
-local UpdateSingleBuyout = function(index, singleBuyout)
-  if not index or not singleBuyout then
-    singleBuyoutFrame:Hide()
+local UpdateSingleCost = function(index, singleBid, singleBuyout)
+  if not index or not singleBid then
+    singleCostFrame:Hide()
     return
   end
 
-  singleBuyoutFrame:ClearAllPoints()
-  singleBuyoutFrame:SetPoint('TOP', _G['BrowseButton'..index], 'TOP', 0, 0)
-  singleBuyoutFrame:SetPoint('LEFT', _G['AuctionFrame'], 'RIGHT', 0, 0)
+  singleCostFrame:ClearAllPoints()
+  singleCostFrame:SetPoint('TOP', _G['BrowseButton'..index], 'TOP', 0, 0)
+  singleCostFrame:SetPoint('LEFT', _G['AuctionFrame'], 'RIGHT', 0, 0)
   
-  singleBuyoutFrame.title:SetText(singleBuyout)
-  singleBuyoutFrame:SetSize(singleBuyoutFrame.title:GetStringWidth() + 16, SIZE_Y)
-  singleBuyoutFrame:Show()
+  -- TODO: pad the shorter label
+  -- TODO: fit 2 lines into the set height while handling nil singleBuyout
+  singleBuyout = singleBuyout or '' -- Buyout could be missing
+  
+  singleCostFrame.title:SetText(singleBid..'\n'..singleBuyout)
+
+
+
+  singleCostFrame:SetSize(singleCostFrame.title:GetStringWidth() + 16, SIZE_Y)
+  singleCostFrame:Show()
 end
 
 local GenerateData = function(index)
@@ -90,23 +101,23 @@ local GenerateData = function(index)
   local bid = C.GetBidPrice(index)
   local buyout = C.GetBuyoutPrice(index)
 
-  local singleBuyout = CalculateSingleBuyout(count, buyout)
+  local singleBid, singleBuyout = CalculateSingleCost(count, bid, buyout)
   local warningLabel = C.CheckScam(bid, buyout)
 
-  return singleBuyout, warningLabel
+  return singleBid, singleBuyout, warningLabel
 end
 
 local InitializeFrames = function()
-  singleBuyoutFrame = CreateFrame('Frame', 'UIC_HoverTooltipBuyout', _G['AuctionFrame'], 'BackdropTemplate')
-  singleBuyoutFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
-  singleBuyoutFrame:SetBackdropColor(0, 0, 0, 1)
-  singleBuyoutFrame:SetSize(125, SIZE_Y)
-  singleBuyoutFrame:SetFrameStrata('TOOLTIP')
+  singleCostFrame = CreateFrame('Frame', 'UIC_HoverTooltipBuyout', _G['AuctionFrame'], 'BackdropTemplate')
+  singleCostFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
+  singleCostFrame:SetBackdropColor(0, 0, 0, 1)
+  singleCostFrame:SetSize(125, SIZE_Y)
+  singleCostFrame:SetFrameStrata('TOOLTIP')
 
-  singleBuyoutFrame.title = singleBuyoutFrame:CreateFontString('UIC_Tooltip_title', 'OVERLAY', 'GameFontNormal')
-  singleBuyoutFrame.title:SetPoint('TOP', 0, -10)
+  singleCostFrame.title = singleCostFrame:CreateFontString('UIC_Tooltip_title', 'OVERLAY', 'GameFontNormal')
+  singleCostFrame.title:SetPoint('TOP', 0, -10)
 
-  singleBuyoutFrame:Hide()
+  singleCostFrame:Hide()
 
   warningFrame = C.CreateWarningFrame('UIC_HoverTooltipWarning')
 end
@@ -146,14 +157,14 @@ HoverTooltip.new = function(isTBC)
       end
     end
 
-    local singleBuyout, warningLabel = GenerateData(hoveredIndex)
+    local singleBid, singleBuyout, warningLabel = GenerateData(hoveredIndex)
 
-    UpdateSingleBuyout(hoveredIndex, singleBuyout)
+    UpdateSingleCost(hoveredIndex, singleBid, singleBuyout)
     UpdateWarning(hoveredIndex, warningLabel)
   end
 
   function self.Hide()
-    singleBuyoutFrame:Hide()
+    singleCostFrame:Hide()
     warningFrame:Hide()
   end
 

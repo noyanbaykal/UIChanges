@@ -24,6 +24,7 @@ UI_CHANGES_LOCALE.FIRST_TIME = 'UI Changes loaded for the first time with this c
 UI_CHANGES_LOCALE.CHANGES_CANCELLED = 'UI Changes: Options screen cancelled, no changes will be made!'
 
 -- AHTooltips
+UI_CHANGES_LOCALE.SINGLE_BID = 'Single bid price: '
 UI_CHANGES_LOCALE.SINGLE_BUYOUT = 'Single buyout price: '
 -- ~AHTooltips
 

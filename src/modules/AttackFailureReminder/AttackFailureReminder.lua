@@ -21,11 +21,11 @@ local C = UI_CHANGES_CONSTANTS
 
 local mainFrame, errorFrame, attackTimer
 
--- Attack out of range or wrong direction or spellcast while moving
 local ERROR_FAILURE = 50
-local ERROR_DIRECTION = 254
+local ERROR_DIRECTION = 254 -- Wrong melee direction
 local ERROR_RANGE_MELEE = 255
 local ERROR_RANGE_SPELL = 363
+local ERROR_CANT_INTERACT = 825
 
 local SPELL_ID_SHOOT_BOW = 2480
 local SPELL_ID_SHOOT_WAND = 5019
@@ -43,23 +43,34 @@ local IsShootType = function(spellID)
     spellID == SPELL_ID_SHOOT_GUN or spellID == SPELL_ID_SHOOT_WAND
 end
 
-local IsAttackFailed = function(errorType, message)
-  return
-    errorType == ERROR_RANGE_MELEE or
-    errorType == ERROR_RANGE_SPELL or
-    errorType == ERROR_DIRECTION or
-    (errorType == ERROR_FAILURE and message == SPELL_FAILED_UNIT_NOT_INFRONT)
+local IsInterruptedMessage = function(message)
+  return message == SPELL_FAILED_MOVING or
+    message == INTERRUPTED or
+    message == LOSS_OF_CONTROL_DISPLAY_INTERRUPT or
+    message == LOSS_OF_CONTROL_DISPLAY_SCHOOL_INTERRUPT or
+    message == SPELL_FAILED_INTERRUPTED or
+    message == SPELL_FAILED_INTERRUPTED_COMBAT
 end
 
 local SetErrorFrame = function(errorType, message)
   local backdropBG
   
-  if errorType == ERROR_FAILURE and message == SPELL_FAILED_MOVING then
-    backdropBG = 'Interface\\CURSOR\\UnableUI-Cursor-Move'
-  elseif errorType == ERROR_RANGE_MELEE or errorType == ERROR_RANGE_SPELL then
-    backdropBG = 'Interface\\PVPFrame\\Icon-Combat'
-  elseif errorType == ERROR_DIRECTION or errorType == ERROR_FAILURE then
+  if errorType == ERROR_RANGE_MELEE then
+    backdropBG = 'Interface\\CURSOR\\UnableAttack' -- TODO: fix icon size
+  elseif errorType == ERROR_DIRECTION then
     backdropBG = 'Interface\\GLUES\\CharacterSelect\\CharacterUndelete'
+  elseif errorType == ERROR_RANGE_SPELL then
+    backdropBG = 'Interface\\CURSOR\\UnableCast' -- TODO: fix icon size
+  elseif errorType == ERROR_CANT_INTERACT and message == ERR_TOO_FAR_TO_INTERACT then
+    backdropBG = 'Interface\\CURSOR\\UnableInteract'
+  elseif errorType == ERROR_FAILURE then
+    if message == SPELL_FAILED_UNIT_NOT_INFRONT then
+      backdropBG = 'Interface\\GLUES\\CharacterSelect\\CharacterUndelete'
+    elseif message == SPELL_FAILED_TOO_CLOSE then
+      backdropBG = 'Interface\\CURSOR\\UnableCrosshairs'
+    elseif IsInterruptedMessage(message) then
+      backdropBG = 'Interface\\CURSOR\\UnableUI-Cursor-Move'
+    end
   end
 
   if backdropBG then
@@ -95,7 +106,15 @@ local IsAttackFailureMessage = function(message)
     message == ERR_BADATTACKFACING or
     message == SPELL_FAILED_UNIT_NOT_INFRONT or
     message == SPELL_FAILED_MOVING or
-    message == ERR_OUT_OF_RANGE 
+    message == ERR_OUT_OF_RANGE or
+    message == ACTION_SPELL_INTERRUPT or
+    message == SPELL_FAILED_TOO_CLOSE or
+    message == INTERRUPTED or
+    message == LOSS_OF_CONTROL_DISPLAY_INTERRUPT or
+    message == LOSS_OF_CONTROL_DISPLAY_SCHOOL_INTERRUPT or
+    message == SPELL_FAILED_INTERRUPTED or
+    message == SPELL_FAILED_INTERRUPTED_COMBAT or
+    message == ERR_TOO_FAR_TO_INTERACT
 end
 
 local GotUIErrorMessage = function(errorType, message)

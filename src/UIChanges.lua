@@ -17,8 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
--- TODO: AFR: fix icon size
--- TODO: finish the toggle boxes with positioning and text
+-- TODO: finish the toggle boxes with positioning and text in the options screen
 -- TODO: improve PA with raid/bg/arena checks using ctrl click
 -- TODO: port PPF
 

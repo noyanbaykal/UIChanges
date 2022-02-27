@@ -56,7 +56,7 @@ local UpdateWarning = function(index, warningLabel)
   warningFrame:ClearAllPoints()
   warningFrame:SetPoint('TOP', relativeFrameY, 'TOP', 0, 0)
   warningFrame:SetPoint('LEFT', relativeFrameX, 'RIGHT', 0, 0)
-  warningFrame:SetBackdropColor(C.ReturnWarningBackdropColor(warningLabel))
+  C.UpdateWarningIcon(warningFrame, warningLabel)
   warningFrame:Show()
 end
 
@@ -98,7 +98,7 @@ end
 
 local InitializeFrames = function()
   singleBuyoutFrame = CreateFrame('Frame', 'UIC_HoverTooltipBuyout', _G['AuctionFrame'], 'BackdropTemplate')
-  singleBuyoutFrame:SetBackdrop(C.BACKDROP_INFO('Interface\\Tooltips\\UI-Tooltip-Background'))
+  singleBuyoutFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
   singleBuyoutFrame:SetBackdropColor(0, 0, 0, 1)
   singleBuyoutFrame:SetSize(125, SIZE_Y)
   singleBuyoutFrame:SetFrameStrata('TOOLTIP')

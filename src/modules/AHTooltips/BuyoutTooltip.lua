@@ -31,7 +31,7 @@ local SetWarning = function(index)
   local newWarning = C.CheckScam(bid, buyout)
 
   if newWarning then
-    warningFrame:SetBackdropColor(C.ReturnWarningBackdropColor(newWarning))
+    C.UpdateWarningIcon(warningFrame, newWarning)
   end
 
   buyoutWarningText = newWarning

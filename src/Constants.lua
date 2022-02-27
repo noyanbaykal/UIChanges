@@ -55,11 +55,12 @@ UI_CHANGES_CONSTANTS.UNREGISTER_EVENTS = function(frame, eventsTable)
   end
 end
 
-UI_CHANGES_CONSTANTS.BACKDROP_INFO = function(bgFileName)
+UI_CHANGES_CONSTANTS.BACKDROP_INFO = function(edgeSize, insetSize)
   return {
-    bgFile = bgFileName,
-    edgeFile = 'Interface\\Tooltips\\UI-Tooltip-Border',
-    edgeSize = 8,
+    bgFile = "Interface/Tooltips/UI-Tooltip-Background", 
+    edgeFile = "Interface/Tooltips/UI-Tooltip-Border", 
+    edgeSize = edgeSize, 
+    insets = { left = insetSize, right = insetSize, top = insetSize, bottom = insetSize }
   }
 end
 
@@ -104,21 +105,33 @@ end
 
 UI_CHANGES_CONSTANTS.CreateWarningFrame = function(frameName)
   local warningFrame = CreateFrame('Frame', frameName, _G['AuctionFrame'], 'BackdropTemplate')
-  local backdropInfo = UI_CHANGES_CONSTANTS.BACKDROP_INFO('Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew')
-  warningFrame:SetBackdrop(backdropInfo)
+  warningFrame:SetBackdrop(UI_CHANGES_CONSTANTS.BACKDROP_INFO(8, 1))
+  warningFrame:SetBackdropColor(0, 0, 0)
   warningFrame:SetSize(30, 30)
   warningFrame:SetFrameStrata('TOOLTIP')
   warningFrame:Hide()
 
+  warningFrame.texture = warningFrame:CreateTexture(frameName..'_Texture', 'ARTWORK')
+  warningFrame.texture:SetTexture('Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew')
+  warningFrame.texture:SetPoint('CENTER', warningFrame, 'CENTER', 0, 0)
+  warningFrame.texture:SetSize(24, 24)
+
   return warningFrame
 end
 
-UI_CHANGES_CONSTANTS.ReturnWarningBackdropColor = function(warningLabel)
+UI_CHANGES_CONSTANTS.UpdateWarningIcon = function(warningFrame, warningLabel)
+  local r = 1
+  local g = 1
+  local b = 0
+
   if warningLabel and warningLabel == UI_CHANGES_CONSTANTS.SCAM_TEXT then
-    return 1, 0, 0
+    warningFrame.texture:SetVertexColor(1, 0, 0)
+    g = 0
   else
-    return 1, 1, 1
+    warningFrame.texture:SetVertexColor(1, 1, 1)
   end
+
+  warningFrame:SetBackdropBorderColor(r, g, b)
 end
 -- ~AHTooltips
 

@@ -53,29 +53,39 @@ local IsInterruptedMessage = function(message)
 end
 
 local SetErrorFrame = function(errorType, message)
-  local backdropBG
+  local size = 40
+  local offsetX = 0
+  local offsetY = 0
+  local textureName
   
   if errorType == ERROR_RANGE_MELEE then
-    backdropBG = 'Interface\\CURSOR\\UnableAttack' -- TODO: fix icon size
+    textureName = 'Interface\\CURSOR\\UnableAttack'
   elseif errorType == ERROR_DIRECTION then
-    backdropBG = 'Interface\\GLUES\\CharacterSelect\\CharacterUndelete'
+    textureName = 'Interface\\GLUES\\CharacterSelect\\CharacterUndelete'
+    size = 52
   elseif errorType == ERROR_RANGE_SPELL then
-    backdropBG = 'Interface\\CURSOR\\UnableCast' -- TODO: fix icon size
+    textureName = 'Interface\\CURSOR\\UnableCast'
+    offsetX = 1
+    offsetY = -2
   elseif errorType == ERROR_CANT_INTERACT and message == ERR_TOO_FAR_TO_INTERACT then
-    backdropBG = 'Interface\\CURSOR\\UnableInteract'
+    textureName = 'Interface\\CURSOR\\UnableInteract'
+    offsetX = 1
+    offsetY = -2
   elseif errorType == ERROR_FAILURE then
     if message == SPELL_FAILED_UNIT_NOT_INFRONT then
-      backdropBG = 'Interface\\GLUES\\CharacterSelect\\CharacterUndelete'
+      textureName = 'Interface\\GLUES\\CharacterSelect\\CharacterUndelete'
+      size = 52
     elseif message == SPELL_FAILED_TOO_CLOSE then
-      backdropBG = 'Interface\\CURSOR\\UnableCrosshairs'
+      textureName = 'Interface\\CURSOR\\UnableCrosshairs'
     elseif IsInterruptedMessage(message) then
-      backdropBG = 'Interface\\CURSOR\\UnableUI-Cursor-Move'
+      textureName = 'Interface\\CURSOR\\UnableUI-Cursor-Move'
     end
   end
 
-  if backdropBG then
-    errorFrame:SetBackdrop(C.BACKDROP_INFO(backdropBG))
-    errorFrame:SetBackdropBorderColor(1, 0, 0)
+  if textureName then
+    errorFrame.texture:SetPoint('CENTER', errorFrame, 'CENTER', offsetX, offsetY)
+    errorFrame.texture:SetSize(size, size)
+    errorFrame.texture:SetTexture(textureName)
     errorFrame:Show()
   end
 end
@@ -151,6 +161,7 @@ AttackFailureReminder.Initialize = function()
   errorFrame = CreateFrame('Frame', 'UIC_AttackFailureReminder_Error', UIParent, 'BackdropTemplate')
   errorFrame:SetSize(56, 56)
   errorFrame:SetFrameStrata('TOOLTIP')
+  errorFrame:SetBackdrop(C.BACKDROP_INFO(16, 4));
   errorFrame:SetBackdropColor(0, 0, 0)
   errorFrame:SetBackdropBorderColor(1, 0, 0)
   errorFrame:ClearAllPoints()
@@ -160,6 +171,8 @@ AttackFailureReminder.Initialize = function()
   errorFrame:SetPoint('TOP', uiErrorsFrame, 'BOTTOM', 0, 0)
   errorFrame:SetPoint('LEFT', uiErrorsFrame, 'LEFT', offsetX, 0)
   errorFrame:Hide()
+
+  errorFrame.texture = errorFrame:CreateTexture('UIC_AttackFailureReminder_Error_Texture', 'ARTWORK')
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)
     EVENTS[event](...)

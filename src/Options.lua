@@ -17,25 +17,59 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
+local C = UI_CHANGES_CONSTANTS
+local L = UI_CHANGES_LOCALE
+
+local optionsPanel, toggleFrames
+
 local changes = {}
+
+local createToggleFrame = function(changeKey, label, title, initialValue, x, y)
+  local cb = CreateFrame('CheckButton', 'UIC_Options_CB_'..label, optionsPanel, 'InterfaceOptionsCheckButtonTemplate')
+  cb:SetPoint('TOPLEFT', x, y)
+  cb.Text:SetText(text)
+  cb:SetChecked(initialValue)
+  cb:SetScript("OnClick", function(self)
+    local newValue = self:GetChecked()
+
+    changes[changeKey] = newValue
+
+    if tick then
+      PlaySound(856) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
+    else
+      PlaySound(857) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF
+    end
+  end)
+end
 
 UIC_Options = {}
 
-UIC_Options.Initialize = function(modules)
-  local optionsPanel = CreateFrame('Frame', 'UIC_Options', UIParent)
+UIC_Options.Initialize = function()
+  optionsPanel = CreateFrame('Frame', 'UIC_Options', UIParent)
   optionsPanel.name = 'UIChanges'
   optionsPanel:Hide()
 
+  optionsPanel:SetScript("OnShow", function()
+    print('onShow') -- TEST
+
+    for i = 1, #toggleFrames do
+      print('setting initialState for i: ', i, ', ', _G[C.MODULE_VARIABLES[i]]) -- TEST
+
+      toggleFrames[i]:SetChecked(_G[C.MODULE_VARIABLES[i]])
+    end
+    
+  end)
+
   optionsPanel.okay = function(...)
-    for k, v in pairs(table) do
-      print(k, v) -- TEST
+    for moduleVariable, newValue in pairs(changes) do
+      print(moduleVariable, newValue) -- TEST
 
-      _G[k] = v
+      _G[moduleVariable] = newValue
 
-      if v then
-        modules[k]:Enable()
+      if newValue then
+        C.MODULES[moduleVariable]['frame']:Enable()
       else
-        modules[k]:Disable()
+        C.MODULES[moduleVariable]['frame']:Disable()
       end
     end
   end
@@ -44,21 +78,22 @@ UIC_Options.Initialize = function(modules)
     changes = {}
   end
 
+  -- Header text
   local headerText = optionsPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormalLarge')
   headerText:SetText('UIChanges')
   headerText:SetPoint('TOPLEFT', optionsPanel, 16, -16)
 
-  -- TODO: implement options!
+  toggleFrames = {}
+  for i = 1, #C.MODULE_VARIABLES do
+    local changeKey = C.MODULE_VARIABLES[i]
+    local label = C.MODULES[C.MODULE_VARIABLES[i]]['label']
+    local title = C.MODULES[C.MODULE_VARIABLES[i]]['title']
+    local initialValue = _G[changeKey]
+    local x = 20
+    local y = i * -20
 
-
-  -- TODO: implement a generic cb generator. with sound
-  local cb = CreateFrame('CheckButton', 'UIC_Options_CB_AHT', optionsPanel, 'InterfaceOptionsCheckButtonTemplate')
-  cb:SetPoint('TOPLEFT', 20, -20)
-  cb.Text:SetText('Print when you jump')
-  cb.SetValue = function(_, value)
-    local asd = (value == '1') -- value can be either '0' or '1'
+    toggleFrames[i] = createToggleFrame(changeKey, label, title, initialValue, x, y)
   end
-  cb:SetChecked(false) -- set the initial checked state
 
   InterfaceOptions_AddCategory(optionsPanel)
 end

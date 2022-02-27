@@ -91,6 +91,7 @@ end
 
 AHTooltips.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
+  HideTooltips()
 end
 
 return AHTooltips

@@ -120,7 +120,7 @@ EVENTS['UNIT_COMBAT'] = function(...)
 end
 
 EVENTS['PLAYER_TARGET_CHANGED'] = function()
-  HideTooltips()
+  StopTimer()
 end
 
 AttackRange = {}
@@ -153,6 +153,7 @@ end
 
 AttackRange.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
+  StopTimer()
 end
 
 return AttackRange

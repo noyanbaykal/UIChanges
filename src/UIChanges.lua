@@ -17,10 +17,11 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
--- TODO: implement options screen to toggle modules
+-- TODO: rename AR to AFR
 -- TODO: improve PA with raid/bg/arena checks using ctrl click
 -- TODO: port PPF
 
+local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 
 local modules
@@ -31,18 +32,18 @@ local Initialize = function(isTBC)
   PingAnnouncer.Initialize()
 
   if not UIC_AHT_IsEnabled then -- First load on this character
+    -- TODO: print first time message!
     UIC_AHT_IsEnabled = true
     UIC_AR_IsEnabled = false
     UIC_PPF_IsEnabled = false
     UIC_PA_IsEnabled = true
   end
 
-  modules = {}
-  modules['UIC_AHT_IsEnabled'] = AHTooltips
-  modules['UIC_AR_IsEnabled'] = AttackRange
-  modules['UIC_PA_IsEnabled'] = PingAnnouncer
+  C.MODULES[C.MODULE_VARIABLES[1]]['frame'] = AHTooltips
+  C.MODULES[C.MODULE_VARIABLES[2]]['frame'] = AttackRange
+  C.MODULES[C.MODULE_VARIABLES[3]]['frame'] = PingAnnouncer
 
-  UIC_Options.Initialize(modules)
+  UIC_Options.Initialize()
 
   if UIC_AHT_IsEnabled then
     AHTooltips.Enable()

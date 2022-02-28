@@ -17,6 +17,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
+local L = UI_CHANGES_LOCALE
+
 -- All addons share the global namespace and global name conflicts are possible.
 -- Bundling all constants in a single object to avoid possible conflicts.
 UI_CHANGES_CONSTANTS = {}
@@ -28,20 +30,23 @@ UI_CHANGES_CONSTANTS.MODULE_VARIABLES = {
 }
 
 UI_CHANGES_CONSTANTS.MODULES = {}
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[1]] = {}
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[1]]['frame'] = nil -- Frames will be set by UIChanges.lua
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[1]]['label'] = 'AHT'
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[1]]['title'] = 'AH Tooltips'
+UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[1]] = {
+  ['label'] = 'AHT',
+  ['title'] = 'Auction House Tooltips',
+  ['description'] = L.AHT
+}
 
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[2]] = {}
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[2]]['frame'] = nil
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[2]]['label'] = 'AFR'
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[2]]['title'] = 'Attack Failure Reminder'
+UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[2]] = {
+  ['label'] = 'AFR',
+  ['title'] = 'Attack Failure Reminder',
+  ['description'] = L.AFR
+}
 
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[3]] = {}
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[3]]['frame'] = nil
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[3]]['label'] = 'PA'
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[3]]['title'] = 'Ping Announcer'
+UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[3]] = {
+  ['label'] = 'PA',
+  ['title'] = 'Ping Announcer',
+  ['description'] = L.PA
+}
 
 UI_CHANGES_CONSTANTS.REGISTER_EVENTS = function(frame, eventsTable)
   for event, _ in pairs(eventsTable) do

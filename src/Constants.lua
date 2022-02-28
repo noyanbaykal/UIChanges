@@ -84,6 +84,10 @@ UI_CHANGES_CONSTANTS.GetBidPrice = function(index)
 end
 
 UI_CHANGES_CONSTANTS.GetBuyoutPrice = function(index)
+  if not _G['BrowseButton'..index..'BuyoutFrame']:IsVisible() then
+    return nil
+  end
+
   local gold = _G['BrowseButton'..index..'BuyoutFrameMoneyGoldButtonText']:GetText() or 0
   local silver = _G['BrowseButton'..index..'BuyoutFrameMoneySilverButtonText']:GetText() or 0
   local copper = _G['BrowseButton'..index..'BuyoutFrameMoneyCopperButtonText']:GetText()
@@ -92,6 +96,10 @@ UI_CHANGES_CONSTANTS.GetBuyoutPrice = function(index)
 end
 
 UI_CHANGES_CONSTANTS.CheckScam = function(bid, buyout)
+  if buyout == nil then
+    return nil
+  end
+
   local ratio = buyout / bid
 
   if ratio >= UI_CHANGES_CONSTANTS.SCAM_RATIO then
@@ -113,7 +121,7 @@ UI_CHANGES_CONSTANTS.CreateWarningFrame = function(frameName)
 
   warningFrame.texture = warningFrame:CreateTexture(frameName..'_Texture', 'ARTWORK')
   warningFrame.texture:SetTexture('Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew')
-  warningFrame.texture:SetPoint('CENTER', warningFrame, 'CENTER', 0, 0)
+  warningFrame.texture:SetPoint('CENTER', warningFrame, 'CENTER', 0, -1)
   warningFrame.texture:SetSize(24, 24)
 
   return warningFrame

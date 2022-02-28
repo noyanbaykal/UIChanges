@@ -22,6 +22,8 @@ local L = UI_CHANGES_LOCALE
 
 local warningFrame, singleCostFrame
 
+local labelBid = WrapTextInColorCode(L.SINGLE_BID, 'FFFFFFFF')
+local labelBuyout = WrapTextInColorCode(L.SINGLE_BUYOUT, 'FFFFFFFF')
 local SIZE_Y = 30
 
 local CalculateSingleCost = function(count, bid, buyout)
@@ -29,16 +31,14 @@ local CalculateSingleCost = function(count, bid, buyout)
     return nil, nil
   end
 
-  local singleBid = bid / count
-  singleBid = tonumber(string.format('%.2f', singleBid))
+  local singleBid = math.floor(bid / count)
 
-  local singleBuyout = buyout / count
-  singleBuyout = tonumber(string.format('%.2f', singleBuyout))
+  local singleBuyout
+  if buyout then
+    singleBuyout = math.floor(buyout / count)
+  end
 
-  local bidText = WrapTextInColorCode(L.SINGLE_BID, 'FFFFFFFF')..GetCoinTextureString(singleBid)
-  local buyoutText = WrapTextInColorCode(L.SINGLE_BUYOUT, 'FFFFFFFF')..GetCoinTextureString(singleBuyout)
-
-  return bidText, buyoutText
+  return singleBid, singleBuyout
 end
 
 local UpdateWarning = function(index, warningLabel)
@@ -64,7 +64,19 @@ local UpdateWarning = function(index, warningLabel)
   warningFrame:Show()
 end
 
-local UpdateSingleCost = function(index, singleBid, singleBuyout)
+local FormatCostString = function(singleBid, singleBuyout)
+  local textureBid = GetCoinTextureString(singleBid)
+
+  if not singleBuyout then
+    return labelBid..textureBid
+  end
+
+  local textureBuyout = GetCoinTextureString(singleBuyout)
+
+  return string.format('%s\n%s', labelBid..textureBid, labelBuyout..textureBuyout)
+end
+
+local UpdateSingleCostFrame = function(index, singleBid, singleBuyout)
   if not index or not singleBid then
     singleCostFrame:Hide()
     return
@@ -73,15 +85,8 @@ local UpdateSingleCost = function(index, singleBid, singleBuyout)
   singleCostFrame:ClearAllPoints()
   singleCostFrame:SetPoint('TOP', _G['BrowseButton'..index], 'TOP', 0, 0)
   singleCostFrame:SetPoint('LEFT', _G['AuctionFrame'], 'RIGHT', 0, 0)
-  
-  -- TODO: pad the shorter label
-  -- TODO: fit 2 lines into the set height while handling nil singleBuyout
-  singleBuyout = singleBuyout or '' -- Buyout could be missing
-  
-  singleCostFrame.title:SetText(singleBid..'\n'..singleBuyout)
 
-
-
+  singleCostFrame.title:SetText(FormatCostString(singleBid, singleBuyout))
   singleCostFrame:SetSize(singleCostFrame.title:GetStringWidth() + 16, SIZE_Y)
   singleCostFrame:Show()
 end
@@ -114,33 +119,18 @@ local InitializeFrames = function()
   singleCostFrame:SetSize(125, SIZE_Y)
   singleCostFrame:SetFrameStrata('TOOLTIP')
 
-  singleCostFrame.title = singleCostFrame:CreateFontString('UIC_Tooltip_title', 'OVERLAY', 'GameFontNormal')
-  singleCostFrame.title:SetPoint('TOP', 0, -10)
+  singleCostFrame.title = singleCostFrame:CreateFontString('UIC_Tooltip_title', 'OVERLAY', 'GameFontNormalSmall2')
+  singleCostFrame.title:SetPoint('CENTER', 0, 0)
+  singleCostFrame.title:SetJustifyH('RIGHT')
 
   singleCostFrame:Hide()
 
   warningFrame = C.CreateWarningFrame('UIC_HoverTooltipWarning')
 end
 
-local Stub = function()
-  local stub = {}
-  
-  function stub.Update()
-  end
-
-  function stub.Hide()
-  end
-
-  return stub
-end
-
 HoverTooltip = {}
 
-HoverTooltip.new = function(isTBC)
-  if isTBC then
-    return Stub()
-  end
-
+HoverTooltip.new = function()
   local self = {}
 
   InitializeFrames()
@@ -159,7 +149,7 @@ HoverTooltip.new = function(isTBC)
 
     local singleBid, singleBuyout, warningLabel = GenerateData(hoveredIndex)
 
-    UpdateSingleCost(hoveredIndex, singleBid, singleBuyout)
+    UpdateSingleCostFrame(hoveredIndex, singleBid, singleBuyout)
     UpdateWarning(hoveredIndex, warningLabel)
   end
 

@@ -27,7 +27,10 @@ local trackingTimer
 local loadedAH = false
 
 local function CheckFrames()
-  hoverTooltip.Update()
+  if not isTBC then
+    hoverTooltip.Update()
+  end
+  
   buyoutTooltip.Update()
 end
 
@@ -42,7 +45,10 @@ local function OnShow()
 end
 
 local function HideTooltips()
-  hoverTooltip.Hide()
+  if not isTBC then
+    hoverTooltip.Hide()
+  end
+
   buyoutTooltip.Hide(true)
 end
 
@@ -77,7 +83,10 @@ AHTooltips.Initialize = function(isTBC)
   mainFrame = CreateFrame('Frame', 'UIC_AHTooltips', UIParent)
   mainFrame:Hide()
 
-  hoverTooltip = HoverTooltip.new(isTBC)
+  if not isTBC then
+    hoverTooltip = HoverTooltip.new()
+  end
+
   buyoutTooltip = BuyoutTooltip.new()
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)

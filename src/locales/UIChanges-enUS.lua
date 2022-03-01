@@ -25,17 +25,22 @@ UI_CHANGES_LOCALE.OPTIONS_INFO = 'You can individually toggle modules here.'
 UI_CHANGES_LOCALE.CHANGES_CANCELLED = 'UI Changes: Options screen cancelled, no changes will be made!'
 
 -- AHTooltips
-UI_CHANGES_LOCALE.AHT = 'Shows single bid and buyout tooltips in the AH. Also displays a warning sign for possible scams.'
+UI_CHANGES_LOCALE.AHT = {'Shows single bid and buyout tooltips in the AH. Also displays a warning sign for possible scams.'}
 UI_CHANGES_LOCALE.SINGLE_BID = 'Single bid price: '
 UI_CHANGES_LOCALE.SINGLE_BUYOUT = 'Single buyout price: '
 -- ~AHTooltips
 
 -- AFR
-UI_CHANGES_LOCALE.AFR = 'Makes combat failure related UI Error messages more visible by adding an icon below the messages.'
+UI_CHANGES_LOCALE.AFR = {'Makes combat failure related UI Error messages more visible by adding an icon below the messages.'}
 -- ~AFR
 
 -- PingAnnouncer
-UI_CHANGES_LOCALE.PA = 'Sends a party message when you click on a minimap object to alert your party members.'
+UI_CHANGES_LOCALE.PA = {'Sends a party message when you click on a minimap object to alert your party members.', 'Hold down CTRL when clicking to send the message to raid or battleground members instead.'}
+UI_CHANGES_LOCALE.PARTY = 'Party'
+UI_CHANGES_LOCALE.RAID = 'Raid'
+UI_CHANGES_LOCALE.BATTLEGROUND = 'Battleground'
+UI_CHANGES_LOCALE.ARENA = 'Arena'
+
 UI_CHANGES_LOCALE.PINGED = 'Pinged'
 UI_CHANGES_LOCALE.NEARBY = 'in the immediate vicinity!'
 UI_CHANGES_LOCALE.DIRECTION = 'to the'

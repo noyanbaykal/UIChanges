@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 
-local optionsPanel, changes, toggleFrames
+local optionsPanel, changes, lastY, toggleFrames
 
-local createToggleFrame = function(i, x, y)
+local createModuleOptions = function(i, x, y)
   local changeKey = C.MODULE_VARIABLES[i]
   local label = C.MODULES[C.MODULE_VARIABLES[i]]['label']
   local title = C.MODULES[C.MODULE_VARIABLES[i]]['title']
@@ -54,11 +54,19 @@ local createToggleFrame = function(i, x, y)
   nameText:SetPoint('TOP', checkbox, 'TOP', 0, -1 * offsetY)
 
   -- Module description
-  local descriptionText = checkbox:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
-  descriptionText:SetTextColor(1, 1, 1)
-  descriptionText:SetText(description)
-  descriptionText:SetPoint('LEFT', checkbox, 'RIGHT', 10, 0)
-  descriptionText:SetPoint('TOP', checkbox, 'BOTTOM', 0, 0)
+  local extraTextOffsetY = -16
+  for i = 1, #description do
+    local descriptionText = checkbox:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
+    descriptionText:SetTextColor(1, 1, 1)
+    descriptionText:SetText(description[i])
+    descriptionText:SetPoint('LEFT', checkbox, 'RIGHT', 10, 0)
+    descriptionText:SetPoint('TOP', checkbox, 'BOTTOM', 0, (i - 1) * extraTextOffsetY)
+    descriptionText:SetJustifyH('LEFT')
+  end
+
+  if #description > 1 then -- lastY needs to account for the additional lines
+    lastY = lastY + 2 + (#description - 1) * extraTextOffsetY
+  end
 end
 
 local populateOptions = function()
@@ -73,7 +81,7 @@ local populateOptions = function()
   infoText:SetText(L.OPTIONS_INFO)
   infoText:SetPoint('TOPLEFT', optionsPanel, 20, -40)
 
-  local lastY = -20
+  lastY = -20
 
   toggleFrames = {}
   for i = 1, #C.MODULE_VARIABLES do
@@ -82,7 +90,7 @@ local populateOptions = function()
     local x = 20
     local y = lastY
 
-    toggleFrames[i] = createToggleFrame(i, x, y)
+    toggleFrames[i] = createModuleOptions(i, x, y)
   end
 end
 

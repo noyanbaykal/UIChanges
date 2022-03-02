@@ -45,7 +45,13 @@ UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[2]] = {
 UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[3]] = {
   ['label'] = 'PA',
   ['title'] = 'Ping Announcer',
-  ['description'] = L.PA
+  ['description'] = L.PA,
+  ['subToggles'] = {
+      {'UIC_PA_Party', L.PARTY},
+      {'UIC_PA_Battleground', L.RAID},
+      {'UIC_PA_Raid', L.BATTLEGROUND},
+      {'UIC_PA_Arena', L.ARENA}
+  }
 }
 
 UI_CHANGES_CONSTANTS.REGISTER_EVENTS = function(frame, eventsTable)

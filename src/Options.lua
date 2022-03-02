@@ -20,38 +20,56 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 
-local optionsPanel, changes, lastY, toggleFrames
+local gameFontColor = {} -- This will be used for checkbox texts
+gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4] = _G['GameFontNormal']:GetTextColor()
 
-local createModuleOptions = function(i, x, y)
-  local changeKey = C.MODULE_VARIABLES[i]
-  local label = C.MODULES[C.MODULE_VARIABLES[i]]['label']
-  local title = C.MODULES[C.MODULE_VARIABLES[i]]['title']
-  local description = C.MODULES[C.MODULE_VARIABLES[i]]['description']
-  local initialValue = _G[changeKey]
+local optionsPanel, changes, cvarMap, lastFrameTop, lastFrameLeft
 
-  local checkbox = CreateFrame('CheckButton', 'UIC_Options_CB_'..label, optionsPanel, 'InterfaceOptionsCheckButtonTemplate')
-  checkbox:SetPoint('TOPLEFT', x, y)
-  checkbox.Text:SetText(text)
-  checkbox:SetChecked(initialValue)
-  checkbox:SetScript("OnClick", function(self)
+local SubFramesSetEnable = function(subFrames, isSet)
+  if subFrames then
+    for i = 1, #subFrames do
+      subFrames[i]:SetEnabled(isSet)
+    end
+  end
+end
+
+local createCheckBox = function(frameName, title, changeKey)
+  local checkbox = CreateFrame('CheckButton', frameName, optionsPanel, 'InterfaceOptionsCheckButtonTemplate')
+  checkbox.Text:SetText(title)
+  checkbox.Text:SetTextColor(gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4])
+  checkbox:SetChecked(_G[changeKey])
+  checkbox:SetScript("OnClick", function(self, button, down)
     local newValue = self:GetChecked()
 
     changes[changeKey] = newValue
 
-    if tick then
+    if newValue then
       PlaySound(856) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
     else
       PlaySound(857) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF
     end
+
+    if cvarMap[changeKey] then
+      SubFramesSetEnable(cvarMap[changeKey]['subFrames'], newValue) -- Enable/disable subcomponents, if any
+    end
   end)
 
-  -- Module name
-  local nameText = checkbox:CreateFontString(nil, 'OVERLAY', 'GameFontNormal')
-  nameText:SetText(title)
-  nameText:SetPoint('LEFT', checkbox, 'RIGHT', 6, 0)
+  return checkbox
+end
 
-  local offsetY = (checkbox:GetHeight() - nameText:GetHeight()) / 2
-  nameText:SetPoint('TOP', checkbox, 'TOP', 0, -1 * offsetY)
+local createModuleOptions = function(i)
+  local changeKey = C.MODULE_VARIABLES[i]
+  local label = C.MODULES[C.MODULE_VARIABLES[i]]['label']
+  local title = C.MODULES[C.MODULE_VARIABLES[i]]['title']
+  local description = C.MODULES[C.MODULE_VARIABLES[i]]['description']
+  local subToggles = C.MODULES[C.MODULE_VARIABLES[i]]['subToggles']
+
+  local checkbox = createCheckBox('UIC_Options_CB_'..label, title, changeKey)
+  checkbox:SetPoint('LEFT', lastFrameLeft, 'LEFT', 0, 0)
+  checkbox:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, -10)
+
+  cvarMap[changeKey] = {}
+  cvarMap[changeKey]['checkbox'] = checkbox
 
   -- Module description
   local extraTextOffsetY = -16
@@ -59,13 +77,36 @@ local createModuleOptions = function(i, x, y)
     local descriptionText = checkbox:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
     descriptionText:SetTextColor(1, 1, 1)
     descriptionText:SetText(description[i])
-    descriptionText:SetPoint('LEFT', checkbox, 'RIGHT', 10, 0)
+    descriptionText:SetPoint('LEFT', checkbox.Text, 'LEFT', 0, 0)
     descriptionText:SetPoint('TOP', checkbox, 'BOTTOM', 0, (i - 1) * extraTextOffsetY)
     descriptionText:SetJustifyH('LEFT')
+
+    lastFrameTop = descriptionText
   end
 
-  if #description > 1 then -- lastY needs to account for the additional lines
-    lastY = lastY + 2 + (#description - 1) * extraTextOffsetY
+  -- Module subtoggles
+  if subToggles then
+    local subLeftAnchor = checkbox
+    cvarMap[changeKey]['subFrames'] = {}
+
+    for i = 1, #subToggles do
+        local subChangeKey = subToggles[i][1]
+        local subTitle = subToggles[i][2]
+        local subLabel = checkbox:GetName()..'_'..subTitle
+        local offsetX = i == 1 and 0 or 72
+
+        local subCheckbox = createCheckBox(subLabel, subTitle, subChangeKey)
+        subCheckbox:SetPoint('LEFT', subLeftAnchor, 'RIGHT', offsetX, 0)
+        subCheckbox:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, -10)
+
+        subLeftAnchor = subCheckbox.Text
+
+        local subFrames = cvarMap[changeKey]['subFrames']
+        subFrames[#subFrames + 1] = subCheckbox
+    end
+
+    local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subToggles[#subToggles][2]
+    lastFrameTop = _G[lastAddedSubCheckboxName]
   end
 end
 
@@ -79,33 +120,34 @@ local populateOptions = function()
   local infoText = optionsPanel:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
   infoText:SetTextColor(1, 1, 1)
   infoText:SetText(L.OPTIONS_INFO)
-  infoText:SetPoint('TOPLEFT', optionsPanel, 20, -40)
+  infoText:SetPoint('TOPLEFT', headerText, 7, -24)
 
-  lastY = -20
+  lastFrameTop = infoText
+  lastFrameLeft = infoText
 
-  toggleFrames = {}
   for i = 1, #C.MODULE_VARIABLES do
-    lastY = lastY - 45
-
-    local x = 20
-    local y = lastY
-
-    toggleFrames[i] = createModuleOptions(i, x, y)
+    createModuleOptions(i)
   end
 end
 
 UIC_Options = {}
 
 UIC_Options.Initialize = function()
+  cvarMap = {}
   changes = {}
 
   optionsPanel = CreateFrame('Frame', 'UIC_Options', UIParent)
   optionsPanel.name = 'UIChanges'
   optionsPanel:Hide()
 
-  optionsPanel:SetScript("OnShow", function()
-    for i = 1, #toggleFrames do
-      toggleFrames[i]:SetChecked(_G[C.MODULE_VARIABLES[i]])
+  optionsPanel:SetScript('OnShow', function()
+    for cvar, frames in pairs(cvarMap) do -- read the current values and set the checkboxes
+      local isSet = _G[cvar]
+      frames['checkbox']:SetChecked(isSet)
+
+      if frames['subFrames'] then -- Enable/Disable subframes
+        SubFramesSetEnable(frames['subFrames'], isSet)
+      end
     end
   end)
 

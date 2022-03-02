@@ -35,7 +35,7 @@ UI_CHANGES_LOCALE.AFR = {'Makes combat failure related UI Error messages more vi
 -- ~AFR
 
 -- PingAnnouncer
-UI_CHANGES_LOCALE.PA = {'Sends a party message when you click on a minimap object to alert your party members.', 'Hold down CTRL when clicking to send the message to raid or battleground members instead.'}
+UI_CHANGES_LOCALE.PA = {'Sends a party message when you click on a minimap object to alert your party members.', 'Hold down CTRL when clicking to send the message to all raid or battleground members instead.'}
 UI_CHANGES_LOCALE.PARTY = 'Party'
 UI_CHANGES_LOCALE.RAID = 'Raid'
 UI_CHANGES_LOCALE.BATTLEGROUND = 'Battleground'

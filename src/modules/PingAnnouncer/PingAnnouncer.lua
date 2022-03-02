@@ -69,13 +69,44 @@ local getPingMessage = function(objectName, directionX, directionY)
   return L.PINGED..': '..objectName..' '..direction
 end
 
+-- Check the cVars and the current state of the game
+local determineTargetChannel = function(unitId)
+  -- Figure out current status
+  local isCTRL = IsControlKeyDown()
+  local inInstance, instanceType = IsInInstance()
+
+  local isInBattleground = instanceType == 'pvp'
+  local isInArena = instanceType == 'arena'
+  local isInHomeRaid = IsInRaid(LE_PARTY_CATEGORY_HOME)
+  local isInRaid = isInHomeRaid or (isInBattleground == false and isInArena == false and IsInRaid())
+  local isInPartyOnly = IsInGroup() and isInBattleground == false and isInArena == false and isInRaid == false
+
+  -- Check cvars against status + instance chat edge case
+  if isInBattleground and _G['UIC_PA_Battleground'] == false or
+      isInArena and _G['UIC_PA_Arena'] == false or
+      isInRaid and _G['UIC_PA_Raid'] == false or
+      isInPartyOnly and (_G['UIC_PA_Party'] == false or isCTRL) then 
+    return nil
+  end
+
+  if not isCTRL then
+    return 'PARTY'
+  elseif isInHomeRaid then
+    return 'RAID'
+  else
+    return 'INSTANCE_CHAT'
+  end
+end
+
 local handlePing = function(unitId, x, y)
-  -- Only consider pings coming from the player while there is a tooltip visible, when in a party
-  local isPartyPing = unitId ~= 'player'
   local tooltipText = _G['GameTooltipTextLeft1']:GetText()
-  local inParty = IsInGroup() and not IsInRaid()
-  
-  if isPartyPing or tooltipText == nil or not inParty then
+
+  if unitId ~= 'player' or tooltipText == nil then -- Only consider pings coming from the player while there is a tooltip visible
+    return
+  end
+
+  local targetChannel = determineTargetChannel(unitId)
+  if not targetChannel then
     return
   end
 
@@ -90,9 +121,9 @@ local handlePing = function(unitId, x, y)
   -- Determine the direction of the pinged coordinate
   local directionX, directionY = determineDirection(x, y)
 
-  -- Let the party members know
+  -- Let others know
   local messageText = getPingMessage(tooltipText, directionX, directionY)
-  SendChatMessage(messageText, 'PARTY');
+  SendChatMessage(messageText, targetChannel);
 end
 
 local EVENTS = {}

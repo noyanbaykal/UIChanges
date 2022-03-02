@@ -17,7 +17,6 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
--- TODO: improve PA with raid/bg/arena checks using ctrl click
 -- TODO: port PPF
 
 local C = UI_CHANGES_CONSTANTS
@@ -30,11 +29,15 @@ local Initialize = function(isTBC)
   AttackFailureReminder.Initialize()
   PingAnnouncer.Initialize()
 
-  if not UIC_AHT_IsEnabled then -- First load on this character
+  if UIC_AHT_IsEnabled == nil then -- First load on this character
     UIC_AHT_IsEnabled = true
     UIC_AFR_IsEnabled = false
     UIC_PPF_IsEnabled = false
     UIC_PA_IsEnabled = true
+    UIC_PA_Party = true
+    UIC_PA_Battleground = true
+    UIC_PA_Raid = true
+    UIC_PA_Arena = true
 
     DEFAULT_CHAT_FRAME:AddMessage(L.FIRST_TIME)
   end

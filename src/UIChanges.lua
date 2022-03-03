@@ -24,23 +24,65 @@ local L = UI_CHANGES_LOCALE
 
 local modules
 
+local setMissingVariables = function()
+  local encounteredNew = false
+
+  if UIC_AHT_IsEnabled == nil then
+    UIC_AHT_IsEnabled = true
+    encounteredNew = true
+  end
+  
+  if UIC_AFR_IsEnabled == nil then
+    UIC_AFR_IsEnabled = false
+    encounteredNew = true
+  end
+  
+  if UIC_AFR_EnteredCombat == nil then
+    UIC_AFR_EnteredCombat = false
+    encounteredNew = true
+  end
+  
+  if UIC_PPF_IsEnabled == nil then
+    UIC_PPF_IsEnabled = false
+    encounteredNew = true
+  end
+  
+  if UIC_PA_IsEnabled == nil then
+    UIC_PA_IsEnabled = true
+    encounteredNew = true
+  end
+  
+  if UIC_PA_Party == nil then
+    UIC_PA_Party = true
+    encounteredNew = true
+  end
+  
+  if UIC_PA_Battleground == nil then
+    UIC_PA_Battleground = true
+    encounteredNew = true
+  end
+  
+  if UIC_PA_Raid == nil then
+    UIC_PA_Raid = true
+    encounteredNew = true
+  end
+  
+  if UIC_PA_Arena == nil then
+    UIC_PA_Arena = true
+    encounteredNew = true
+  end  
+
+  if encounteredNew then
+    DEFAULT_CHAT_FRAME:AddMessage(L.FIRST_TIME)
+  end
+end
+
 local initialize = function(isTBC)
   AHTooltips.Initialize(isTBC)
   AttackFailureReminder.Initialize()
   PingAnnouncer.Initialize()
 
-  if UIC_AHT_IsEnabled == nil then -- First load on this character
-    UIC_AHT_IsEnabled = true
-    UIC_AFR_IsEnabled = false
-    UIC_PPF_IsEnabled = false
-    UIC_PA_IsEnabled = true
-    UIC_PA_Party = true
-    UIC_PA_Battleground = true
-    UIC_PA_Raid = true
-    UIC_PA_Arena = true
-
-    DEFAULT_CHAT_FRAME:AddMessage(L.FIRST_TIME)
-  end
+  setMissingVariables()
 
   C.MODULES[C.MODULE_VARIABLES[1]]['frame'] = AHTooltips
   C.MODULES[C.MODULE_VARIABLES[2]]['frame'] = AttackFailureReminder

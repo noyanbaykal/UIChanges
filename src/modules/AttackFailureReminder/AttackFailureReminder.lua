@@ -80,6 +80,8 @@ local setErrorFrame = function(errorType, message)
     elseif isInterruptedMessage(message) then
       textureName = 'Interface\\CURSOR\\UnableUI-Cursor-Move'
     end
+  elseif message == 'PLAYER_REGEN_DISABLED' then
+    textureName = 'Interface\\PVPFrame\\Icon-Combat'
   end
 
   if textureName then
@@ -110,7 +112,7 @@ local spellCastSuccess = function(unitTarget, castGUID, spellID)
   end
 end
 
-local isAttackFailureMessage = function(message)
+local isRelevantMessage = function(message)
   return
     message == ERR_BADATTACKPOS or
     message == ERR_BADATTACKFACING or
@@ -124,11 +126,12 @@ local isAttackFailureMessage = function(message)
     message == LOSS_OF_CONTROL_DISPLAY_SCHOOL_INTERRUPT or
     message == SPELL_FAILED_INTERRUPTED or
     message == SPELL_FAILED_INTERRUPTED_COMBAT or
-    message == ERR_TOO_FAR_TO_INTERACT
+    message == ERR_TOO_FAR_TO_INTERACT or
+    message == 'PLAYER_REGEN_DISABLED' and _G['UIC_AFR_EnteredCombat']
 end
 
 local gotUIErrorMessage = function(errorType, message)
-  if isAttackFailureMessage(message) then
+  if isRelevantMessage(message) then
     stopTimer()
     attackTimer = C_Timer.NewTicker(TIMER_INTERVAL, stopTimer)
     setErrorFrame(errorType, message)
@@ -138,6 +141,10 @@ end
 local EVENTS = {}
 EVENTS['UI_ERROR_MESSAGE'] = function(...)
   gotUIErrorMessage(...)
+end
+
+EVENTS['PLAYER_REGEN_DISABLED'] = function()
+  gotUIErrorMessage(nil, 'PLAYER_REGEN_DISABLED')
 end
 
 EVENTS['UNIT_SPELLCAST_SUCCEEDED'] = function(...)

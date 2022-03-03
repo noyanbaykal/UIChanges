@@ -25,7 +25,7 @@ gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4] = _G['Gam
 
 local optionsPanel, changes, cvarMap, lastFrameTop, lastFrameLeft
 
-local SubFramesSetEnable = function(subFrames, isSet)
+local subFramesSetEnable = function(subFrames, isSet)
   if subFrames then
     for i = 1, #subFrames do
       subFrames[i]:SetEnabled(isSet)
@@ -50,7 +50,7 @@ local createCheckBox = function(frameName, title, changeKey)
     end
 
     if cvarMap[changeKey] then
-      SubFramesSetEnable(cvarMap[changeKey]['subFrames'], newValue) -- Enable/disable subcomponents, if any
+      subFramesSetEnable(cvarMap[changeKey]['subFrames'], newValue) -- Enable/disable subcomponents, if any
     end
   end)
 
@@ -146,7 +146,7 @@ UIC_Options.Initialize = function()
       frames['checkbox']:SetChecked(isSet)
 
       if frames['subFrames'] then -- Enable/Disable subframes
-        SubFramesSetEnable(frames['subFrames'], isSet)
+        subFramesSetEnable(frames['subFrames'], isSet)
       end
     end
   end)

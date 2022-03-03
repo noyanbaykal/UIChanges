@@ -26,7 +26,7 @@ local mainFrame, hoverTooltip, buyoutTooltip
 local trackingTimer
 local loadedAH = false
 
-local function CheckFrames()
+local function checkFrames()
   if not isTBC then
     hoverTooltip.Update()
   end
@@ -34,17 +34,17 @@ local function CheckFrames()
   buyoutTooltip.Update()
 end
 
-local function OnShow()
+local function onShow()
   -- The first time the AH is shown, we'll hook into the button onClicks
   if loadedAH == false then
     buyoutTooltip.LoadedAH()
     loadedAH = true
   end
   
-  trackingTimer = C_Timer.NewTicker(TIMER_INTERVAL, CheckFrames)
+  trackingTimer = C_Timer.NewTicker(TIMER_INTERVAL, checkFrames)
 end
 
-local function HideTooltips()
+local function hideTooltips()
   if not isTBC then
     hoverTooltip.Hide()
   end
@@ -52,29 +52,29 @@ local function HideTooltips()
   buyoutTooltip.Hide(true)
 end
 
-local function OnClosed()
+local function onClosed()
   if trackingTimer:IsCancelled() ~= true then
     trackingTimer:Cancel()
   end
 
-  HideTooltips()
+  hideTooltips()
 end
 
 local EVENTS = {}
 EVENTS['AUCTION_HOUSE_SHOW'] = function(...)
-  OnShow(...)
+  onShow(...)
 end
 
 EVENTS['AUCTION_HOUSE_CLOSED'] = function(...)
-  OnClosed(...)
+  onClosed(...)
 end
 
 EVENTS['AUCTION_ITEM_LIST_UPDATE'] = function()
-  HideTooltips()
+  hideTooltips()
 end
 
 EVENTS['AUCTION_BIDDER_LIST_UPDATE'] = function()
-  HideTooltips()
+  hideTooltips()
 end
 
 AHTooltips = {}
@@ -100,7 +100,7 @@ end
 
 AHTooltips.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
-  HideTooltips()
+  hideTooltips()
 end
 
 return AHTooltips

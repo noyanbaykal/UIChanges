@@ -26,7 +26,7 @@ local labelBid = WrapTextInColorCode(L.SINGLE_BID, 'FFFFFFFF')
 local labelBuyout = WrapTextInColorCode(L.SINGLE_BUYOUT, 'FFFFFFFF')
 local SIZE_Y = 30
 
-local CalculateSingleCost = function(count, bid, buyout)
+local calculateSingleCost = function(count, bid, buyout)
   if count == 1 then
     return nil, nil
   end
@@ -41,7 +41,7 @@ local CalculateSingleCost = function(count, bid, buyout)
   return singleBid, singleBuyout
 end
 
-local UpdateWarning = function(index, warningLabel)
+local updateWarning = function(index, warningLabel)
   if not index or not warningLabel then
     warningFrame:Hide()
     return
@@ -64,7 +64,7 @@ local UpdateWarning = function(index, warningLabel)
   warningFrame:Show()
 end
 
-local FormatCostString = function(singleBid, singleBuyout)
+local formatCostString = function(singleBid, singleBuyout)
   local textureBid = GetCoinTextureString(singleBid)
 
   if not singleBuyout then
@@ -76,7 +76,7 @@ local FormatCostString = function(singleBid, singleBuyout)
   return string.format('%s\n%s', labelBid..textureBid, labelBuyout..textureBuyout)
 end
 
-local UpdateSingleCostFrame = function(index, singleBid, singleBuyout)
+local updateSingleCostFrame = function(index, singleBid, singleBuyout)
   if not index or not singleBid then
     singleCostFrame:Hide()
     return
@@ -86,12 +86,12 @@ local UpdateSingleCostFrame = function(index, singleBid, singleBuyout)
   singleCostFrame:SetPoint('TOP', _G['BrowseButton'..index], 'TOP', 0, 0)
   singleCostFrame:SetPoint('LEFT', _G['AuctionFrame'], 'RIGHT', 0, 0)
 
-  singleCostFrame.title:SetText(FormatCostString(singleBid, singleBuyout))
+  singleCostFrame.title:SetText(formatCostString(singleBid, singleBuyout))
   singleCostFrame:SetSize(singleCostFrame.title:GetStringWidth() + 16, SIZE_Y)
   singleCostFrame:Show()
 end
 
-local GenerateData = function(index)
+local generateData = function(index)
   if not index then
     return nil, nil
   end
@@ -106,13 +106,13 @@ local GenerateData = function(index)
   local bid = C.GetBidPrice(index)
   local buyout = C.GetBuyoutPrice(index)
 
-  local singleBid, singleBuyout = CalculateSingleCost(count, bid, buyout)
+  local singleBid, singleBuyout = calculateSingleCost(count, bid, buyout)
   local warningLabel = C.CheckScam(bid, buyout)
 
   return singleBid, singleBuyout, warningLabel
 end
 
-local InitializeFrames = function()
+local initializeFrames = function()
   singleCostFrame = CreateFrame('Frame', 'UIC_HoverTooltipBuyout', _G['AuctionFrame'], 'BackdropTemplate')
   singleCostFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
   singleCostFrame:SetBackdropColor(0, 0, 0, 1)
@@ -133,7 +133,7 @@ HoverTooltip = {}
 HoverTooltip.new = function()
   local self = {}
 
-  InitializeFrames()
+  initializeFrames()
 
   function self.Update()
     local hoveredIndex = nil
@@ -147,10 +147,10 @@ HoverTooltip.new = function()
       end
     end
 
-    local singleBid, singleBuyout, warningLabel = GenerateData(hoveredIndex)
+    local singleBid, singleBuyout, warningLabel = generateData(hoveredIndex)
 
-    UpdateSingleCostFrame(hoveredIndex, singleBid, singleBuyout)
-    UpdateWarning(hoveredIndex, warningLabel)
+    updateSingleCostFrame(hoveredIndex, singleBid, singleBuyout)
+    updateWarning(hoveredIndex, warningLabel)
   end
 
   function self.Hide()

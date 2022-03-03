@@ -24,7 +24,7 @@ local L = UI_CHANGES_LOCALE
 
 local modules
 
-local Initialize = function(isTBC)
+local initialize = function(isTBC)
   AHTooltips.Initialize(isTBC)
   AttackFailureReminder.Initialize()
   PingAnnouncer.Initialize()
@@ -79,6 +79,6 @@ mainFrame:RegisterEvent('PLAYER_LOGIN')
 
 mainFrame:SetScript('OnEvent', function(self, event, ...)
   if (event == 'PLAYER_LOGIN') then
-    Initialize(isTBC)
+    initialize(isTBC)
   end
 end)

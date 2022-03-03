@@ -34,16 +34,16 @@ local SPELL_ID_SHOOT_CROSSBOW = 7919
 
 local TIMER_INTERVAL = 4 -- Seconds
 
-local IsDamageTaken = function(type)
+local isDamageTaken = function(type)
   return type == 'DODGE' or type == 'BLOCK' or type == 'WOUND' or type == 'PARRY'
 end
 
-local IsShootType = function(spellID)
+local isShootType = function(spellID)
   return spellID == SPELL_ID_SHOOT_BOW or spellID == SPELL_ID_SHOOT_CROSSBOW or
     spellID == SPELL_ID_SHOOT_GUN or spellID == SPELL_ID_SHOOT_WAND
 end
 
-local IsInterruptedMessage = function(message)
+local isInterruptedMessage = function(message)
   return message == SPELL_FAILED_MOVING or
     message == INTERRUPTED or
     message == LOSS_OF_CONTROL_DISPLAY_INTERRUPT or
@@ -52,7 +52,7 @@ local IsInterruptedMessage = function(message)
     message == SPELL_FAILED_INTERRUPTED_COMBAT
 end
 
-local SetErrorFrame = function(errorType, message)
+local setErrorFrame = function(errorType, message)
   local size = 40
   local offsetX = 0
   local offsetY = 0
@@ -77,7 +77,7 @@ local SetErrorFrame = function(errorType, message)
       size = 52
     elseif message == SPELL_FAILED_TOO_CLOSE then
       textureName = 'Interface\\CURSOR\\UnableCrosshairs'
-    elseif IsInterruptedMessage(message) then
+    elseif isInterruptedMessage(message) then
       textureName = 'Interface\\CURSOR\\UnableUI-Cursor-Move'
     end
   end
@@ -90,7 +90,7 @@ local SetErrorFrame = function(errorType, message)
   end
 end
 
-local StopTimer = function()
+local stopTimer = function()
   if attackTimer and not attackTimer:IsCancelled() then
     attackTimer:Cancel()
   end
@@ -98,19 +98,19 @@ local StopTimer = function()
   errorFrame:Hide()
 end
 
-local CombatEvent = function(unitTarget, event, flagText, amount, schoolMask)
-  if unitTarget == 'target' and IsDamageTaken(event) then
-    StopTimer()
+local combatEvent = function(unitTarget, event, flagText, amount, schoolMask)
+  if unitTarget == 'target' and isDamageTaken(event) then
+    stopTimer()
   end
 end
 
-local SpellCastSuccess = function(unitTarget, castGUID, spellID)
-  if unitTarget == 'player' and IsShootType(spellID) then
-    StopTimer()
+local spellCastSuccess = function(unitTarget, castGUID, spellID)
+  if unitTarget == 'player' and isShootType(spellID) then
+    stopTimer()
   end
 end
 
-local IsAttackFailureMessage = function(message)
+local isAttackFailureMessage = function(message)
   return
     message == ERR_BADATTACKPOS or
     message == ERR_BADATTACKFACING or
@@ -127,29 +127,29 @@ local IsAttackFailureMessage = function(message)
     message == ERR_TOO_FAR_TO_INTERACT
 end
 
-local GotUIErrorMessage = function(errorType, message)
-  if IsAttackFailureMessage(message) then
-    StopTimer()
-    attackTimer = C_Timer.NewTicker(TIMER_INTERVAL, StopTimer)
-    SetErrorFrame(errorType, message)
+local gotUIErrorMessage = function(errorType, message)
+  if isAttackFailureMessage(message) then
+    stopTimer()
+    attackTimer = C_Timer.NewTicker(TIMER_INTERVAL, stopTimer)
+    setErrorFrame(errorType, message)
   end
 end
 
 local EVENTS = {}
 EVENTS['UI_ERROR_MESSAGE'] = function(...)
-  GotUIErrorMessage(...)
+  gotUIErrorMessage(...)
 end
 
 EVENTS['UNIT_SPELLCAST_SUCCEEDED'] = function(...)
-  SpellCastSuccess(...)
+  spellCastSuccess(...)
 end
 
 EVENTS['UNIT_COMBAT'] = function(...)
-  CombatEvent(...)
+  combatEvent(...)
 end
 
 EVENTS['PLAYER_TARGET_CHANGED'] = function()
-  StopTimer()
+  stopTimer()
 end
 
 AttackFailureReminder = {}
@@ -185,7 +185,7 @@ end
 
 AttackFailureReminder.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
-  StopTimer()
+  stopTimer()
 end
 
 return AttackFailureReminder

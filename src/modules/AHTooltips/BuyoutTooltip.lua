@@ -21,7 +21,7 @@ local C = UI_CHANGES_CONSTANTS
 
 local warningFrame, buyoutWarningText
 
-local SetWarning = function(index)
+local setWarning = function(index)
   if not index then
     return
   end
@@ -37,27 +37,27 @@ local SetWarning = function(index)
   buyoutWarningText = newWarning
 end
 
-local OnBrowseSelect = function(self, buttonName, left, right)
+local onBrowseSelect = function(self, buttonName, left, right)
   local index = string.sub(self:GetName(), left, right)
-  SetWarning(index)
+  setWarning(index)
 end
 
-local HookAHButtonClicks = function()
+local hookAHButtonClicks = function()
   for i = 1, C.AH_ENTRY_COUNT do
     local button = _G['BrowseButton'..i]
     local item = _G['BrowseButton'..i..'Item']
 
     button:HookScript('OnClick', function(self, buttonName)
-      OnBrowseSelect(self, buttonName, -1)
+      onBrowseSelect(self, buttonName, -1)
     end)
 
     item:HookScript('OnClick', function(self, buttonName)
-      OnBrowseSelect(self, buttonName, -5, -5)
+      onBrowseSelect(self, buttonName, -5, -5)
     end)
   end
 end
 
-local SetWarningFramePosition = function()
+local setWarningFramePosition = function()
   local buyoutTextFrame = _G['BrowseBuyoutButtonText']
   local buyoutTextOffsetX = buyoutTextFrame:GetWidth() / 2
   local warningOffsetX = buyoutTextOffsetX - (warningFrame:GetWidth() / 2)
@@ -75,8 +75,8 @@ BuyoutTooltip.new = function()
   warningFrame = C.CreateWarningFrame('UIC_BuyoutTooltip')
 
   function self.LoadedAH()
-    HookAHButtonClicks()
-    SetWarningFramePosition()
+    hookAHButtonClicks()
+    setWarningFramePosition()
   end
 
   function self.Update()

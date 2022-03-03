@@ -31,7 +31,7 @@ UI_CHANGES_LOCALE.SINGLE_BUYOUT = 'Single buyout price: '
 -- ~AHTooltips
 
 -- AFR
-UI_CHANGES_LOCALE.AFR = {'Makes combat failure related UI Error messages more visible by adding an icon below the messages.'}
+UI_CHANGES_LOCALE.AFR = {'Makes some failure related UI Error messages more visible by adding an icon above the messages.'}
 UI_CHANGES_LOCALE.ENTERED_COMBAT_CHECKBOX = 'Entered Combat Warning'
 -- ~AFR
 

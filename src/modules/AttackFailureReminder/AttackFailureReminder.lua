@@ -175,7 +175,7 @@ AttackFailureReminder.Initialize = function()
 
   local uiErrorsFrame = _G['UIErrorsFrame']
   local offsetX = (uiErrorsFrame:GetWidth() / 2) - (errorFrame:GetWidth() / 2)
-  errorFrame:SetPoint('TOP', uiErrorsFrame, 'BOTTOM', 0, 0)
+  errorFrame:SetPoint('BOTTOM', uiErrorsFrame, 'TOP', 0, 15)
   errorFrame:SetPoint('LEFT', uiErrorsFrame, 'LEFT', offsetX, 0)
   errorFrame:Hide()
 

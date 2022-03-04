@@ -43,7 +43,7 @@ local setMissingVariables = function()
   end
   
   if UIC_PPF_IsEnabled == nil then
-    UIC_PPF_IsEnabled = false
+    UIC_PPF_IsEnabled = PPF_IsEnabled or false -- Special case for PPF users migrating to UIC
     encounteredNew = true
   end
   
@@ -80,13 +80,16 @@ end
 local initialize = function(isTBC)
   AHTooltips.Initialize(isTBC)
   AttackFailureReminder.Initialize()
+  PartyPetFrames.Initialize()
   PingAnnouncer.Initialize()
 
   setMissingVariables()
 
-  C.MODULES[C.MODULE_VARIABLES[1]]['frame'] = AHTooltips
-  C.MODULES[C.MODULE_VARIABLES[2]]['frame'] = AttackFailureReminder
-  C.MODULES[C.MODULE_VARIABLES[3]]['frame'] = PingAnnouncer
+  local mVars = C.MODULE_VARIABLES
+  C.MODULES[mVars[1]]['frame'] = AHTooltips
+  C.MODULES[mVars[2]]['frame'] = AttackFailureReminder
+  C.MODULES[mVars[3]]['frame'] = PartyPetFrames
+  C.MODULES[mVars[4]]['frame'] = PingAnnouncer
 
   UIC_Options.Initialize()
 

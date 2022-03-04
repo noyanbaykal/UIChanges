@@ -137,8 +137,6 @@ PingAnnouncer.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_PingAnnouncer', UIParent)
   mainFrame:Hide()
 
-  mainFrame:RegisterEvent('MINIMAP_PING')
-
   mainFrame:SetScript('OnEvent', function(self, event, ...)
     EVENTS[event](...)
   end)

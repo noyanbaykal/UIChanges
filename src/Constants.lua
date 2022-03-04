@@ -26,17 +26,24 @@ UI_CHANGES_CONSTANTS = {}
 UI_CHANGES_CONSTANTS.MODULE_VARIABLES = {
   'UIC_AHT_IsEnabled',
   'UIC_AFR_IsEnabled',
+  'UIC_PPF_IsEnabled',
   'UIC_PA_IsEnabled',
 }
 
+local mVars = UI_CHANGES_CONSTANTS.MODULE_VARIABLES
+
+UI_CHANGES_CONSTANTS.OUT_OF_COMBAT_VARIABLES = {
+  [mVars[3]] = true,
+}
+
 UI_CHANGES_CONSTANTS.MODULES = {}
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[1]] = {
+UI_CHANGES_CONSTANTS.MODULES[mVars[1]] = {
   ['label'] = 'AHT',
   ['title'] = 'Auction House Tooltips',
   ['description'] = L.AHT
 }
 
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[2]] = {
+UI_CHANGES_CONSTANTS.MODULES[mVars[2]] = {
   ['label'] = 'AFR',
   ['title'] = 'Attack Failure Reminder',
   ['description'] = L.AFR,
@@ -45,7 +52,13 @@ UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[2]] = {
   }
 }
 
-UI_CHANGES_CONSTANTS.MODULES[UI_CHANGES_CONSTANTS.MODULE_VARIABLES[3]] = {
+UI_CHANGES_CONSTANTS.MODULES[mVars[3]] = {
+  ['label'] = 'PPF',
+  ['title'] = 'Party Pet Frames',
+  ['description'] = L.PPF,
+}
+
+UI_CHANGES_CONSTANTS.MODULES[mVars[4]] = {
   ['label'] = 'PA',
   ['title'] = 'Ping Announcer',
   ['description'] = L.PA,

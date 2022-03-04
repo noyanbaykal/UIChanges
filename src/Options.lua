@@ -59,10 +59,10 @@ end
 
 local createModuleOptions = function(i)
   local changeKey = C.MODULE_VARIABLES[i]
-  local label = C.MODULES[C.MODULE_VARIABLES[i]]['label']
-  local title = C.MODULES[C.MODULE_VARIABLES[i]]['title']
-  local description = C.MODULES[C.MODULE_VARIABLES[i]]['description']
-  local subToggles = C.MODULES[C.MODULE_VARIABLES[i]]['subToggles']
+  local label = C.MODULES[changeKey]['label']
+  local title = C.MODULES[changeKey]['title']
+  local description = C.MODULES[changeKey]['description']
+  local subToggles = C.MODULES[changeKey]['subToggles']
 
   local checkbox = createCheckBox('UIC_Options_CB_'..label, title, changeKey)
   checkbox:SetPoint('LEFT', lastFrameLeft, 'LEFT', 0, 0)
@@ -76,7 +76,7 @@ local createModuleOptions = function(i)
   for i = 1, #description do
     local descriptionText = checkbox:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
     descriptionText:SetTextColor(1, 1, 1)
-    descriptionText:SetText(description[i])
+    descriptionText:SetFormattedText(description[i])
     descriptionText:SetPoint('LEFT', checkbox.Text, 'LEFT', 0, 0)
     descriptionText:SetPoint('TOP', checkbox, 'BOTTOM', 0, (i - 1) * extraTextOffsetY)
     descriptionText:SetJustifyH('LEFT')
@@ -153,12 +153,22 @@ UIC_Options.Initialize = function()
 
   optionsPanel.okay = function(...)
     for moduleVariable, newValue in pairs(changes) do
-      _G[moduleVariable] = newValue
+      local canChange = true
 
-      if newValue then
-        C.MODULES[moduleVariable]['frame']:Enable()
-      else
-        C.MODULES[moduleVariable]['frame']:Disable()
+      -- Check if this is an out-of-combat only setting and if we're in combat
+      if C.OUT_OF_COMBAT_VARIABLES[moduleVariable] and InCombatLockdown() then
+        canChange = false
+        DEFAULT_CHAT_FRAME:AddMessage(L.CANT_CHANGE_IN_COMBAT)
+      end
+
+      if canChange then
+        _G[moduleVariable] = newValue
+
+        if newValue then
+          C.MODULES[moduleVariable]['frame']:Enable()
+        else
+          C.MODULES[moduleVariable]['frame']:Disable()
+        end
       end
     end
   end

@@ -27,7 +27,7 @@ local trackingTimer
 local loadedAH = false
 
 local function checkFrames()
-  if not isTBC then
+  if hoverTooltip then
     hoverTooltip.Update()
   end
   
@@ -45,7 +45,7 @@ local function onShow()
 end
 
 local function hideTooltips()
-  if not isTBC then
+  if hoverTooltip then
     hoverTooltip.Hide()
   end
 
@@ -53,7 +53,7 @@ local function hideTooltips()
 end
 
 local function onClosed()
-  if trackingTimer:IsCancelled() ~= true then
+  if trackingTimer and trackingTimer:IsCancelled() ~= true then
     trackingTimer:Cancel()
   end
 
@@ -79,11 +79,11 @@ end
 
 AHTooltips = {}
 
-AHTooltips.Initialize = function(isTBC)
+AHTooltips.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_AHTooltips', UIParent)
   mainFrame:Hide()
 
-  if not isTBC then
+  if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then -- Apparently this was added to TBCC sometime after release
     hoverTooltip = HoverTooltip.new()
   end
 
@@ -96,11 +96,15 @@ end
 
 AHTooltips.Enable = function()
   C.REGISTER_EVENTS(mainFrame, EVENTS)
+
+  if _G['AuctionFrame'] and _G['AuctionFrame']:IsShown() then
+    onShow()
+  end
 end
 
 AHTooltips.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
-  hideTooltips()
+  onClosed()
 end
 
 return AHTooltips

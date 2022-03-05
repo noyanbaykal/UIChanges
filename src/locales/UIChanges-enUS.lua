@@ -21,8 +21,9 @@ UI_CHANGES_LOCALE = {}
 
 UI_CHANGES_LOCALE.TXT_NOT_CLASSIC = 'UI Changes supports classic only!'
 UI_CHANGES_LOCALE.FIRST_TIME = 'UI Changes encountered new variables with this character! Please check out the Interface Options/AddOns/UIChanges page to see the available options.'
-UI_CHANGES_LOCALE.OPTIONS_INFO = 'You can individually toggle modules here.'
-UI_CHANGES_LOCALE.CANT_CHANGE_IN_COMBAT = 'Unable to change setting while in combat! Please check the options page again after combat.' 
+UI_CHANGES_LOCALE.OPTIONS_INFO = '|cFFFFFFFFYou can individually toggle modules here. |cFFFF8000Settings that modify console variables have to be toggled when not in combat and require a UI reload afterwards to take effect.'
+UI_CHANGES_LOCALE.CVAR_CHANGED = 'UI Changes: Console variable changed, please reload your UI!'
+UI_CHANGES_LOCALE.CANT_CHANGE_IN_COMBAT = 'UI Changes: Unable to change setting while in combat! Please check the options page again after combat.' 
 UI_CHANGES_LOCALE.CHANGES_CANCELLED = 'UI Changes: Options screen cancelled, no changes will be made!'
 
 -- AHTooltips
@@ -37,7 +38,7 @@ UI_CHANGES_LOCALE.ENTERED_COMBAT_CHECKBOX = 'Entered Combat Warning'
 -- ~AFR
 
 -- PartyPetFrames
-UI_CHANGES_LOCALE.PPF = {'Re-enables the hidden pet frames & adds their missing power bars when using default party frames.', '|cFFFF0000This modifies a console variable and needs to be set when not in combat!', '|cFFFF8000Please remember to disable this first if you\'re going to remove the addon.'}
+UI_CHANGES_LOCALE.PPF = {'Re-enables the hidden pet frames & adds their missing power bars when using default party frames.', '|cFFFF8000This modifies a console variable! Please remember to disable this first if you\'re going to remove the addon.'}
 UI_CHANGES_LOCALE.CURRENT_CVAR_VALUE = function(enabled)
   local variable = enabled == true and 'enabled' or 'disabled'
   return 'The showPartyPets console variable is currently '..variable..'.'

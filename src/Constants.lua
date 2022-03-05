@@ -23,51 +23,45 @@ local L = UI_CHANGES_LOCALE
 -- Bundling all constants in a single object to avoid possible conflicts.
 UI_CHANGES_CONSTANTS = {}
 
-UI_CHANGES_CONSTANTS.MODULE_VARIABLES = {
-  'UIC_AHT_IsEnabled',
-  'UIC_AFR_IsEnabled',
-  'UIC_PPF_IsEnabled',
-  'UIC_PA_IsEnabled',
-}
-
-local mVars = UI_CHANGES_CONSTANTS.MODULE_VARIABLES
-
-UI_CHANGES_CONSTANTS.OUT_OF_COMBAT_VARIABLES = {
-  [mVars[3]] = true,
-}
-
-UI_CHANGES_CONSTANTS.MODULES = {}
-UI_CHANGES_CONSTANTS.MODULES[mVars[1]] = {
-  ['label'] = 'AHT',
-  ['title'] = 'Auction House Tooltips',
-  ['description'] = L.AHT
-}
-
-UI_CHANGES_CONSTANTS.MODULES[mVars[2]] = {
-  ['label'] = 'AFR',
-  ['title'] = 'Attack Failure Reminder',
-  ['description'] = L.AFR,
-  ['subToggles'] = {
-    {'UIC_AFR_EnteredCombat', L.ENTERED_COMBAT_CHECKBOX}
-  }
-}
-
-UI_CHANGES_CONSTANTS.MODULES[mVars[3]] = {
-  ['label'] = 'PPF',
-  ['title'] = 'Party Pet Frames',
-  ['description'] = L.PPF,
-}
-
-UI_CHANGES_CONSTANTS.MODULES[mVars[4]] = {
-  ['label'] = 'PA',
-  ['title'] = 'Ping Announcer',
-  ['description'] = L.PA,
-  ['subToggles'] = {
+UI_CHANGES_CONSTANTS.MODULES = {
+  {
+    ['savedVariableName'] = 'UIC_AHT_IsEnabled', -- Name of the corresponding savedVariable
+    ['frameName'] = 'AHTooltips', -- Corresponds to the class that is exported in the module file
+    ['label'] = 'AHT', -- Used in subframe names
+    ['title'] = 'Auction House Tooltips',
+    ['description'] = L.AHT,
+  },
+  {
+    ['savedVariableName'] = 'UIC_AFR_IsEnabled',
+    ['frameName'] = 'AttackFailureReminder',
+    ['label'] = 'AFR',
+    ['title'] = 'Attack Failure Reminder',
+    ['description'] = L.AFR,
+    ['subToggles'] = {
+      {'UIC_AFR_EnteredCombat', L.ENTERED_COMBAT_CHECKBOX},
+    },
+  },
+  {
+    ['savedVariableName'] = 'UIC_PPF_IsEnabled',
+    ['frameName'] = 'PartyPetFrames',
+    ['consoleVariableName'] = 'showPartyPets', -- Modules that change console variables must be toggled outside of combat
+    ['label'] = 'PPF',
+    ['title'] = 'Party Pet Frames',
+    ['description'] = L.PPF,
+  },
+  {
+    ['savedVariableName'] = 'UIC_PA_IsEnabled',
+    ['frameName'] = 'PingAnnouncer',
+    ['label'] = 'PA',
+    ['title'] = 'Ping Announcer',
+    ['description'] = L.PA,
+    ['subToggles'] = {
+      {'UIC_PA_Raid', L.RAID},
+      {'UIC_PA_Arena', L.ARENA},
+      {'UIC_PA_Battleground', L.BATTLEGROUND},
       {'UIC_PA_Party', L.PARTY},
-      {'UIC_PA_Battleground', L.RAID},
-      {'UIC_PA_Raid', L.BATTLEGROUND},
-      {'UIC_PA_Arena', L.ARENA}
-  }
+    },
+  },
 }
 
 UI_CHANGES_CONSTANTS.REGISTER_EVENTS = function(frame, eventsTable)
@@ -92,8 +86,6 @@ UI_CHANGES_CONSTANTS.BACKDROP_INFO = function(edgeSize, insetSize)
 end
 
 -- AHTooltips
-UI_CHANGES_CONSTANTS.AH_ENTRY_COUNT = 8
-
 UI_CHANGES_CONSTANTS.MULTIPLIER_GOLD = 10000
 UI_CHANGES_CONSTANTS.MULTIPLIER_SILVER = 100
 

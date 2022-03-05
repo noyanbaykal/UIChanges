@@ -138,7 +138,7 @@ HoverTooltip.new = function()
   function self.Update()
     local hoveredIndex = nil
 
-    for i = 1, C.AH_ENTRY_COUNT do
+    for i = 1, 8 do
       local browseButton = _G['BrowseButton'..i]
   
       if MouseIsOver(browseButton) and browseButton:IsVisible() then

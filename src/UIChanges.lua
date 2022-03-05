@@ -77,33 +77,19 @@ local setMissingVariables = function()
   end
 end
 
-local initialize = function(isTBC)
-  AHTooltips.Initialize(isTBC)
-  AttackFailureReminder.Initialize()
-  PartyPetFrames.Initialize()
-  PingAnnouncer.Initialize()
-
+local initialize = function()
   setMissingVariables()
 
-  local mVars = C.MODULE_VARIABLES
-  C.MODULES[mVars[1]]['frame'] = AHTooltips
-  C.MODULES[mVars[2]]['frame'] = AttackFailureReminder
-  C.MODULES[mVars[3]]['frame'] = PartyPetFrames
-  C.MODULES[mVars[4]]['frame'] = PingAnnouncer
+  for _, moduleInfo in ipairs(C.MODULES) do
+    local frame = _G[moduleInfo['frameName']]
+    frame:Initialize()
+
+    if _G[moduleInfo['savedVariableName']] then
+      frame:Enable()
+    end
+  end
 
   UIC_Options.Initialize()
-
-  if UIC_AHT_IsEnabled then
-    AHTooltips.Enable()
-  end
-
-  if UIC_AFR_IsEnabled then
-    AttackFailureReminder.Enable()
-  end
-
-  if UIC_PA_IsEnabled then
-    PingAnnouncer.Enable()
-  end
 end
 
 -- The addon entry is right here
@@ -124,6 +110,6 @@ mainFrame:RegisterEvent('PLAYER_LOGIN')
 
 mainFrame:SetScript('OnEvent', function(self, event, ...)
   if (event == 'PLAYER_LOGIN') then
-    initialize(isTBC)
+    initialize()
   end
 end)

@@ -43,7 +43,7 @@ local onBrowseSelect = function(self, buttonName, left, right)
 end
 
 local hookAHButtonClicks = function()
-  for i = 1, C.AH_ENTRY_COUNT do
+  for i = 1, 8 do
     local button = _G['BrowseButton'..i]
     local item = _G['BrowseButton'..i..'Item']
 

@@ -20,8 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 
-local gameFontColor = {} -- This will be used for checkbox texts
+local gameFontColor = {} -- This will override checkbox texts
 gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4] = _G['GameFontNormal']:GetTextColor()
+
+local disabledFontColor = {} -- This is used for disabled checkbox texts
+disabledFontColor[1], disabledFontColor[2], disabledFontColor[3], disabledFontColor[4] = _G['GameFontDisable']:GetTextColor()
 
 local optionsPanel, changes, cvarMap, lastFrameTop, lastFrameLeft
 
@@ -29,6 +32,16 @@ local subFramesSetEnable = function(subFrames, isSet)
   if subFrames then
     for i = 1, #subFrames do
       subFrames[i]:SetEnabled(isSet)
+
+      local r, g, b, a
+
+      if isSet then
+        r, g, b, a = gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4]
+      else
+        r, g, b, a = disabledFontColor[1], disabledFontColor[2], disabledFontColor[3], disabledFontColor[4]
+      end
+
+      subFrames[i].Text:SetTextColor(r, g, b, a)
     end
   end
 end
@@ -49,7 +62,7 @@ local createCheckBox = function(frameName, title, changeKey)
       PlaySound(857) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF
     end
 
-    if cvarMap[changeKey] then
+    if cvarMap[changeKey] and cvarMap[changeKey]['subFrames'] then -- if this is not a subToggle variable
       subFramesSetEnable(cvarMap[changeKey]['subFrames'], newValue) -- Enable/disable subcomponents, if any
     end
   end)
@@ -57,19 +70,21 @@ local createCheckBox = function(frameName, title, changeKey)
   return checkbox
 end
 
-local createModuleOptions = function(i)
-  local changeKey = C.MODULE_VARIABLES[i]
-  local label = C.MODULES[changeKey]['label']
-  local title = C.MODULES[changeKey]['title']
-  local description = C.MODULES[changeKey]['description']
-  local subToggles = C.MODULES[changeKey]['subToggles']
+local createModuleOptions = function(moduleInfo)
+  local changeKey = moduleInfo['savedVariableName']
+  local label = moduleInfo['label']
+  local title = moduleInfo['title']
+  local description = moduleInfo['description']
+  local subToggles = moduleInfo['subToggles']
 
   local checkbox = createCheckBox('UIC_Options_CB_'..label, title, changeKey)
   checkbox:SetPoint('LEFT', lastFrameLeft, 'LEFT', 0, 0)
   checkbox:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, -10)
 
   cvarMap[changeKey] = {}
+  cvarMap[changeKey]['frame'] = _G[moduleInfo['frameName']]
   cvarMap[changeKey]['checkbox'] = checkbox
+  cvarMap[changeKey]['consoleVariableName'] = moduleInfo['consoleVariableName']
 
   -- Module description
   local extraTextOffsetY = -16
@@ -86,8 +101,10 @@ local createModuleOptions = function(i)
 
   -- Module subtoggles
   if subToggles then
-    local subLeftAnchor = checkbox
     cvarMap[changeKey]['subFrames'] = {}
+
+    local subFrames = cvarMap[changeKey]['subFrames']
+    local subLeftAnchor = checkbox
 
     for i = 1, #subToggles do
         local subChangeKey = subToggles[i][1]
@@ -101,8 +118,10 @@ local createModuleOptions = function(i)
 
         subLeftAnchor = subCheckbox.Text
 
-        local subFrames = cvarMap[changeKey]['subFrames']
         subFrames[#subFrames + 1] = subCheckbox
+
+        cvarMap[subChangeKey] = {} 
+        cvarMap[subChangeKey]['checkbox'] = subCheckbox
     end
 
     local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subToggles[#subToggles][2]
@@ -111,6 +130,8 @@ local createModuleOptions = function(i)
 end
 
 local populateOptions = function()
+  local outerPanelWidth = _G['InterfaceOptionsFramePanelContainer']:GetWidth()
+
   -- Header text
   local headerText = optionsPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormalLarge')
   headerText:SetText('UIChanges')
@@ -118,16 +139,48 @@ local populateOptions = function()
 
   -- Informational text
   local infoText = optionsPanel:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
-  infoText:SetTextColor(1, 1, 1)
+  infoText:SetWidth(outerPanelWidth - 40)
+  infoText:SetJustifyH('LEFT')
+  infoText:SetSpacing(2)
   infoText:SetText(L.OPTIONS_INFO)
   infoText:SetPoint('TOPLEFT', headerText, 7, -24)
 
   lastFrameTop = infoText
   lastFrameLeft = infoText
 
-  for i = 1, #C.MODULE_VARIABLES do
-    createModuleOptions(i)
+  for _, moduleInfo in ipairs(C.MODULES) do
+    createModuleOptions(moduleInfo)
   end
+end
+
+local applyChange = function(savedVariableName, newValue)
+  local consoleVariable = cvarMap[savedVariableName] ~= nil and cvarMap[savedVariableName]['consoleVariableName'] or nil
+
+  if consoleVariable then
+    local success = false
+
+    if not InCombatLockdown() then
+      success = SetCVar(consoleVariable, newValue)
+    end
+
+    if not success then
+      DEFAULT_CHAT_FRAME:AddMessage(L.CANT_CHANGE_IN_COMBAT, 1, 0.3, 0.3)
+      return
+    else
+      DEFAULT_CHAT_FRAME:AddMessage(L.CVAR_CHANGED, 1, 0.501, 0)
+    end
+  end
+
+  if cvarMap[savedVariableName] ~= nil and cvarMap[savedVariableName]['frame'] then
+    local frame = cvarMap[savedVariableName]['frame']
+    if newValue then
+      frame:Enable()
+    else
+      frame:Disable()
+    end
+  end
+  
+  _G[savedVariableName] = newValue
 end
 
 UIC_Options = {}
@@ -152,30 +205,21 @@ UIC_Options.Initialize = function()
   end)
 
   optionsPanel.okay = function(...)
-    for moduleVariable, newValue in pairs(changes) do
-      local canChange = true
-
-      -- Check if this is an out-of-combat only setting and if we're in combat
-      if C.OUT_OF_COMBAT_VARIABLES[moduleVariable] and InCombatLockdown() then
-        canChange = false
-        DEFAULT_CHAT_FRAME:AddMessage(L.CANT_CHANGE_IN_COMBAT)
-      end
-
-      if canChange then
-        _G[moduleVariable] = newValue
-
-        if newValue then
-          C.MODULES[moduleVariable]['frame']:Enable()
-        else
-          C.MODULES[moduleVariable]['frame']:Disable()
-        end
-      end
+    for savedVariableName, newValue in pairs(changes) do
+      applyChange(savedVariableName, newValue)
     end
+
+    changes = {}
   end
 
   optionsPanel.cancel = function(...)
-    changes = {}
     DEFAULT_CHAT_FRAME:AddMessage(L.CHANGES_CANCELLED)
+
+    for savedVariableName, newValue in pairs(changes) do
+      cvarMap[savedVariableName]['checkbox']:SetChecked(not newValue)
+    end
+
+    changes = {}
   end
 
   populateOptions()

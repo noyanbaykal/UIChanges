@@ -85,7 +85,8 @@ local determineTargetChannel = function(unitId)
   if isInBattleground and _G['UIC_PA_Battleground'] == false or
       isInArena and _G['UIC_PA_Arena'] == false or
       isInRaid and _G['UIC_PA_Raid'] == false or
-      isInPartyOnly and (_G['UIC_PA_Party'] == false or isCTRL) then 
+      isInPartyOnly and (_G['UIC_PA_Party'] == false or isCTRL) or
+      isInPartyOnly == false then 
     return nil
   end
 

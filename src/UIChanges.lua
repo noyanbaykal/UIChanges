@@ -94,11 +94,7 @@ end
 
 -- The addon entry is right here
 
-local isClassic = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-local isTBC = WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC
-local isRetail = not (isClassic or isTBC)
-
-if isRetail then
+if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
   DEFAULT_CHAT_FRAME:AddMessage(L.TXT_NOT_CLASSIC)
   return
 end

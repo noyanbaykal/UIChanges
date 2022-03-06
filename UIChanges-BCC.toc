@@ -28,6 +28,7 @@ src\modules\AHTooltips\AHTooltips.lua
 src\modules\AHTooltips\BuyoutTooltip.lua
 src\modules\AHTooltips\HoverTooltip.lua
 src\modules\AttackFailureReminder\AttackFailureReminder.lua
+src\modules\PartyPetFrames\PetPowerBar.lua
 src\modules\PartyPetFrames\PartyPetFrames.lua
 src\modules\PingAnnouncer\PingAnnouncer.lua
 src\UIChanges.lua

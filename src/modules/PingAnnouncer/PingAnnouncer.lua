@@ -17,11 +17,16 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local DIRECTION_MARGIN = 0.02
-local MINIMUM_SECONDS = 4
-
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
+
+local ESCAPE_TABLE = {
+  ['|c%x%x%x%x%x%x%x%x'] = '', -- color start
+  ['|r'] = '', -- color end
+}
+
+local DIRECTION_MARGIN = 0.02
+local MINIMUM_SECONDS = 4
 
 local mainFrame, lastPingTime
 
@@ -55,7 +60,14 @@ local determineDirection = function(x, y)
   return directionX, directionY
 end
 
-local getPingMessage = function(objectName, directionX, directionY)
+local getPingMessage = function(tooltipText, x, y)
+  -- Have to remove color strings due to them now causing issues with the send message function
+  for pattern, substitute in pairs(ESCAPE_TABLE) do
+    tooltipText = gsub(tooltipText, pattern, substitute)
+  end
+
+  local directionX, directionY = determineDirection(x, y)
+
   local direction
 
   if directionX == '' and directionY == '' then
@@ -66,7 +78,7 @@ local getPingMessage = function(objectName, directionX, directionY)
     direction = L.DIRECTION..' '..directionY..directionX
   end
 
-  return L.PINGED..': '..objectName..' '..direction
+  return L.PINGED..': '..tooltipText..' '..direction
 end
 
 -- Check the cVars and the current state of the game
@@ -102,7 +114,8 @@ end
 local handlePing = function(unitId, x, y)
   local tooltipText = _G['GameTooltipTextLeft1']:GetText()
 
-  if unitId ~= 'player' or tooltipText == nil then -- Only consider pings coming from the player while there is a tooltip visible
+  -- Only consider pings coming from the player while there is a tooltip visible
+  if unitId ~= 'player' or tooltipText == nil or string.len(tooltipText) < 1 then
     return
   end
 
@@ -119,12 +132,10 @@ local handlePing = function(unitId, x, y)
     lastPingTime = currentTime
   end
 
-  -- Determine the direction of the pinged coordinate
-  local directionX, directionY = determineDirection(x, y)
+  -- Prepare message and let others know
+  local messageText = getPingMessage(tooltipText, x, y)
 
-  -- Let others know
-  local messageText = getPingMessage(tooltipText, directionX, directionY)
-  SendChatMessage(messageText, targetChannel);
+  SendChatMessage(messageText, targetChannel)
 end
 
 local EVENTS = {}

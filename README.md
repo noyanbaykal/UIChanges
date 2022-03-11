@@ -1,28 +1,35 @@
+# UI Changes
+
 UI Changes consists of modules that implement relatively small changes to improve certain parts of the default UI. The modules can be individually toggled and not all of them are enabled by default. Please check out the in-game addon options page of UI Changes for all the available settings.
 
--Auction House Tooltips
-	Shows the single bid and buyout prices for the entry you're hovering on. While working on this, I noticed that this was added to TBCC so this particular feature is for classic only.
+**Auction House Tooltips**
 
-	Also shows warnings for both the hovered over entry and the selected entry.
-	Selected entry warning is displayed below the buyout button.
+Shows the single bid and buyout prices for the entry you're hovering on. While working on this, I noticed that this was added to TBCC so this particular feature is for classic only.
+Also shows warnings for both the hovered over entry and the selected entry.
+Selected entry warning is displayed below the buyout button.
 
-	This addon does not track AH prices and give smart suggestions. It blindly looks at the ratio of buyout / bid and warns you if the ratio is too high. If the ratio is >= 8, it displays a red warning sign. A yellow warning sign is displayed for when the ratio is 2 >= x < 8. False positives are very much possible. This feature is just to give you a heads up in case you are about to accidentally buyout a scam entry (for example, 40s bid and 311g buyout)
+This addon does not track AH prices and give smart suggestions. It blindly looks at the ratio of buyout / bid and warns you if the ratio is too high.
+If the ratio is >= 8, it displays a red warning sign. A yellow warning sign is displayed for when the ratio is 2 >= x < 8.
+False positives are very much possible. This feature is just to give you a heads up in case you are about to accidentally buyout a scam entry (for example, 40s bid and 311g buyout).
 
--Attack Failure Reminder
-	This module might come in handy for people who'd like the UI Error Messages that are displayed near the top center of the screen to be more prominent. The module adds an icon above the error messages to make sure the error doesn't get lost due to everything else that might be going on in the UI / the game world.
+**Attack Failure Reminder**
 
-	Currently the following errors will display the icon:
-		Unable to attack / shoot due to range (min and max)
-		Unable to attack / shoot / cast due to direction (not facing target)
-		Unable to cast due to distance (shoot wand is considered casting, same as spells)
-		Cast interrupted due to movement
-		Unable to interact due to distance.
+This module might come in handy for people who'd like the UI Error Messages that are displayed near the top center of the screen to be more prominent. The module adds an icon above the error messages to make sure the error doesn't get lost due to everything else that might be going on in the UI / the game world.
 
--Party Pet Frames
-	I ported over my previously stand-alone party pet frames addon into UIC. Back in vanilla the default party frames used to show party pet frames as well. This feature seems to have been hidden behind a console variable and the power frames dropped somewhere around patch 7.0.3. This module enables the console variable and implements the missing power bars. While porting this addon, I changed it to be more in line with the current state of the party pet frames of the modern client that classic now uses.
+Currently the following errors will display the icon:
+  Unable to attack / shoot due to range (min and max)
+  Unable to attack / shoot / cast due to direction (not facing target)
+  Unable to cast due to distance (shoot wand is considered casting, same as spells)
+  Cast interrupted due to movement
+  Unable to interact due to distance.
 
--Ping Announcer
-	This is my second stand-alone addon that I ported. It listens to the player pinging in the mini-map on a marker with text and sends a message to chat mentioning the player's name, marker text and direction (in relation to the player). While porting this addon, I added the option to selectively disable its functionality while in a battleground, arena, raid or just a party. The module defaults to party chat, but if Control (CTRL) is pressed while the mini-map ping is sent out, the instance chat channel will be used instead. The instance chat channel only exists when in a battleground, arena or instance.
+**Party Pet Frames**
+
+I ported over my previously stand-alone party pet frames addon into UIC. Back in vanilla the default party frames used to show party pet frames as well. This feature seems to have been hidden behind a console variable and the power frames dropped somewhere around patch 7.0.3. This module enables the console variable and implements the missing power bars. While porting this addon, I changed it to be more in line with the current state of the party pet frames of the modern client that classic now uses.
+
+**Ping Announcer**
+
+This is my second stand-alone addon that I ported. It listens to the player pinging in the mini-map on a marker with text and sends a message to chat mentioning the player's name, marker text and direction (in relation to the player). While porting this addon, I added the option to selectively disable its functionality while in a battleground, arena, raid or just a party. The module defaults to party chat, but if Control (CTRL) is pressed while the mini-map ping is sent out, the instance chat channel will be used instead. The instance chat channel only exists when in a battleground, arena or instance.
 
 Please let me know if you encounter any issues as I currently don't have a max level character that I'm playing with.
 

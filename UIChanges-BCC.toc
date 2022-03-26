@@ -17,7 +17,7 @@
 
 ## Interface: 20503
 ## Title: UIChanges
-## Version: 1.0.0
+## Version: 1.0.1
 ## Notes: Simple additions to the classic UI to make it nicer.
 ## SavedVariablesPerCharacter: UIC_AHT_IsEnabled, UIC_AFR_IsEnabled, UIC_AFR_EnteredCombat, UIC_PPF_IsEnabled, UIC_PA_IsEnabled, UIC_PA_Party, UIC_PA_Battleground, UIC_PA_Raid, UIC_PA_Arena
 

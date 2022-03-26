@@ -24,6 +24,7 @@ local mainFrame, errorFrame, attackTimer
 local ERROR_FAILURE = 50
 local ERROR_DIRECTION = 254 -- Wrong melee direction
 local ERROR_RANGE_MELEE = 255
+local ERROR_TOO_FAR_TO_INTERACT = 264 -- For the mailbox
 local ERROR_RANGE_SPELL = 363
 local ERROR_CANT_INTERACT = 825
 
@@ -33,6 +34,26 @@ local SPELL_ID_SHOOT_GUN = 7918
 local SPELL_ID_SHOOT_CROSSBOW = 7919
 
 local TIMER_INTERVAL = 4 -- Seconds
+
+local MessageMap = {
+  [ERR_BADATTACKPOS] = true,
+  [ERR_BADATTACKFACING] = true,
+  [SPELL_FAILED_UNIT_NOT_INFRONT] = true,
+  [SPELL_FAILED_MOVING] = true,
+  [ERR_OUT_OF_RANGE] = true,
+  [ACTION_SPELL_INTERRUPT] = true,
+  [SPELL_FAILED_TOO_CLOSE] = true,
+  [INTERRUPTED] = true,
+  [LOSS_OF_CONTROL_DISPLAY_INTERRUPT] = true,
+  [LOSS_OF_CONTROL_DISPLAY_SCHOOL_INTERRUPT] = true,
+  [SPELL_FAILED_INTERRUPTED] = true,
+  [SPELL_FAILED_INTERRUPTED_COMBAT] = true,
+  [ERR_TOO_FAR_TO_INTERACT] = true,
+  [ERR_SPELL_COOLDOWN] = true,
+  [ERR_ABILITY_COOLDOWN] = true,
+  [ERR_USE_TOO_FAR] = true,
+  ['PLAYER_REGEN_DISABLED'] = function() return _G['UIC_AFR_EnteredCombat'] end
+}
 
 local isDamageTaken = function(type)
   return type == 'DODGE' or type == 'BLOCK' or type == 'WOUND' or type == 'PARRY'
@@ -52,6 +73,11 @@ local isInterruptedMessage = function(message)
     message == SPELL_FAILED_INTERRUPTED_COMBAT
 end
 
+local isCantInteractMessage = function(errorType, message)
+  return (errorType == ERROR_CANT_INTERACT and message == ERR_TOO_FAR_TO_INTERACT) or
+    (errorType == ERROR_TOO_FAR_TO_INTERACT and message == ERR_USE_TOO_FAR)
+end
+
 local setErrorFrame = function(errorType, message)
   local size = 40
   local offsetX = 0
@@ -67,7 +93,7 @@ local setErrorFrame = function(errorType, message)
     textureName = 'Interface\\CURSOR\\UnableCast'
     offsetX = 1
     offsetY = -2
-  elseif errorType == ERROR_CANT_INTERACT and message == ERR_TOO_FAR_TO_INTERACT then
+  elseif isCantInteractMessage(errorType, message) then
     textureName = 'Interface\\CURSOR\\UnableInteract'
     offsetX = 1
     offsetY = -2
@@ -82,6 +108,8 @@ local setErrorFrame = function(errorType, message)
     end
   elseif message == 'PLAYER_REGEN_DISABLED' then
     textureName = 'Interface\\PVPFrame\\Icon-Combat'
+  elseif message == ERR_SPELL_COOLDOWN or message == ERR_ABILITY_COOLDOWN then
+    textureName = 'Interface\\ICONS\\INV_Misc_PocketWatch_01'
   end
 
   if textureName then
@@ -113,21 +141,15 @@ local spellCastSuccess = function(unitTarget, castGUID, spellID)
 end
 
 local isRelevantMessage = function(message)
-  return
-    message == ERR_BADATTACKPOS or
-    message == ERR_BADATTACKFACING or
-    message == SPELL_FAILED_UNIT_NOT_INFRONT or
-    message == SPELL_FAILED_MOVING or
-    message == ERR_OUT_OF_RANGE or
-    message == ACTION_SPELL_INTERRUPT or
-    message == SPELL_FAILED_TOO_CLOSE or
-    message == INTERRUPTED or
-    message == LOSS_OF_CONTROL_DISPLAY_INTERRUPT or
-    message == LOSS_OF_CONTROL_DISPLAY_SCHOOL_INTERRUPT or
-    message == SPELL_FAILED_INTERRUPTED or
-    message == SPELL_FAILED_INTERRUPTED_COMBAT or
-    message == ERR_TOO_FAR_TO_INTERACT or
-    message == 'PLAYER_REGEN_DISABLED' and _G['UIC_AFR_EnteredCombat']
+  local lookup = MessageMap[message]
+
+  if lookup == nil then
+    return false
+  elseif type(lookup) == 'function' then
+    return lookup()
+  else
+    return lookup
+  end
 end
 
 local gotUIErrorMessage = function(errorType, message)

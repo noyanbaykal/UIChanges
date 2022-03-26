@@ -53,6 +53,7 @@ local MessageMap = {
   [ERR_SPELL_COOLDOWN] = true,
   [ERR_ABILITY_COOLDOWN] = true,
   [ERR_USE_TOO_FAR] = true,
+  [SPELL_FAILED_LINE_OF_SIGHT ] = true,
   ['PLAYER_REGEN_DISABLED'] = function() return _G['UIC_AFR_EnteredCombat'] end
 }
 
@@ -106,6 +107,8 @@ local setErrorFrame = function(errorType, message)
       textureName = 'Interface\\CURSOR\\UnableCrosshairs'
     elseif isInterruptedMessage(message) then
       textureName = 'Interface\\CURSOR\\UnableUI-Cursor-Move'
+    elseif message == SPELL_FAILED_LINE_OF_SIGHT then
+      textureName = 'Interface\\ICONS\\INV_Misc_Eye_01'
     end
   elseif message == 'PLAYER_REGEN_DISABLED' then
     textureName = 'Interface\\PVPFrame\\Icon-Combat'

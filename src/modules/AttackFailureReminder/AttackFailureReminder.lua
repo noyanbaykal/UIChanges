@@ -27,6 +27,7 @@ local ERROR_RANGE_MELEE = 255
 local ERROR_TOO_FAR_TO_INTERACT = 264 -- For the mailbox
 local ERROR_RANGE_SPELL = 363
 local ERROR_CANT_INTERACT = 825
+local ERROR_CANT_INTERACT_TBCC = 826
 
 local SPELL_ID_SHOOT_BOW = 2480
 local SPELL_ID_SHOOT_WAND = 5019
@@ -74,7 +75,7 @@ local isInterruptedMessage = function(message)
 end
 
 local isCantInteractMessage = function(errorType, message)
-  return (errorType == ERROR_CANT_INTERACT and message == ERR_TOO_FAR_TO_INTERACT) or
+  return ((errorType == ERROR_CANT_INTERACT or errorType == ERROR_CANT_INTERACT_TBCC) and message == ERR_TOO_FAR_TO_INTERACT) or
     (errorType == ERROR_TOO_FAR_TO_INTERACT and message == ERR_USE_TOO_FAR)
 end
 

@@ -21,7 +21,11 @@ Currently the following errors will display the icon:
   Unable to attack / shoot / cast due to direction (not facing target)
   Unable to cast due to distance (shoot wand is considered casting, same as spells)
   Cast interrupted due to movement
-  Unable to interact due to distance.
+  Unable to interact due to distance
+  Target not in line of sight
+  Ability / spell on cooldown
+  Entered combat (needs to be enabled in the options page)
+  No energy/mana/rage (needs to be enabled in the options page)
 
 **Party Pet Frames**
 

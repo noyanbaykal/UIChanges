@@ -39,6 +39,7 @@ UI_CHANGES_CONSTANTS.MODULES = {
     ['description'] = L.AFR,
     ['subToggles'] = {
       {'UIC_AFR_EnteredCombat', L.ENTERED_COMBAT_CHECKBOX},
+      {'UIC_AFR_NoResource', L.NO_RESOURCE_CHECKBOX}
     },
   },
   {

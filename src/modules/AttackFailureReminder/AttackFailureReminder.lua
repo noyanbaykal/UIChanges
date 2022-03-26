@@ -36,6 +36,10 @@ local SPELL_ID_SHOOT_CROSSBOW = 7919
 
 local TIMER_INTERVAL = 4 -- Seconds
 
+local showNoResourceReminder = function()
+  return _G['UIC_AFR_NoResource']
+end
+
 local MessageMap = {
   [ERR_BADATTACKPOS] = true,
   [ERR_BADATTACKFACING] = true,
@@ -54,6 +58,12 @@ local MessageMap = {
   [ERR_ABILITY_COOLDOWN] = true,
   [ERR_USE_TOO_FAR] = true,
   [SPELL_FAILED_LINE_OF_SIGHT ] = true,
+  [ERR_OUT_OF_RAGE] = showNoResourceReminder,
+  [OUT_OF_RAGE] = showNoResourceReminder,
+  [ERR_OUT_OF_ENERGY] = showNoResourceReminder,
+  [OUT_OF_ENERGY] = showNoResourceReminder,
+  [ERR_OUT_OF_MANA] = showNoResourceReminder,
+  [OUT_OF_MANA] = showNoResourceReminder,
   ['PLAYER_REGEN_DISABLED'] = function() return _G['UIC_AFR_EnteredCombat'] end
 }
 
@@ -114,6 +124,12 @@ local setErrorFrame = function(errorType, message)
     textureName = 'Interface\\PVPFrame\\Icon-Combat'
   elseif message == ERR_SPELL_COOLDOWN or message == ERR_ABILITY_COOLDOWN then
     textureName = 'Interface\\ICONS\\INV_Misc_PocketWatch_01'
+  elseif message == ERR_OUT_OF_MANA or message == OUT_OF_MANA then
+    textureName = 'Interface\\ICONS\\Spell_Shadow_ManaBurn'
+  elseif message == ERR_OUT_OF_RAGE or message == OUT_OF_RAGE then
+    textureName = 'Interface\\ICONS\\Ability_Racial_BloodRage'
+  elseif message == ERR_OUT_OF_ENERGY or message == OUT_OF_ENERGY then
+    textureName = 'Interface\\ICONS\\ClassIcon_Rogue'
   end
 
   if textureName then

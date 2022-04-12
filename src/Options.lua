@@ -103,14 +103,15 @@ local createModuleOptions = function(moduleInfo)
   if subToggles then
     cvarMap[changeKey]['subFrames'] = {}
 
+    local subtoggleEntries = subToggles['entries']
     local subFrames = cvarMap[changeKey]['subFrames']
     local subLeftAnchor = checkbox
 
-    for i = 1, #subToggles do
-        local subChangeKey = subToggles[i][1]
-        local subTitle = subToggles[i][2]
+    for i = 1, #subtoggleEntries do
+        local subChangeKey = subtoggleEntries[i][1]
+        local subTitle = subtoggleEntries[i][2]
         local subLabel = checkbox:GetName()..'_'..subTitle
-        local offsetX = i == 1 and 0 or 72
+        local offsetX = i == 1 and 0 or subToggles['offsetX']
 
         local subCheckbox = createCheckBox(subLabel, subTitle, subChangeKey)
         subCheckbox:SetPoint('LEFT', subLeftAnchor, 'RIGHT', offsetX, 0)
@@ -122,9 +123,15 @@ local createModuleOptions = function(moduleInfo)
 
         cvarMap[subChangeKey] = {} 
         cvarMap[subChangeKey]['checkbox'] = subCheckbox
+
+        -- A subToggle with this index set means that upon changes, we need the module to update
+        -- so we need to store the frame reference
+        if subtoggleEntries[i][3] == true then
+          cvarMap[subChangeKey]['mainFrame'] = cvarMap[changeKey]['frame']
+        end
     end
 
-    local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subToggles[#subToggles][2]
+    local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subtoggleEntries[#subtoggleEntries][2]
     lastFrameTop = _G[lastAddedSubCheckboxName]
   end
 end
@@ -171,16 +178,23 @@ local applyChange = function(savedVariableName, newValue)
     end
   end
 
-  if cvarMap[savedVariableName] ~= nil and cvarMap[savedVariableName]['frame'] then
-    local frame = cvarMap[savedVariableName]['frame']
-    if newValue then
-      frame:Enable()
-    else
-      frame:Disable()
+  _G[savedVariableName] = newValue
+
+  if cvarMap[savedVariableName] ~= nil then
+    if cvarMap[savedVariableName]['frame'] then
+      local frame = cvarMap[savedVariableName]['frame']
+
+      if newValue then
+        frame:Enable()
+      else
+        frame:Disable()
+      end
+    elseif cvarMap[savedVariableName]['mainFrame'] ~= nil then
+      local frame = cvarMap[savedVariableName]['mainFrame']
+
+      frame:Update(savedVariableName, newValue)
     end
   end
-  
-  _G[savedVariableName] = newValue
 end
 
 UIC_Options = {}
@@ -189,7 +203,7 @@ UIC_Options.Initialize = function()
   cvarMap = {}
   changes = {}
 
-  optionsPanel = CreateFrame('Frame', 'UIC_Options', UIParent)
+  optionsPanel = CreateFrame('Frame', 'UIC_Options', _G['InterfaceOptionsFramePanelContainer'].NineSlice)
   optionsPanel.name = 'UIChanges'
   optionsPanel:Hide()
 

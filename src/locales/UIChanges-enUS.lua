@@ -33,9 +33,10 @@ UI_CHANGES_LOCALE.SINGLE_BUYOUT = 'Single buyout price: '
 -- ~AHTooltips
 
 -- AFR
-UI_CHANGES_LOCALE.AFR = {'Makes some failure related UI Error messages more visible by adding an icon above the messages.'}
-UI_CHANGES_LOCALE.ENTERED_COMBAT_CHECKBOX = 'Entered Combat Warning'
+UI_CHANGES_LOCALE.AFR = {'Makes some UI Error messages more visible by adding an icon above the messages.'}
+UI_CHANGES_LOCALE.ENTERED_COMBAT_CHECKBOX = 'Combat Warning'
 UI_CHANGES_LOCALE.NO_RESOURCE_CHECKBOX = 'No Resource Warning'
+UI_CHANGES_LOCALE.TARGETFRAME_CHECKBOX = 'Anchor to TargetFrame'
 -- ~AFR
 
 -- PartyPetFrames

@@ -38,8 +38,12 @@ UI_CHANGES_CONSTANTS.MODULES = {
     ['title'] = 'Attack Failure Reminder',
     ['description'] = L.AFR,
     ['subToggles'] = {
-      {'UIC_AFR_EnteredCombat', L.ENTERED_COMBAT_CHECKBOX},
-      {'UIC_AFR_NoResource', L.NO_RESOURCE_CHECKBOX}
+      ['offsetX'] = 35,
+      ['entries'] = {
+        {'UIC_AFR_EnteredCombat', L.ENTERED_COMBAT_CHECKBOX},
+        {'UIC_AFR_NoResource', L.NO_RESOURCE_CHECKBOX},
+        {'UIC_AFR_TargetFrame', L.TARGETFRAME_CHECKBOX, true},
+      }
     },
   },
   {
@@ -57,10 +61,13 @@ UI_CHANGES_CONSTANTS.MODULES = {
     ['title'] = 'Ping Announcer',
     ['description'] = L.PA,
     ['subToggles'] = {
-      {'UIC_PA_Raid', L.RAID},
-      {'UIC_PA_Arena', L.ARENA},
-      {'UIC_PA_Battleground', L.BATTLEGROUND},
-      {'UIC_PA_Party', L.PARTY},
+      ['offsetX'] = 72,
+      ['entries'] = {
+        {'UIC_PA_Raid', L.RAID},
+        {'UIC_PA_Arena', L.ARENA},
+        {'UIC_PA_Battleground', L.BATTLEGROUND},
+        {'UIC_PA_Party', L.PARTY},
+      }
     },
   },
 }

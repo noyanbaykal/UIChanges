@@ -46,6 +46,11 @@ local setMissingVariables = function()
     UIC_AFR_NoResource = false
     encounteredNew = true
   end
+
+  if UIC_AFR_TargetFrame == nil then
+    UIC_AFR_TargetFrame = false
+    encounteredNew = true
+  end 
   
   if UIC_PPF_IsEnabled == nil then
     UIC_PPF_IsEnabled = PPF_IsEnabled or false -- Special case for PPF users migrating to UIC

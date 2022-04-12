@@ -180,6 +180,20 @@ local gotUIErrorMessage = function(errorType, message)
   end
 end
 
+local anchorErrorFrame = function()
+  errorFrame:ClearAllPoints()
+
+  if _G['UIC_AFR_TargetFrame'] == true then
+    errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'LEFT', 2, 0)
+    errorFrame:SetPoint('BOTTOM', _G['TargetFramePortrait'], 'TOP', 0, 0)
+  else
+    local uiErrorsFrame = _G['UIErrorsFrame']
+    local offsetX = (uiErrorsFrame:GetWidth() / 2) - (errorFrame:GetWidth() / 2)
+    errorFrame:SetPoint('BOTTOM', uiErrorsFrame, 'TOP', 0, 15)
+    errorFrame:SetPoint('LEFT', uiErrorsFrame, 'LEFT', offsetX, 0)
+  end
+end
+
 local EVENTS = {}
 EVENTS['UI_ERROR_MESSAGE'] = function(...)
   gotUIErrorMessage(...)
@@ -209,19 +223,16 @@ AttackFailureReminder.Initialize = function()
 
   errorFrame = CreateFrame('Frame', 'UIC_AttackFailureReminder_Error', UIParent, 'BackdropTemplate')
   errorFrame:SetSize(56, 56)
-  errorFrame:SetFrameStrata('TOOLTIP')
+  errorFrame:SetFrameStrata('DIALOG')
   errorFrame:SetBackdrop(C.BACKDROP_INFO(16, 4));
   errorFrame:SetBackdropColor(0, 0, 0)
   errorFrame:SetBackdropBorderColor(1, 0, 0)
-  errorFrame:ClearAllPoints()
-
-  local uiErrorsFrame = _G['UIErrorsFrame']
-  local offsetX = (uiErrorsFrame:GetWidth() / 2) - (errorFrame:GetWidth() / 2)
-  errorFrame:SetPoint('BOTTOM', uiErrorsFrame, 'TOP', 0, 15)
-  errorFrame:SetPoint('LEFT', uiErrorsFrame, 'LEFT', offsetX, 0)
-  errorFrame:Hide()
 
   errorFrame.texture = errorFrame:CreateTexture('UIC_AttackFailureReminder_Error_Texture', 'ARTWORK')
+
+  anchorErrorFrame()
+
+  errorFrame:Hide()
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)
     EVENTS[event](...)
@@ -235,6 +246,10 @@ end
 AttackFailureReminder.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
   stopTimer()
+end
+
+AttackFailureReminder.Update = function()
+  anchorErrorFrame()
 end
 
 return AttackFailureReminder

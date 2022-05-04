@@ -37,6 +37,7 @@ UI_CHANGES_LOCALE.AFR = {'Makes some UI Error messages more visible by adding an
 UI_CHANGES_LOCALE.ENTERED_COMBAT_CHECKBOX = 'Combat Warning'
 UI_CHANGES_LOCALE.NO_RESOURCE_CHECKBOX = 'No Resource Warning'
 UI_CHANGES_LOCALE.TARGETFRAME_CHECKBOX = 'Anchor to TargetFrame'
+UI_CHANGES_LOCALE.PLAY_SOUND_CHECKBOX = 'Play sound'
 -- ~AFR
 
 -- PartyPetFrames

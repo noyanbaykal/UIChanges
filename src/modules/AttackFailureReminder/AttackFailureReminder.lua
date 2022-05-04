@@ -137,6 +137,10 @@ local setErrorFrame = function(errorType, message)
     errorFrame.texture:SetSize(size, size)
     errorFrame.texture:SetTexture(textureName)
     errorFrame:Show()
+
+    if _G['UIC_AFR_PlaySound'] == true then
+      PlaySound(8959) -- RAID_WARNING
+    end
   end
 end
 

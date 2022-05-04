@@ -131,6 +131,22 @@ local createModuleOptions = function(moduleInfo)
         end
     end
 
+    -- Separate the subtoggles into rows
+    local rowSize = subToggles['rowSize']
+    if rowSize then
+      local i = rowSize + 1
+
+      while i <= #subtoggleEntries do
+        local prevRowStart = subFrames[i - rowSize]
+        local rowStart = subFrames[i]
+
+        rowStart:SetPoint('LEFT', prevRowStart, 'LEFT', 0, 0)
+        rowStart:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, -4)
+
+        i = i + rowSize
+      end
+    end
+
     local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subtoggleEntries[#subtoggleEntries][2]
     lastFrameTop = _G[lastAddedSubCheckboxName]
   end

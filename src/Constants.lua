@@ -39,9 +39,11 @@ UI_CHANGES_CONSTANTS.MODULES = {
     ['description'] = L.AFR,
     ['subToggles'] = {
       ['offsetX'] = 35,
+      ['rowSize'] = 3,
       ['entries'] = {
         {'UIC_AFR_EnteredCombat', L.ENTERED_COMBAT_CHECKBOX},
         {'UIC_AFR_NoResource', L.NO_RESOURCE_CHECKBOX},
+        {'UIC_AFR_PlaySound', L.PLAY_SOUND_CHECKBOX},
         {'UIC_AFR_TargetFrame', L.TARGETFRAME_CHECKBOX, true},
       }
     },

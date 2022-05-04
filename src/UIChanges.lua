@@ -50,7 +50,12 @@ local setMissingVariables = function()
   if UIC_AFR_TargetFrame == nil then
     UIC_AFR_TargetFrame = false
     encounteredNew = true
-  end 
+  end
+
+  if UIC_AFR_PlaySound == nil then
+    UIC_AFR_PlaySound = false
+    encounteredNew = true
+  end
   
   if UIC_PPF_IsEnabled == nil then
     UIC_PPF_IsEnabled = PPF_IsEnabled or false -- Special case for PPF users migrating to UIC

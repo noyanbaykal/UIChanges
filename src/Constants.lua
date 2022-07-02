@@ -23,6 +23,18 @@ local L = UI_CHANGES_LOCALE
 -- Bundling all constants in a single object to avoid possible conflicts.
 UI_CHANGES_CONSTANTS = {}
 
+UI_CHANGES_CONSTANTS.ENUM_ANCHOR_OPTIONS = {
+  {'Off', nil},
+  {'Top Left',      'TOPLEFT'},
+  {'Top',           'TOP'},
+  {'Top Right',     'TOPRIGHT'},
+  {'Right',         'RIGHT'},
+  {'Bottom Right',  'BOTTOMRIGHT'},
+  {'Bottom',        'BOTTOM'},
+  {'Bottom Left',   'BOTTOMLEFT'},
+  {'Left',          'LEFT'}
+}
+
 UI_CHANGES_CONSTANTS.MODULES = {
   {
     ['savedVariableName'] = 'UIC_AHT_IsEnabled', -- Name of the corresponding savedVariable
@@ -44,7 +56,7 @@ UI_CHANGES_CONSTANTS.MODULES = {
         {'UIC_AFR_EnteredCombat', L.ENTERED_COMBAT_CHECKBOX},
         {'UIC_AFR_NoResource', L.NO_RESOURCE_CHECKBOX},
         {'UIC_AFR_PlaySound', L.PLAY_SOUND_CHECKBOX},
-        {'UIC_AFR_TargetFrame', L.TARGETFRAME_CHECKBOX, true},
+        {'UIC_AFR_TargetFrame', L.TARGETFRAME_CHECKBOX, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
       }
     },
   },
@@ -88,8 +100,8 @@ end
 
 UI_CHANGES_CONSTANTS.BACKDROP_INFO = function(edgeSize, insetSize)
   return {
-    bgFile = "Interface/Tooltips/UI-Tooltip-Background", 
-    edgeFile = "Interface/Tooltips/UI-Tooltip-Border", 
+    bgFile = 'Interface/Tooltips/UI-Tooltip-Background', 
+    edgeFile = 'Interface/Tooltips/UI-Tooltip-Border', 
     edgeSize = edgeSize, 
     insets = { left = insetSize, right = insetSize, top = insetSize, bottom = insetSize }
   }

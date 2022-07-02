@@ -48,7 +48,7 @@ local setMissingVariables = function()
   end
 
   if UIC_AFR_TargetFrame == nil then
-    UIC_AFR_TargetFrame = false
+    UIC_AFR_TargetFrame = 1
     encounteredNew = true
   end
 

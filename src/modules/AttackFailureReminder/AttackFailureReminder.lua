@@ -184,17 +184,54 @@ local gotUIErrorMessage = function(errorType, message)
   end
 end
 
+local errorFrameAnchoringTable = {}
+errorFrameAnchoringTable['TOPLEFT'] = function()
+  errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'LEFT', 2, 0)
+  errorFrame:SetPoint('BOTTOM', _G['TargetFramePortrait'], 'TOP', 0, 5)
+end
+errorFrameAnchoringTable['TOP'] = function()
+  local x = (_G['TargetFrameTextureFrame']:GetRight() - _G['TargetFrameTextureFrame']:GetLeft()) / 4
+  
+  errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'LEFT', x, 0)
+  errorFrame:SetPoint('BOTTOM', _G['TargetFramePortrait'], 'TOP', 0, 5)
+end
+errorFrameAnchoringTable['TOPRIGHT'] = function()
+  errorFrame:SetPoint('RIGHT', _G['TargetFramePortrait'], 'RIGHT', 0)
+  errorFrame:SetPoint('BOTTOM', _G['TargetFramePortrait'], 'TOP', 0, 5)
+end
+errorFrameAnchoringTable['RIGHT'] = function()
+  errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'RIGHT', -10, 0)
+end
+errorFrameAnchoringTable['BOTTOMRIGHT'] = function()
+  errorFrame:SetPoint('RIGHT', _G['TargetFramePortrait'], 'RIGHT', 0)
+  errorFrame:SetPoint('TOP', _G['TargetFramePortrait'], 'BOTTOM', 0, -5)
+end
+errorFrameAnchoringTable['BOTTOM'] = function()
+  local x = (_G['TargetFrameTextureFrame']:GetRight() - _G['TargetFrameTextureFrame']:GetLeft()) / 4
+
+  errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'LEFT', x, 0)
+  errorFrame:SetPoint('TOP', _G['TargetFramePortrait'], 'BOTTOM', 0, -5)
+end
+errorFrameAnchoringTable['BOTTOMLEFT'] = function()
+  errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'LEFT', 2, 0)
+  errorFrame:SetPoint('TOP', _G['TargetFramePortrait'], 'BOTTOM', 0, -5)
+end
+errorFrameAnchoringTable['LEFT'] = function()
+  errorFrame:SetPoint('RIGHT', _G['TargetFrame'], 'LEFT', -10, 6)
+end
+
 local anchorErrorFrame = function()
+  local anchorDirection = C.ENUM_ANCHOR_OPTIONS[_G['UIC_AFR_TargetFrame']][2]
+
   errorFrame:ClearAllPoints()
 
-  if _G['UIC_AFR_TargetFrame'] == true then
-    errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'LEFT', 2, 0)
-    errorFrame:SetPoint('BOTTOM', _G['TargetFramePortrait'], 'TOP', 0, 0)
-  else
+  if anchorDirection == nil then
     local uiErrorsFrame = _G['UIErrorsFrame']
     local offsetX = (uiErrorsFrame:GetWidth() / 2) - (errorFrame:GetWidth() / 2)
     errorFrame:SetPoint('BOTTOM', uiErrorsFrame, 'TOP', 0, 15)
     errorFrame:SetPoint('LEFT', uiErrorsFrame, 'LEFT', offsetX, 0)
+  else
+    errorFrameAnchoringTable[anchorDirection]()
   end
 end
 

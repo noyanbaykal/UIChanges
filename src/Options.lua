@@ -77,8 +77,6 @@ local createCheckBox = function(frameName, title, changeKey)
 end
 
 local createDropDown = function(frameName, title, changeKey, enumTable, onChange)
-  local selectedIndex = _G[changeKey]
-
   local dropdown = CreateFrame('Frame', frameName, optionsPanel, 'UIDropDownMenuTemplate')
   local dropdownLabel = dropdown:CreateFontString(dropdown, 'OVERLAY', 'GameFontNormalSmall')
   dropdownLabel:SetPoint("TOPLEFT", 20, 10)
@@ -86,6 +84,8 @@ local createDropDown = function(frameName, title, changeKey, enumTable, onChange
   -- This is called each time the downArrow button is clicked
   UIDropDownMenu_Initialize(dropdown, function(self, level, _)
     local info = UIDropDownMenu_CreateInfo()
+
+    local selectedIndex = (changes[changeKey] ~= nil and changes[changeKey][2]) or _G[changeKey]
 
     for i, enum in ipairs(enumTable) do
       local label = enum[1]
@@ -232,8 +232,27 @@ local createModuleOptions = function(moduleInfo)
         local prevRowStart = subFrames[i - rowSize]
         local rowStart = subFrames[i]
 
-        rowStart:SetPoint('LEFT', prevRowStart, 'LEFT', 0, 0)
-        rowStart:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, -4)
+        local offsetX = 0
+        local offsetY = -4
+
+        if (subtoggleEntries[i][4] ~= nil) then
+          local typeValue = subtoggleEntries[i][4][1]
+          if (typeValue == 'dropdown') then
+            offsetX = -15
+            offsetY = -16
+          end
+        end
+
+        rowStart:SetPoint('LEFT', prevRowStart, 'LEFT', offsetX, 0)
+        rowStart:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, offsetY)
+
+        local j = i + 1
+        while j < i + rowSize and j < #subtoggleEntries do
+          -- This only handles anchoring to checkboxes!
+          subFrames[j]:SetPoint('LEFT', subFrames[j - rowSize], 'LEFT', 0, 0)
+          subFrames[j]:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, -4)
+          j = j + 1
+        end
 
         i = i + rowSize
       end

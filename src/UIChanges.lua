@@ -17,8 +17,6 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
--- TODO: port PPF
-
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 

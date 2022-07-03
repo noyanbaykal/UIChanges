@@ -228,7 +228,7 @@ AttackFailureReminder.Initialize = function()
   errorFrame = CreateFrame('Frame', 'UIC_AttackFailureReminder_Error', UIParent, 'BackdropTemplate')
   errorFrame:SetSize(56, 56)
   errorFrame:SetFrameStrata('DIALOG')
-  errorFrame:SetBackdrop(C.BACKDROP_INFO(16, 4));
+  errorFrame:SetBackdrop(C.BACKDROP_INFO(16, 4))
   errorFrame:SetBackdropColor(0, 0, 0)
   errorFrame:SetBackdropBorderColor(1, 0, 0)
 

@@ -47,7 +47,7 @@ UI_CHANGES_CONSTANTS.MODULES = {
     ['savedVariableName'] = 'UIC_AFR_IsEnabled',
     ['frameName'] = 'AttackFailureReminder',
     ['label'] = 'AFR',
-    ['title'] = 'Attack Failure Reminder',
+    ['title'] = 'Notification Reminder',
     ['description'] = L.AFR,
     ['subToggles'] = {
       ['offsetX'] = 35,
@@ -56,7 +56,7 @@ UI_CHANGES_CONSTANTS.MODULES = {
         {'UIC_AFR_EnteredCombat', L.ENTERED_COMBAT_CHECKBOX},
         {'UIC_AFR_NoResource', L.NO_RESOURCE_CHECKBOX},
         {'UIC_AFR_PlaySound', L.PLAY_SOUND_CHECKBOX},
-        {'UIC_AFR_TargetFrame', L.TARGETFRAME_CHECKBOX, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
+        {'UIC_AFR_TargetFrame', L.TARGETFRAME_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
       }
     },
   },

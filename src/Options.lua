@@ -20,11 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 
-local gameFontColor = {} -- This will override checkbox texts
+local gameFontColor = {} -- Yellow. This will override checkbox texts
 gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4] = _G['GameFontNormal']:GetTextColor()
 
-local disabledFontColor = {} -- This is used for disabled checkbox texts
+local disabledFontColor = {} -- Gray. This is used for disabled options
 disabledFontColor[1], disabledFontColor[2], disabledFontColor[3], disabledFontColor[4] = _G['GameFontDisable']:GetTextColor()
+
+local whiteFontColor = {1, 1, 1, gameFontColor[4]}
 
 local optionsPanel, changes, cvarMap, lastFrameTop, lastFrameLeft
 
@@ -36,7 +38,7 @@ local subFramesSetEnable = function(subFrames, isSet)
       local r, g, b, a
 
       if isSet then
-        r, g, b, a = gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4]
+        r, g, b, a = whiteFontColor[1], whiteFontColor[2], whiteFontColor[3], whiteFontColor[4]
       else
         r, g, b, a = disabledFontColor[1], disabledFontColor[2], disabledFontColor[3], disabledFontColor[4]
       end
@@ -54,7 +56,7 @@ local createCheckBox = function(frameName, title, changeKey)
   checkbox:SetScript('OnClick', function(self, button, down)
     local newValue = self:GetChecked()
 
-    changes[changeKey] = newValue
+    changes[changeKey] = {_G[changeKey], newValue}
 
     if newValue then
       PlaySound(856) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
@@ -75,20 +77,13 @@ local createCheckBox = function(frameName, title, changeKey)
 end
 
 local createDropDown = function(frameName, title, changeKey, enumTable, onChange)
-
-  -- https://jordanbenge.medium.com/creating-a-wow-dropdown-menu-in-pure-lua-db7b2f9c0364
-  -- https://wowpedia.fandom.com/wiki/Using_UIDropDownMenu
-
-  -- TODO: move above when finished
-  
-
   local selectedIndex = _G[changeKey]
-  local dropdownWidth = 150
 
   local dropdown = CreateFrame('Frame', frameName, optionsPanel, 'UIDropDownMenuTemplate')
-  local dropdownLabel = dropdown:CreateFontString(dropdown, 'OVERLAY', 'GameFontNormal')
-  dropdownLabel:SetPoint("TOPLEFT", 20, 12)
+  local dropdownLabel = dropdown:CreateFontString(dropdown, 'OVERLAY', 'GameFontNormalSmall')
+  dropdownLabel:SetPoint("TOPLEFT", 20, 10)
 
+  -- This is called each time the downArrow button is clicked
   UIDropDownMenu_Initialize(dropdown, function(self, level, _)
     local info = UIDropDownMenu_CreateInfo()
 
@@ -96,51 +91,33 @@ local createDropDown = function(frameName, title, changeKey, enumTable, onChange
       local label = enum[1]
       local value = enum[2]
 
-      info.text = label;
-      info.arg1 = i
+      info.text = label
+      info.arg1 = changeKey
+      info.arg2 = i
 
       if i == selectedIndex then
         info.checked = true
-        UIDropDownMenu_SetText(dropdown, WrapTextInColorCode(label, "FFFFFFFF"))
+        UIDropDownMenu_SetText(dropdown, label)
       else
         info.checked = false
       end
 
-      info.func = function(self, arg1)
-        UIDropDownMenu_SetText(dropdown, WrapTextInColorCode(label, "FFFFFFFF"))
-        UIDropDownMenu_SetSelectedName(dropdown, label)
-        UIDropDownMenu_SetSelectedValue(dropdown, value)
+      info.func = function(self, arg1, arg2)
+        UIDropDownMenu_SetText(dropdown, label)
         self.checked = true
 
-        -- TODO: do we need a onChange func passed in? we need to set the variable and invoke sideeffects
-        --onChange(i, enum[2])
-
-        -- We'll use dropdownLabel to get stringWidths on the labels and hold on to the largest width
-        dropdownLabel:SetText(title)
-        local width = dropdownLabel:GetStringWidth() + 20
-        if width > dropdownWidth then
-          dropdownWidth = width
-        end
+        changes[arg1] = {_G[arg1], arg2}
       end
 
       UIDropDownMenu_AddButton(info)
     end
   end)
 
-  UIDropDownMenu_SetWidth(dropdown, dropdownWidth)
   dropdownLabel:SetText(title)
 
   dropdown['SetValue'] = function(self, newValue)
-    -- TODO
-    -- send click event
-    -- set newValue
-
-    -- if input is nil, revert to default value
-
-    print('dd got setValue:', newValue)
-    -- print(dump(newValue))
-    --pp(newValue)
-
+    local newLabel = enumTable[newValue][1]
+    UIDropDownMenu_SetText(dropdown, newLabel)
   end
 
   dropdown['SetEnabled'] = function(self, isSet)
@@ -154,19 +131,33 @@ local createDropDown = function(frameName, title, changeKey, enumTable, onChange
   return dropdown
 end
 
-local createSubtoggleFrame = function(subChangeKey, subTitle, controlType, subLabel)
+local createSubOptionFrame = function(subLeftAnchor, offsetX, lastFrameTop, subChangeKey, subTitle, controlType, subLabel)
+  local subOption, nextSubLeftAnchor
+  local subOffsetX = 0
+  local subOffsetY = 0
+
+  subLabel = subLabel:gsub("%s+", "_")
+
   if controlType ~= nil then
-    local type = controlType[1]
+    local typeValue = controlType[1]
     local enum = C[controlType[2]]
 
-    if type == 'dropdown' then
-      local subToggle = createDropDown(subLabel, subTitle, subChangeKey, enum)
-      return subToggle
+    if typeValue == 'dropdown' then
+      subOption = createDropDown(subLabel, subTitle, subChangeKey, enum)
+      nextSubLeftAnchor = subOption
+      subOffsetX = -18
+      subOffsetY = -18
     end
+  else
+    subOption = createCheckBox(subLabel, subTitle, subChangeKey)
+    nextSubLeftAnchor = subOption.Text
+    subOffsetY = -10
   end
 
-  local subToggle = createCheckBox(subLabel, subTitle, subChangeKey)
-  return subToggle
+  subOption:SetPoint('LEFT', subLeftAnchor, 'RIGHT', offsetX + subOffsetX, 0)
+  subOption:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, subOffsetY)
+
+  return subOption, nextSubLeftAnchor
 end
 
 local createModuleOptions = function(moduleInfo)
@@ -215,18 +206,17 @@ local createModuleOptions = function(moduleInfo)
         local subLabel = checkbox:GetName()..'_'..subTitle
         local offsetX = i == 1 and 0 or subToggles['offsetX']
 
-        local subOption = createSubtoggleFrame(subChangeKey, subTitle, controlType, subLabel)
-        subOption:SetPoint('LEFT', subLeftAnchor, 'RIGHT', offsetX, 0)
-        subOption:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, -10)
-
-        subLeftAnchor = subOption.Text
-
+        local subOption, nextSubLeftAnchor = createSubOptionFrame(subLeftAnchor, offsetX, lastFrameTop,
+          subChangeKey, subTitle, controlType, subLabel)
+        
+        subLeftAnchor = nextSubLeftAnchor
+        
         subFrames[#subFrames + 1] = subOption
 
         cvarMap[subChangeKey] = {} 
         cvarMap[subChangeKey]['option'] = subOption
 
-        -- A subToggle with this index set means that upon changes, we need the module to update
+        -- A subToggle with this index set means that upon modification, we need the module to update
         -- so we need to store the frame reference
         if changeNeedsRestart then
           cvarMap[subChangeKey]['mainFrame'] = cvarMap[changeKey]['frame']
@@ -249,7 +239,8 @@ local createModuleOptions = function(moduleInfo)
       end
     end
 
-    local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subtoggleEntries[#subtoggleEntries][2]
+    local subToggleFrameName = subtoggleEntries[#subtoggleEntries][2]:gsub("%s+", "_")
+    local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subToggleFrameName
     lastFrameTop = _G[lastAddedSubCheckboxName]
   end
 end
@@ -337,8 +328,8 @@ UIC_Options.Initialize = function()
   end)
 
   optionsPanel.okay = function(...)
-    for savedVariableName, newValue in pairs(changes) do
-      applyChange(savedVariableName, newValue)
+    for savedVariableName, values in pairs(changes) do
+      applyChange(savedVariableName, values[2])
     end
 
     changes = {}
@@ -347,8 +338,8 @@ UIC_Options.Initialize = function()
   optionsPanel.cancel = function(...)
     DEFAULT_CHAT_FRAME:AddMessage(L.CHANGES_CANCELLED)
 
-    for savedVariableName, newValue in pairs(changes) do
-      cvarMap[savedVariableName]['option']:SetValue(not newValue)
+    for savedVariableName, values in pairs(changes) do
+      cvarMap[savedVariableName]['option']:SetValue(values[1])
     end
 
     changes = {}

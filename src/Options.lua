@@ -235,9 +235,9 @@ local createModuleOptions = function(moduleInfo)
         local offsetX = 0
         local offsetY = -4
 
-        if (subtoggleEntries[i][4] ~= nil) then
+        if subtoggleEntries[i][4] ~= nil then
           local typeValue = subtoggleEntries[i][4][1]
-          if (typeValue == 'dropdown') then
+          if typeValue == 'dropdown' then
             offsetX = -15
             offsetY = -16
           end

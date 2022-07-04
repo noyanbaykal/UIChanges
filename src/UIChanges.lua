@@ -45,7 +45,7 @@ local setMissingVariables = function()
     encounteredNew = true
   end
 
-  if UIC_AFR_TargetFrame == nil then
+  if UIC_AFR_TargetFrame == nil or type(UIC_AFR_TargetFrame) ~= 'number' then
     UIC_AFR_TargetFrame = 1
     encounteredNew = true
   end
@@ -118,7 +118,7 @@ mainFrame:Hide()
 mainFrame:RegisterEvent('PLAYER_LOGIN')
 
 mainFrame:SetScript('OnEvent', function(self, event, ...)
-  if (event == 'PLAYER_LOGIN') then
+  if event == 'PLAYER_LOGIN' then
     initialize()
   end
 end)

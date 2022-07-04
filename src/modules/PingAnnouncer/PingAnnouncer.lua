@@ -126,7 +126,7 @@ local handlePing = function(unitId, x, y)
 
   -- Throttle if needed
   local currentTime = time()
-  if(currentTime - lastPingTime < MINIMUM_SECONDS) then
+  if currentTime - lastPingTime < MINIMUM_SECONDS then
     return
   else
     lastPingTime = currentTime

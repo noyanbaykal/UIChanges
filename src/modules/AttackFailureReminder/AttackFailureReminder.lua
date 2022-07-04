@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 local C = UI_CHANGES_CONSTANTS
 
-local mainFrame, errorFrame, attackTimer
+local mainFrame, errorFrame, breathFrame, attackTimer, breathTimer, breathValues
 
 local ERROR_FAILURE = 50
 local ERROR_DIRECTION = 254 -- Wrong melee direction
@@ -35,6 +35,7 @@ local SPELL_ID_SHOOT_GUN = 7918
 local SPELL_ID_SHOOT_CROSSBOW = 7919
 
 local TIMER_INTERVAL = 4 -- Seconds
+local BREATH_TIMER_INTERVAL = 1 -- Seconds
 
 local showNoResourceReminder = function()
   return _G['UIC_AFR_NoResource']
@@ -141,6 +142,70 @@ local setErrorFrame = function(errorType, message)
     if _G['UIC_AFR_PlaySound'] == true then
       PlaySound(8959) -- RAID_WARNING
     end
+  end
+end
+
+local updateBreathFrame = function()
+  if not breathValues or breathValues[3] > 0 then
+    breathFrame:Hide()
+    return
+  elseif breathValues[3] == 0 then
+    return
+  end
+
+  local maxSeconds = breathValues[2]
+  local secondsleft = math.max(breathValues[1] + breathValues[3], 0)
+  
+  breathValues[1] = secondsleft
+
+  local index = 1
+  for i = 1, 3 do
+    if _G['MirrorTimer'..i..'Text']:GetText() == BREATH_LABEL then
+      index = i
+      break
+    end
+  end
+
+  local r, g, b = 1, 1, 1
+  if secondsleft <= 10 then
+    r, g, b = 1, 0, 0
+  elseif (maxSeconds / secondsleft) > 2 then
+    r, g, b = 1, 1, 0
+  end
+
+  breathFrame:SetPoint('LEFT', _G['MirrorTimer'..index], 'LEFT', -45, 0)
+  breathFrame:SetPoint('TOP', _G['MirrorTimer'..index], 'TOP', 0, 8)
+
+  breathFrame.title:SetTextColor(r, g, b)
+  breathFrame.title:SetText(secondsleft)
+
+  breathFrame:Show()
+end
+
+local breathStop = function()
+  if breathTimer and not breathTimer:IsCancelled() then
+    breathTimer:Cancel()
+  end
+
+  breathValues = nil
+
+  updateBreathFrame()
+end
+
+local breathStart = function(value, maxValue, scale, paused)
+  if breathTimer and not breathTimer:IsCancelled() then
+    breathTimer:Cancel()
+  end
+
+  local secondsleft = math.floor((value / 1000) / math.abs(scale))
+  local maxSeconds = math.floor(maxValue / 1000)
+
+  breathValues = {secondsleft - scale, maxSeconds, scale} -- The initial secondsleft value needs to be padded with 1 scale
+
+  updateBreathFrame()
+
+  if paused ~= 1 then
+    breathTimer = C_Timer.NewTicker(BREATH_TIMER_INTERVAL, updateBreathFrame)
   end
 end
 
@@ -256,12 +321,33 @@ EVENTS['PLAYER_TARGET_CHANGED'] = function()
   stopTimer()
 end
 
-AttackFailureReminder = {}
+EVENTS['MIRROR_TIMER_START'] = function(timerName, value, maxValue, scale, paused, timerLabel)
+  if timerName == 'BREATH' then
+    breathStart(value, maxValue, scale, paused)
+  end
+end
 
-AttackFailureReminder.Initialize = function()
-  mainFrame = CreateFrame('Frame', 'UIC_AttackFailureReminder', UIParent)
-  mainFrame:Hide()
+EVENTS['MIRROR_TIMER_STOP'] = function(timerName)
+  if timerName == 'BREATH' then
+    breathStop()
+  end
+end
 
+local initializeBreathFrame = function()
+  breathFrame = CreateFrame('Frame', 'UIC_AFR_BREATH', _G['MirrorTimer1'], 'BackdropTemplate')
+  breathFrame:SetSize(32, 32)
+  breathFrame:SetFrameStrata('TOOLTIP')
+  breathFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
+  breathFrame:SetBackdropColor(0, 0, 0, 1)
+
+  breathFrame.title = breathFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
+  breathFrame.title:SetPoint('CENTER', 0, 0)
+  breathFrame.title:SetJustifyH('RIGHT')
+
+  breathFrame:Hide()
+end
+
+local initializeErrorFrame = function()
   errorFrame = CreateFrame('Frame', 'UIC_AttackFailureReminder_Error', UIParent, 'BackdropTemplate')
   errorFrame:SetSize(56, 56)
   errorFrame:SetFrameStrata('DIALOG')
@@ -272,8 +358,17 @@ AttackFailureReminder.Initialize = function()
   errorFrame.texture = errorFrame:CreateTexture('UIC_AttackFailureReminder_Error_Texture', 'ARTWORK')
 
   anchorErrorFrame()
-
   errorFrame:Hide()
+end
+
+AttackFailureReminder = {}
+
+AttackFailureReminder.Initialize = function()
+  mainFrame = CreateFrame('Frame', 'UIC_AttackFailureReminder', UIParent)
+  mainFrame:Hide()
+
+  initializeErrorFrame()
+  initializeBreathFrame()
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)
     EVENTS[event](...)

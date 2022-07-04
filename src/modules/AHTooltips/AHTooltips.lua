@@ -22,7 +22,7 @@ local TIMER_INTERVAL = 0.08 -- Seconds
 local C = UI_CHANGES_CONSTANTS
 
 -- Forward declaring modules
-local mainFrame, hoverTooltip, buyoutTooltip
+local mainFrame, hoverTooltip, buyoutTooltip, calculator
 local trackingTimer
 local loadedAH = false
 
@@ -38,8 +38,11 @@ local function onShow()
   -- The first time the AH is shown, we'll hook into the button onClicks
   if loadedAH == false then
     buyoutTooltip.LoadedAH()
+    calculator.LoadedAH()
     loadedAH = true
   end
+
+  calculator.Show()
   
   trackingTimer = C_Timer.NewTicker(TIMER_INTERVAL, checkFrames)
 end
@@ -56,6 +59,8 @@ local function onClosed()
   if trackingTimer and trackingTimer:IsCancelled() ~= true then
     trackingTimer:Cancel()
   end
+
+  calculator.Hide()
 
   hideTooltips()
 end
@@ -88,6 +93,8 @@ AHTooltips.Initialize = function()
   end
 
   buyoutTooltip = BuyoutTooltip.new()
+
+  calculator = Calculator.new()
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)
     EVENTS[event](...)

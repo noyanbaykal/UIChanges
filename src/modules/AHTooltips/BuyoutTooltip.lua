@@ -58,6 +58,10 @@ local hookAHButtonClicks = function()
 end
 
 local setWarningFramePosition = function()
+  if InCombatLockdown() then
+    return
+  end
+  
   local buyoutTextFrame = _G['BrowseBuyoutButtonText']
   local buyoutTextOffsetX = buyoutTextFrame:GetWidth() / 2
   local warningOffsetX = buyoutTextOffsetX - (warningFrame:GetWidth() / 2)

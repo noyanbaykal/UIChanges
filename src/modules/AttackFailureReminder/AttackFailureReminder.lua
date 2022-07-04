@@ -286,6 +286,10 @@ errorFrameAnchoringTable['LEFT'] = function()
 end
 
 local anchorErrorFrame = function()
+  if InCombatLockdown() then
+    return
+  end
+
   local anchorDirection = C.ENUM_ANCHOR_OPTIONS[_G['UIC_AFR_TargetFrame']][2]
 
   errorFrame:ClearAllPoints()

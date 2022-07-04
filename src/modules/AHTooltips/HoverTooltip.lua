@@ -47,6 +47,10 @@ local updateWarning = function(index, warningLabel)
     return
   end
 
+  if InCombatLockdown() then
+    return
+  end
+
   local relativeFrameX, relativeFrameY
 
   if singleCostFrame:IsVisible() then

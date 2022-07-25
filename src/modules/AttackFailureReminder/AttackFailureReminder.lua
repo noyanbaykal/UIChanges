@@ -59,6 +59,7 @@ local MessageMap = {
   [ERR_ABILITY_COOLDOWN] = true,
   [ERR_USE_TOO_FAR] = true,
   [SPELL_FAILED_LINE_OF_SIGHT ] = true,
+  [SPELL_FAILED_TRY_AGAIN] = true,
   [ERR_OUT_OF_RAGE] = showNoResourceReminder,
   [OUT_OF_RAGE] = showNoResourceReminder,
   [ERR_OUT_OF_ENERGY] = showNoResourceReminder,
@@ -120,6 +121,8 @@ local setErrorFrame = function(errorType, message)
       textureName = 'Interface\\CURSOR\\UnableUI-Cursor-Move'
     elseif message == SPELL_FAILED_LINE_OF_SIGHT then
       textureName = 'Interface\\ICONS\\INV_Misc_Eye_01'
+    elseif message == SPELL_FAILED_TRY_AGAIN then
+      textureName = 'Interface\\CURSOR\\UnableGatherHerbs'
     end
   elseif message == 'PLAYER_REGEN_DISABLED' then
     textureName = 'Interface\\PVPFrame\\Icon-Combat'

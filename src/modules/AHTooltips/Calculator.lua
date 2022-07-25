@@ -34,8 +34,13 @@ local updateResult = function()
 
   calculatorFrame.timesFrame:SetTextColor(1, g, b, 1)
   calculatorFrame.equalsFrame:SetTextColor(1, g, b, 1)
-  
-  MoneyFrame_Update(resultFrame, newResult)
+
+  if newResult == 0 then
+    resultFrame:Hide()
+  else
+    MoneyInputFrame_SetCopper(resultFrame, newResult)
+    resultFrame:Show()
+  end
 end
 
 local hookFrameScripts = function()
@@ -108,13 +113,15 @@ local initializeFrames = function()
   calculatorFrame.equalsFrame:SetText('=')
 
   local resultFrameName = 'UIC_AHT_Mini_Calculator_Result'
-  resultFrame = CreateFrame('Frame', resultFrameName, calculatorFrame, 'SmallMoneyFrameTemplate')
+  resultFrame = CreateFrame('Frame', resultFrameName, calculatorFrame, 'MoneyInputFrameTemplate')
   resultFrame:SetFrameStrata('TOOLTIP')
-  MoneyFrame_SetType(resultFrame, "STATIC")
+  resultFrame:SetPoint('LEFT', calculatorFrame, 'LEFT', 10, 0)
+  resultFrame:SetPoint('TOP', inputFrame, 'BOTTOM', 0, -6)
+  resultFrame:SetScale(0.9)
 
-  local offsetX = (calculatorFrame:GetWidth() / 2) - (resultFrame:GetWidth() / 2)
-  resultFrame:SetPoint('LEFT', calculatorFrame, 'LEFT', offsetX, 0)
-  resultFrame:SetPoint('TOP', inputFrame, 'BOTTOM', 0, -10)
+  _G[resultFrameName..'Gold']:SetEnabled(false)
+  _G[resultFrameName..'Silver']:SetEnabled(false)
+  _G[resultFrameName..'Copper']:SetEnabled(false)
 
   calculatorFrame:Hide()
 

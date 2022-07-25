@@ -17,10 +17,13 @@
 
 ## Interface: 11403
 ## Title: UIChanges
-## Version: 1.0.4
+## Version: 1.0.5
 ## Notes: Simple additions to the classic UI to make it nicer.
 ## SavedVariablesPerCharacter: UIC_AHT_IsEnabled, UIC_AFR_IsEnabled, UIC_AFR_EnteredCombat, UIC_AFR_NoResource, UIC_AFR_TargetFrame, UIC_AFR_PlaySound, UIC_PPF_IsEnabled, UIC_PA_IsEnabled, UIC_PA_Party, UIC_PA_Battleground, UIC_PA_Raid, UIC_PA_Arena
 
+src\libs\LibStub.lua
+src\libs\LibUIDropDownMenu.xml
+src\libs\LibUIDropDownMenu.lua
 src\locales\UIChanges-enUS.lua
 src\Constants.lua
 src\Options.lua

@@ -17,6 +17,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
+local LibDD = LibStub:GetLibrary("LibUIDropDownMenu-4.0")
+
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 
@@ -77,13 +79,13 @@ local createCheckBox = function(frameName, title, changeKey)
 end
 
 local createDropDown = function(frameName, title, changeKey, enumTable, onChange)
-  local dropdown = CreateFrame('Frame', frameName, optionsPanel, 'UIDropDownMenuTemplate')
+  local dropdown = LibDD:Create_UIDropDownMenu(frameName, optionsPanel)
   local dropdownLabel = dropdown:CreateFontString(dropdown, 'OVERLAY', 'GameFontNormalSmall')
   dropdownLabel:SetPoint("TOPLEFT", 20, 10)
 
   -- This is called each time the downArrow button is clicked
-  UIDropDownMenu_Initialize(dropdown, function(self, level, _)
-    local info = UIDropDownMenu_CreateInfo()
+  LibDD:UIDropDownMenu_Initialize(dropdown, function(self, level, _)
+    local info = LibDD:UIDropDownMenu_CreateInfo()
 
     local selectedIndex = (changes[changeKey] ~= nil and changes[changeKey][2]) or _G[changeKey]
 
@@ -97,19 +99,18 @@ local createDropDown = function(frameName, title, changeKey, enumTable, onChange
 
       if i == selectedIndex then
         info.checked = true
-        UIDropDownMenu_SetText(dropdown, label)
       else
         info.checked = false
       end
 
       info.func = function(self, arg1, arg2)
-        UIDropDownMenu_SetText(dropdown, label)
+        LibDD:UIDropDownMenu_SetText(dropdown, label)
         self.checked = true
 
         changes[arg1] = {_G[arg1], arg2}
       end
-
-      UIDropDownMenu_AddButton(info)
+      
+      LibDD:UIDropDownMenu_AddButton(info)
     end
   end)
 
@@ -117,14 +118,14 @@ local createDropDown = function(frameName, title, changeKey, enumTable, onChange
 
   dropdown['SetValue'] = function(self, newValue)
     local newLabel = enumTable[newValue][1]
-    UIDropDownMenu_SetText(dropdown, newLabel)
+    LibDD:UIDropDownMenu_SetText(dropdown, newLabel)
   end
 
   dropdown['SetEnabled'] = function(self, isSet)
     if isSet then
-      UIDropDownMenu_EnableDropDown(dropdown)
+      LibDD:UIDropDownMenu_EnableDropDown(dropdown)
     else
-      UIDropDownMenu_DisableDropDown(dropdown)
+      LibDD:UIDropDownMenu_DisableDropDown(dropdown)
     end
   end
 

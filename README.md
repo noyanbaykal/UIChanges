@@ -1,6 +1,6 @@
 # UI Changes
 
-UI Changes consists of modules that implement relatively small changes to improve certain parts of the default UI. The modules can be individually toggled and not all of them are enabled by default. Please check out the in-game addon options page of UI Changes for all the available settings.
+UI Changes consists of modules that implement relatively small changes to improve certain parts of the default UI. The modules can be individually toggled and not all are enabled by default. Please check out the in-game addon options page of UI Changes for all the available settings. UIChanges makes use of LibStub and LibUIDropDownMenu.
 
 **Auction House Tooltips**
 
@@ -11,6 +11,8 @@ Selected entry warning is displayed below the buyout button.
 This addon does not track AH prices and give smart suggestions. It blindly looks at the ratio of buyout / bid and warns you if the ratio is too high.
 If the ratio is >= 8, it displays a red warning sign. A yellow warning sign is displayed for when the ratio is 2 >= x < 8.
 False positives are very much possible. This feature is just to give you a heads up in case you are about to accidentally buyout a scam entry (for example, 40s bid and 311g buyout).
+
+Also provides a simple calculator that takes in a price and a number to multiply it with, to calculate the stack buyout price from a single buyout price.
 
 **Attack Failure Reminder**
 
@@ -24,6 +26,7 @@ Currently the following errors will display the icon:
   Unable to interact due to distance
   Target not in line of sight
   Ability / spell on cooldown
+  Failed attempt
   Entered combat (needs to be enabled in the options page)
   No energy/mana/rage (needs to be enabled in the options page)
 

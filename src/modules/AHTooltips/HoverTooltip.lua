@@ -121,7 +121,6 @@ local initializeFrames = function()
   singleCostFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
   singleCostFrame:SetBackdropColor(0, 0, 0, 1)
   singleCostFrame:SetSize(125, SIZE_Y)
-  singleCostFrame:SetFrameStrata('TOOLTIP')
 
   singleCostFrame.title = singleCostFrame:CreateFontString('UIC_Tooltip_title', 'OVERLAY', 'GameFontNormalSmall2')
   singleCostFrame.title:SetPoint('CENTER', 0, 0)

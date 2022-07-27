@@ -157,7 +157,6 @@ UI_CHANGES_CONSTANTS.CreateWarningFrame = function(frameName)
   warningFrame:SetBackdrop(UI_CHANGES_CONSTANTS.BACKDROP_INFO(8, 1))
   warningFrame:SetBackdropColor(0, 0, 0)
   warningFrame:SetSize(30, 30)
-  warningFrame:SetFrameStrata('TOOLTIP')
   warningFrame:Hide()
 
   warningFrame.texture = warningFrame:CreateTexture(frameName..'_Texture', 'ARTWORK')

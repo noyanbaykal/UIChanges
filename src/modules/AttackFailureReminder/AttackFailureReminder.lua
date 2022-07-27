@@ -343,7 +343,6 @@ end
 local initializeBreathFrame = function()
   breathFrame = CreateFrame('Frame', 'UIC_AFR_BREATH', _G['MirrorTimer1'], 'BackdropTemplate')
   breathFrame:SetSize(32, 32)
-  breathFrame:SetFrameStrata('TOOLTIP')
   breathFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
   breathFrame:SetBackdropColor(0, 0, 0, 1)
 

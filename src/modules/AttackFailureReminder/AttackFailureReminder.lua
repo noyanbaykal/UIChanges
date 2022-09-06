@@ -24,10 +24,9 @@ local mainFrame, errorFrame, breathFrame, attackTimer, breathTimer, breathValues
 local ERROR_FAILURE = 50
 local ERROR_DIRECTION = 254 -- Wrong melee direction
 local ERROR_RANGE_MELEE = 255
-local ERROR_TOO_FAR_TO_INTERACT = 264 -- For the mailbox
+local ERROR_DIRECTION_WOTLK = 260
+local ERROR_RANGE_MELEE_WOTLK = 261
 local ERROR_RANGE_SPELL = 363
-local ERROR_CANT_INTERACT = 825
-local ERROR_CANT_INTERACT_TBCC = 826
 
 local SPELL_ID_SHOOT_BOW = 2480
 local SPELL_ID_SHOOT_WAND = 5019
@@ -87,27 +86,22 @@ local isInterruptedMessage = function(message)
     message == SPELL_FAILED_INTERRUPTED_COMBAT
 end
 
-local isCantInteractMessage = function(errorType, message)
-  return ((errorType == ERROR_CANT_INTERACT or errorType == ERROR_CANT_INTERACT_TBCC) and message == ERR_TOO_FAR_TO_INTERACT) or
-    (errorType == ERROR_TOO_FAR_TO_INTERACT and message == ERR_USE_TOO_FAR)
-end
-
 local setErrorFrame = function(errorType, message)
   local size = 40
   local offsetX = 0
   local offsetY = 0
   local textureName
   
-  if errorType == ERROR_RANGE_MELEE then
+  if errorType == ERROR_RANGE_MELEE or errorType == ERROR_RANGE_MELEE_WOTLK then
     textureName = 'Interface\\CURSOR\\UnableAttack'
-  elseif errorType == ERROR_DIRECTION then
+  elseif errorType == ERROR_DIRECTION  or errorType == ERROR_DIRECTION_WOTLK then
     textureName = 'Interface\\GLUES\\CharacterSelect\\CharacterUndelete'
     size = 52
-  elseif errorType == ERROR_RANGE_SPELL then
+  elseif errorType == ERROR_RANGE_SPELL or message == ERR_SPELL_FAILED_ANOTHER_IN_PROGRESS then
     textureName = 'Interface\\CURSOR\\UnableCast'
     offsetX = 1
     offsetY = -2
-  elseif isCantInteractMessage(errorType, message) then
+  elseif message == ERR_TOO_FAR_TO_INTERACT or message == ERR_USE_TOO_FAR then
     textureName = 'Interface\\CURSOR\\UnableInteract'
     offsetX = 1
     offsetY = -2
@@ -134,6 +128,8 @@ local setErrorFrame = function(errorType, message)
     textureName = 'Interface\\ICONS\\Ability_Racial_BloodRage'
   elseif message == ERR_OUT_OF_ENERGY or message == OUT_OF_ENERGY then
     textureName = 'Interface\\ICONS\\ClassIcon_Rogue'
+  elseif message == ERR_OUT_OF_RANGE then
+    textureName = 'Interface\\CURSOR\\UnableCrosshairs'
   end
 
   if textureName then

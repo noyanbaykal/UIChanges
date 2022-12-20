@@ -120,6 +120,7 @@ local initializeFrames = function()
   singleCostFrame = CreateFrame('Frame', 'UIC_HoverTooltipBuyout', _G['AuctionFrame'], 'BackdropTemplate')
   singleCostFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
   singleCostFrame:SetBackdropColor(0, 0, 0, 1)
+  singleCostFrame:SetFrameStrata('TOOLTIP')
   singleCostFrame:SetSize(125, SIZE_Y)
 
   singleCostFrame.title = singleCostFrame:CreateFontString('UIC_Tooltip_title', 'OVERLAY', 'GameFontNormalSmall2')

@@ -17,9 +17,9 @@
 
 ## Interface: 11403
 ## Title: UIChanges
-## Version: 1.0.5
+## Version: 1.0.7
 ## Notes: Simple additions to the classic UI to make it nicer.
-## SavedVariablesPerCharacter: UIC_AHT_IsEnabled, UIC_AFR_IsEnabled, UIC_AFR_EnteredCombat, UIC_AFR_NoResource, UIC_AFR_TargetFrame, UIC_AFR_PlaySound, UIC_PPF_IsEnabled, UIC_PA_IsEnabled, UIC_PA_Party, UIC_PA_Battleground, UIC_PA_Raid, UIC_PA_Arena
+## SavedVariablesPerCharacter: UIC_AHT_IsEnabled, UIC_AFR_IsEnabled, UIC_AFR_EnteredCombat, UIC_AFR_NoResource, UIC_AFR_TargetFrame, UIC_AFR_PlaySound, UIC_DMB_IsEnabled, UIC_PPF_IsEnabled, UIC_PA_IsEnabled, UIC_PA_Party, UIC_PA_Battleground, UIC_PA_Raid, UIC_PA_Arena
 
 src\libs\LibStub.lua
 src\libs\LibUIDropDownMenu.xml
@@ -32,6 +32,7 @@ src\modules\AHTooltips\BuyoutTooltip.lua
 src\modules\AHTooltips\HoverTooltip.lua
 src\modules\AHTooltips\Calculator.lua
 src\modules\AttackFailureReminder\AttackFailureReminder.lua
+src\modules\DruidManaBar\DruidManaBar.lua
 src\modules\PartyPetFrames\PetPowerBar.lua
 src\modules\PartyPetFrames\PartyPetFrames.lua
 src\modules\PingAnnouncer\PingAnnouncer.lua

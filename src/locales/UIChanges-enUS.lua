@@ -40,6 +40,10 @@ UI_CHANGES_LOCALE.TARGETFRAME_DROPDOWN = 'Anchor to TargetFrame'
 UI_CHANGES_LOCALE.PLAY_SOUND_CHECKBOX = 'Play Sound'
 -- ~AFR
 
+-- DruidManaBar
+UI_CHANGES_LOCALE.DMB = {'Shows the mana bar while shapeshifted into a druid form that does not use mana.'}
+-- ~DruidManaBar
+
 -- PartyPetFrames
 UI_CHANGES_LOCALE.PPF = {'Re-enables the hidden pet frames & adds their missing power bars when using default party frames.', '|cFFFF8000This modifies a console variable! Please remember to disable this first if you\'re going to remove the addon.'}
 UI_CHANGES_LOCALE.CURRENT_CVAR_VALUE = function(enabled)

@@ -61,6 +61,13 @@ UI_CHANGES_CONSTANTS.MODULES = {
     },
   },
   {
+    ['savedVariableName'] = 'UIC_DMB_IsEnabled',
+    ['frameName'] = 'DruidManaBar',
+    ['label'] = 'DMB',
+    ['title'] = 'Druid Mana Bar (Classic Era Only)',
+    ['description'] = L.DMB,
+  },
+  {
     ['savedVariableName'] = 'UIC_PPF_IsEnabled',
     ['frameName'] = 'PartyPetFrames',
     ['consoleVariableName'] = 'showPartyPets', -- Modules that change console variables must be toggled outside of combat

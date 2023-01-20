@@ -80,7 +80,7 @@ end
 
 local createDropDown = function(frameName, title, changeKey, enumTable, onChange)
   local dropdown = LibDD:Create_UIDropDownMenu(frameName, optionsPanel)
-  local dropdownLabel = dropdown:CreateFontString(dropdown, 'OVERLAY', 'GameFontNormalSmall')
+  local dropdownLabel = dropdown:CreateFontString(frameName..'Label', 'OVERLAY', 'GameFontNormalSmall')
   dropdownLabel:SetPoint("TOPLEFT", 20, 10)
 
   -- This is called each time the downArrow button is clicked

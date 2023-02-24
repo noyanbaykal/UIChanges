@@ -25,6 +25,7 @@ UI_CHANGES_LOCALE.OPTIONS_INFO = '|cFFFFFFFFYou can individually toggle modules 
 UI_CHANGES_LOCALE.CVAR_CHANGED = 'UI Changes: Console variable changed, please reload your UI!'
 UI_CHANGES_LOCALE.CANT_CHANGE_IN_COMBAT = 'UI Changes: Unable to change setting while in combat! Please check the options page again after combat.' 
 UI_CHANGES_LOCALE.CHANGES_CANCELLED = 'UI Changes: Options screen cancelled, no changes will be made!'
+UI_CHANGES_LOCALE.CLASSIC_ERA_ONLY = 'Classic Era Only'
 
 -- AHTooltips
 UI_CHANGES_LOCALE.AHT = {'Shows single bid and buyout tooltips in the AH. Also displays a warning sign for possible scams.'}
@@ -39,6 +40,10 @@ UI_CHANGES_LOCALE.NO_RESOURCE_CHECKBOX = 'No Resource Warning'
 UI_CHANGES_LOCALE.TARGETFRAME_DROPDOWN = 'Anchor to TargetFrame'
 UI_CHANGES_LOCALE.PLAY_SOUND_CHECKBOX = 'Play Sound'
 -- ~AFR
+
+-- BagUtilities
+UI_CHANGES_LOCALE.BU = {'Opens clams after picking them up.'}
+-- ~BagUtilities
 
 -- DruidManaBar
 UI_CHANGES_LOCALE.DMB = {'Shows the mana bar while shapeshifted into a druid form that does not use mana.'}

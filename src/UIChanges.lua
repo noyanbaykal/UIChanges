@@ -55,6 +55,11 @@ local setMissingVariables = function()
     encounteredNew = true
   end
 
+  if UIC_BU_IsEnabled == nil then
+    UIC_BU_IsEnabled = true
+    encounteredNew = true
+  end
+
   if UIC_DMB_IsEnabled == nil then
     UIC_DMB_IsEnabled = true
     encounteredNew = true

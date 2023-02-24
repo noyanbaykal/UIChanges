@@ -61,10 +61,17 @@ UI_CHANGES_CONSTANTS.MODULES = {
     },
   },
   {
+    ['savedVariableName'] = 'UIC_BU_IsEnabled',
+    ['frameName'] = 'BagUtilities',
+    ['label'] = 'BU',
+    ['title'] = 'Bag Utilities ('..L.CLASSIC_ERA_ONLY..')',
+    ['description'] = L.BU,
+  },
+  {
     ['savedVariableName'] = 'UIC_DMB_IsEnabled',
     ['frameName'] = 'DruidManaBar',
     ['label'] = 'DMB',
-    ['title'] = 'Druid Mana Bar (Classic Era Only)',
+    ['title'] = 'Druid Mana Bar ('..L.CLASSIC_ERA_ONLY..')',
     ['description'] = L.DMB,
   },
   {

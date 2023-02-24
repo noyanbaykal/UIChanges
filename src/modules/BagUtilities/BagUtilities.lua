@@ -20,6 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 
+-- There will be some false positives but this is much better than reacting to all items
+local CLAM_FILE_IDS = {
+  [134431] = true,  -- Small Barnacled Clam
+  [134432] = true,  -- Thick-shelled Clam
+  [134433] = true,  -- Big-mouth Clam, Soft-shelled Clam, Jaggal Clam
+}
+
 local CLAMS = {
   [5523] = true,  -- Small Barnacled Clam
   [5524] = true,  -- Thick-shelled Clam
@@ -28,39 +35,44 @@ local CLAMS = {
   [24476] = true  -- Jaggal Clam
 }
 
-local mainFrame, awaitingCombatEnd
+local mainFrame, bagsToCheck
 
-local openClams = function()
-  for bag = 0, 4 do
-    local slotCount = GetContainerNumSlots(bag)
+local checkBag = function(bagSlot)
+  local slotCount = GetContainerNumSlots(bagSlot)
 
-    for slot = 0, slotCount do
-      local _, _, locked, _, _, _, _, _, _, itemID, _ = GetContainerItemInfo(bag, slot)
+  for slot = 0, slotCount do
+    local _, _, locked, _, _, _, _, _, _, itemID, _ = GetContainerItemInfo(bagSlot, slot)
 
-      if CLAMS[itemID] then
-        if locked then
-          awaitingCombatEnd = true
-        elseif not InCombatLockdown() then
-          UseContainerItem(bag, slot)
-        end
+    if CLAMS[itemID] then
+      if locked or InCombatLockdown() then
+        bagsToCheck[bagSlot] = true
+      else
+        UseContainerItem(bagSlot, slot)
       end
     end
   end
 end
 
+local openClams = function()
+  for bagSlot, _ in pairs(bagsToCheck) do
+    bagsToCheck[bagSlot] = nil
+    checkBag(bagSlot)
+  end
+end
+
 local EVENTS = {}
 EVENTS['BAG_UPDATE_DELAYED'] = function()
-  if InCombatLockdown() then
-    awaitingCombatEnd = true
-  else
+  if not InCombatLockdown() then
     openClams()
   end
 end
-EVENTS['PLAYER_REGEN_ENABLED'] = function()
-  if awaitingCombatEnd then
-    awaitingCombatEnd = false
-    openClams()
+EVENTS['ITEM_PUSH'] = function(bagSlot, iconFileID)
+  if CLAM_FILE_IDS[iconFileID] then
+    bagsToCheck[bagSlot] = true
   end
+end
+EVENTS['PLAYER_REGEN_ENABLED'] = function()
+  openClams()
 end
 
 local shouldRespond = function()
@@ -77,7 +89,7 @@ BagUtilities.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_BagUtilities', UIParent)
   mainFrame:Hide()
 
-  awaitingCombatEnd = false
+  bagsToCheck = {}
 
   if shouldRespond() then
     mainFrame:SetScript('OnEvent', function(self, event, ...)

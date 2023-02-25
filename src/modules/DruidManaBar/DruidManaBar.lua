@@ -61,7 +61,7 @@ end
 local setManaBarValue = function()
   local mana = UnitPower('player', Enum.PowerType.Mana)
   local manaMax = UnitPowerMax('player', Enum.PowerType.Mana)
-  local percentage = mana / manaMax
+  local percentage = manaMax > 0 and (mana / manaMax) or 0
 
   manaBar:SetValue(percentage)
   manaBar.value:SetText(mana)

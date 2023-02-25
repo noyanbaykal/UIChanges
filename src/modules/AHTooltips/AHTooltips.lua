@@ -17,13 +17,20 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local TIMER_INTERVAL = 0.08 -- Seconds
-
 local C = UI_CHANGES_CONSTANTS
+
+-- These calls differ between classic era and wotlk
+local ALIAS_GetContainerNumSlots
+local ALIAS_GetContainerItemLink
+
+local TIMER_INTERVAL = 0.08 -- Seconds
+local AH_SEARCH_INTERVAL = 0.3 -- Seconds
 
 -- Forward declaring modules
 local mainFrame, hoverTooltip, buyoutTooltip, calculator
 local trackingTimer
+local lastAHSearchTime
+local isWOTLK
 local loadedAH = false
 
 local function checkFrames()
@@ -82,19 +89,85 @@ EVENTS['AUCTION_BIDDER_LIST_UPDATE'] = function()
   hideTooltips()
 end
 
+local function searchItemInAH(bagID, slotID)
+  local item = ALIAS_GetContainerItemLink(bagID, slotID)
+  if item then
+    local itemName = select(1, GetItemInfo(item))
+
+    if isWOTLK then
+      itemName = '"'..itemName..'"'
+    end
+    
+    BrowseName:SetText(itemName)
+    BrowseSearchButton:Click()
+  end
+end
+
+local function quickAHSearch(containerFrame, itemFrameIndex)
+  -- Throttle if needed
+  local currentTime = time()
+  if currentTime - lastAHSearchTime < AH_SEARCH_INTERVAL then
+    return
+  else
+    lastAHSearchTime = currentTime
+  end
+
+  local bagID = containerFrame:GetID()
+  local capacity = ALIAS_GetContainerNumSlots(bagID)
+  local slotID = 1 + (capacity - itemFrameIndex)
+
+  if slotID >= 0 then
+    searchItemInAH(bagID, slotID)
+  end
+end
+
+local function hookContainerFrames()
+  for container = 1, 5 do
+    local containerFrame = _G['ContainerFrame'..container]
+
+    for slot = 1, 20 do
+      local buttonFrame = _G['ContainerFrame'..container..'Item'..slot]
+  
+      if buttonFrame then
+        buttonFrame:HookScript('OnMouseUp', function(self, button)
+          if _G['UIC_AHT_IsEnabled'] and button == 'MiddleButton'
+            and _G['AuctionFrame'] and _G['AuctionFrame']:IsShown() and BrowseName:IsVisible()
+          then
+            quickAHSearch(containerFrame, slot)
+          end
+        end)
+      end
+    end
+  end
+end
+
 AHTooltips = {}
 
 AHTooltips.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_AHTooltips', UIParent)
   mainFrame:Hide()
 
-  if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then -- Apparently this was added to TBCC sometime after release
+  if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then -- This was added to TBCC sometime after release
     hoverTooltip = HoverTooltip.new()
   end
 
   buyoutTooltip = BuyoutTooltip.new()
 
   calculator = Calculator.new()
+
+  if WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
+    ALIAS_GetContainerNumSlots = C_Container.GetContainerNumSlots
+    ALIAS_GetContainerItemLink = C_Container.GetContainerItemLink
+    isWOTLK = true
+  else
+    ALIAS_GetContainerNumSlots = GetContainerNumSlots
+    ALIAS_GetContainerItemLink = GetContainerItemLink
+    isWOTLK = false
+  end
+
+  lastAHSearchTime = time()
+
+  hookContainerFrames()
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)
     EVENTS[event](...)

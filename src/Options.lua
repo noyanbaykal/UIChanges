@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local LibDD = LibStub:GetLibrary("LibUIDropDownMenu-4.0")
+local LibDD = LibStub:GetLibrary('LibUIDropDownMenu-4.0')
 
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
@@ -81,7 +81,7 @@ end
 local createDropDown = function(frameName, title, changeKey, enumTable, onChange)
   local dropdown = LibDD:Create_UIDropDownMenu(frameName, optionsPanel)
   local dropdownLabel = dropdown:CreateFontString(frameName..'Label', 'OVERLAY', 'GameFontNormalSmall')
-  dropdownLabel:SetPoint("TOPLEFT", 20, 10)
+  dropdownLabel:SetPoint('TOPLEFT', 20, 10)
 
   -- This is called each time the downArrow button is clicked
   LibDD:UIDropDownMenu_Initialize(dropdown, function(self, level, _)
@@ -137,7 +137,7 @@ local createSubOptionFrame = function(subLeftAnchor, offsetX, lastFrameTop, subC
   local subOffsetX = 0
   local subOffsetY = 0
 
-  subLabel = subLabel:gsub("%s+", "_")
+  subLabel = subLabel:gsub('%s+', '_')
 
   if controlType ~= nil then
     local typeValue = controlType[1]
@@ -259,7 +259,7 @@ local createModuleOptions = function(moduleInfo)
       end
     end
 
-    local subToggleFrameName = subtoggleEntries[#subtoggleEntries][2]:gsub("%s+", "_")
+    local subToggleFrameName = subtoggleEntries[#subtoggleEntries][2]:gsub('%s+', '_')
     local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subToggleFrameName
     lastFrameTop = _G[lastAddedSubCheckboxName]
   end

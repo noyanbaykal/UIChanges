@@ -1,10 +1,11 @@
 # UI Changes
 
-UI Changes consists of modules that implement relatively small changes to improve certain parts of the default UI. The modules can be individually toggled and not all are enabled by default. Please check out the in-game addon options page of UI Changes for all the available settings. UIChanges makes use of LibStub and LibUIDropDownMenu.
+UI Changes consists of many modules that improve parts of the default UI. The modules can be individually toggled and not all are enabled by default. Please check out the in-game addon options page of UI Changes for all the available settings. UIChanges makes use of LibStub and LibUIDropDownMenu.
 
 **Auction House Tooltips**
 
-Shows the single bid and buyout prices for the entry you're hovering on. While working on this, I noticed that this was added to TBCC so this particular feature is for classic only.
+Provides a calculator that takes in a price and a multiplier, to help with determining the cost of a bunch.
+Shows the single bid and buyout prices for the entry you're hovering on (This feature is classic era only as it is present TBCC onwards).
 Also shows warnings for both the hovered over entry and the selected entry.
 Selected entry warning is displayed below the buyout button.
 
@@ -13,6 +14,7 @@ If the ratio is >= 8, it displays a red warning sign. A yellow warning sign is d
 False positives are very much possible. This feature is just to give you a heads up in case you are about to accidentally buyout a scam entry (for example, 40s bid and 311g buyout).
 
 Also provides a simple calculator that takes in a price and a number to multiply it with, to calculate the stack buyout price from a single buyout price.
+Additionally, clicking on an itemFrame in a bag with the mouse middleButton allows for a quick search while the Browse tab of the AH is visible.
 
 **Attack Failure Reminder**
 
@@ -30,6 +32,12 @@ Currently the following errors will display the icon:
   Entered combat (needs to be enabled in the options page)
   No energy/mana/rage (needs to be enabled in the options page)
 
+**Bag Utilities**
+Opens looted clams to avoid extra work and inventory congestion. UseContainerItem is protected in WOTLK so this feature is classic era only.
+
+**Druid Mana Bar**
+Druid Mana Bar Displays the mana bar underneath the player frame when shapeshifted into a form that does not use mana as a druid. This feature exists in WOTLK classic so this is for classic era only. The mana bar obeys the "Status Text Display" preference under the Interface options.
+
 **Party Pet Frames**
 
 I ported over my previously stand-alone party pet frames addon into UIC. Back in vanilla the default party frames used to show party pet frames as well. This feature seems to have been hidden behind a console variable and the power frames dropped somewhere around patch 7.0.3. This module enables the console variable and implements the missing power bars. While porting this addon, I changed it to be more in line with the current state of the party pet frames of the modern client that classic now uses.
@@ -37,6 +45,7 @@ I ported over my previously stand-alone party pet frames addon into UIC. Back in
 **Ping Announcer**
 
 This is my second stand-alone addon that I ported. It listens to the player pinging in the mini-map on a marker with text and sends a message to chat mentioning the player's name, marker text and direction (in relation to the player). While porting this addon, I added the option to selectively disable its functionality while in a battleground, arena, raid or just a party. The module defaults to party chat, but if Control (CTRL) is pressed while the mini-map ping is sent out, the instance chat channel will be used instead. The instance chat channel only exists when in a battleground, arena or instance.
+The mouse click handlers for the minimap zoom in / out buttons will check for the shift button being held to set the zoom level to max in / out.
 
 Please let me know if you encounter any issues as I currently don't have a max level character that I'm playing with.
 

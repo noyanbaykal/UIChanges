@@ -16,7 +16,7 @@ False positives are very much possible. This feature is just to give you a heads
 Also provides a simple calculator that takes in a price and a number to multiply it with, to calculate the stack buyout price from a single buyout price.
 Additionally, clicking on an itemFrame in a bag with the mouse middleButton allows for a quick search while the Browse tab of the AH is visible.
 
-**Attack Failure Reminder**
+**Notification Reminder**
 
 This module might come in handy for people who'd like the UI Error Messages that are displayed near the top center of the screen to be more prominent. The module adds an icon above the error messages to make sure the error doesn't get lost due to everything else that might be going on in the UI / the game world.
 

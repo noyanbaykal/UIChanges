@@ -68,6 +68,10 @@ local getPingMessage = function(tooltipText, x, y)
     tooltipText = gsub(tooltipText, pattern, substitute)
   end
 
+  if tooltipText == ZOOM_IN or tooltipText == ZOOM_OUT then
+    return nil
+  end
+
   local directionX, directionY = determineDirection(x, y)
 
   local direction
@@ -136,8 +140,9 @@ local handlePing = function(unitId, x, y)
 
   -- Prepare message and let others know
   local messageText = getPingMessage(tooltipText, x, y)
-
-  SendChatMessage(messageText, targetChannel)
+  if messageText then
+    SendChatMessage(messageText, targetChannel)
+  end
 end
 
 local onMinimapZoomChange = function(level)

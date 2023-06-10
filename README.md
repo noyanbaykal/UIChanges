@@ -47,7 +47,9 @@ I ported over my previously stand-alone party pet frames addon into UIC. Back in
 This is my second stand-alone addon that I ported. It listens to the player pinging in the mini-map on a marker with text and sends a message to chat mentioning the player's name, marker text and direction (in relation to the player). While porting this addon, I added the option to selectively disable its functionality while in a battleground, arena, raid or just a party. The module defaults to party chat, but if Control (CTRL) is pressed while the mini-map ping is sent out, the instance chat channel will be used instead. The instance chat channel only exists when in a battleground, arena or instance.
 The mouse click handlers for the minimap zoom in / out buttons will check for the shift button being held to set the zoom level to max in / out.
 
-Please let me know if you encounter any issues as I currently don't have a max level character that I'm playing with.
+This addon hides the minimap worldMap button on classic era.
+
+Please let me know if you encounter any issues.
 
 ### License
 UIChanges

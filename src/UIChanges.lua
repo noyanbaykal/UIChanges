@@ -22,6 +22,14 @@ local L = UI_CHANGES_LOCALE
 
 local modules
 
+local hideEraMiniMapWorldMapButton = function()
+  if MiniMapWorldMapButton then
+    MiniMapWorldMapButton:SetAlpha(0)
+    MiniMapWorldMapButton:SetMouseClickEnabled(false)
+    MiniMapWorldMapButton:SetMouseMotionEnabled(false)
+  end
+end
+
 local setMissingVariables = function()
   local encounteredNew = false
 
@@ -127,8 +135,14 @@ mainFrame:Hide()
 
 mainFrame:RegisterEvent('PLAYER_LOGIN')
 
+if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+  mainFrame:RegisterEvent('PLAYER_ENTERING_WORLD')
+end
+
 mainFrame:SetScript('OnEvent', function(self, event, ...)
   if event == 'PLAYER_LOGIN' then
     initialize()
+  elseif event == 'PLAYER_ENTERING_WORLD' then
+    hideEraMiniMapWorldMapButton()
   end
 end)

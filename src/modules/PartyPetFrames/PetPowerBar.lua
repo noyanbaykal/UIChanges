@@ -17,6 +17,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
+local C = UI_CHANGES_CONSTANTS
+
 PetPowerBar = {}
 
 -- This class isn't a singleton, things need to be defined within new
@@ -45,16 +47,6 @@ PetPowerBar.new = function(index)
   
     return colors.r, colors.g, colors.b
   end
-
-  local function roundToPixelCount(count)
-    if count == 0 then
-      return count
-    elseif count > 0 and count < 1 then
-      return 1
-    else
-      return math.floor(0.5 + count)
-    end
-  end
   
   local function getPowerBarDrawWidth()
     local power = UnitPower(petReference)
@@ -74,7 +66,7 @@ PetPowerBar.new = function(index)
     local width = healthBar:GetWidth()
     local offset = width * 0.04 -- The bar offset is used to better position the power bar inside the existing StatusBar texture
   
-    return roundToPixelCount((width - offset) * percentage / 100)
+    return C.RoundToPixelCount((width - offset) * percentage / 100)
   end
   -- ~Helper functions for displaying the power bar
 

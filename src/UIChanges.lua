@@ -20,7 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 
-local modules
+local onMinimapZoomChange = function(level)
+  Minimap:SetZoom(level)
+
+  -- Call the minimap update function to update the button states
+  Minimap_OnEvent(_G['MiniMap'], 'MINIMAP_UPDATE_ZOOM')
+end
 
 local hideEraMiniMapWorldMapButton = function()
   if MiniMapWorldMapButton then
@@ -33,33 +38,23 @@ end
 local setMissingVariables = function()
   local encounteredNew = false
 
+  if UIC_Toggle_Quick_Zoom == nil then
+    UIC_Toggle_Quick_Zoom = true
+    encounteredNew = true
+  end
+
+  if UIC_Toggle_Hide_Era_Map_Button == nil then
+    UIC_Toggle_Hide_Era_Map_Button = true
+    encounteredNew = true
+  end
+
+  if UIC_AD_IsEnabled == nil then
+    UIC_AD_IsEnabled = true
+    encounteredNew = true
+  end
+
   if UIC_AHT_IsEnabled == nil then
     UIC_AHT_IsEnabled = true
-    encounteredNew = true
-  end
-  
-  if UIC_AFR_IsEnabled == nil then
-    UIC_AFR_IsEnabled = false
-    encounteredNew = true
-  end
-  
-  if UIC_AFR_EnteredCombat == nil then
-    UIC_AFR_EnteredCombat = false
-    encounteredNew = true
-  end
-
-  if UIC_AFR_NoResource == nil then
-    UIC_AFR_NoResource = false
-    encounteredNew = true
-  end
-
-  if UIC_AFR_TargetFrame == nil or type(UIC_AFR_TargetFrame) ~= 'number' then
-    UIC_AFR_TargetFrame = 1
-    encounteredNew = true
-  end
-
-  if UIC_AFR_PlaySound == nil then
-    UIC_AFR_PlaySound = false
     encounteredNew = true
   end
 
@@ -68,40 +63,164 @@ local setMissingVariables = function()
     encounteredNew = true
   end
 
+  if UIC_CR_IsEnabled == nil then
+    UIC_CR_IsEnabled = true
+    encounteredNew = true
+  end
+
+  if UIC_CR_ErrorFrameAnchor == nil or type(UIC_CR_ErrorFrameAnchor) ~= 'number' then
+    UIC_CR_ErrorFrameAnchor = 1
+    encounteredNew = true
+  end
+
+  if UIC_CR_BreathWarning == nil then
+    UIC_CR_BreathWarning = true
+    encounteredNew = true
+  end
+
+  if UIC_CR_BreathWarning_Sound == nil then
+    UIC_CR_BreathWarning_Sound = true
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatWarning == nil then
+    UIC_CR_CombatWarning = true
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatWarning_Sound == nil then
+    UIC_CR_CombatWarning_Sound = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_GatheringFailure == nil then
+    UIC_CR_GatheringFailure = true
+    encounteredNew = true
+  end
+
+  if UIC_CR_GatheringFailure_Sound == nil then
+    UIC_CR_GatheringFailure_Sound = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatLos == nil then
+    UIC_CR_CombatLos = true
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatLos_Sound == nil then
+    UIC_CR_CombatLos_Sound = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatDirection == nil then
+    UIC_CR_CombatDirection = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatDirection_Sound == nil then
+    UIC_CR_CombatDirection_Sound = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatRange == nil then
+    UIC_CR_CombatRange = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatRange_Sound == nil then
+    UIC_CR_CombatRange_Sound = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatInterrupted == nil then
+    UIC_CR_CombatInterrupted = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatInterrupted_Sound == nil then
+    UIC_CR_CombatInterrupted_Sound = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatCooldown == nil then
+    UIC_CR_CombatCooldown = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatCooldown_Sound == nil then
+    UIC_CR_CombatCooldown_Sound = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatNoResource == nil then
+    UIC_CR_CombatNoResource = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_CombatNoResource_Sound == nil then
+    UIC_CR_CombatNoResource_Sound = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_InteractionRange == nil then
+    UIC_CR_InteractionRange = false
+    encounteredNew = true
+  end
+
+  if UIC_CR_InteractionRange_Sound == nil then
+    UIC_CR_InteractionRange_Sound = false
+    encounteredNew = true
+  end
+
   if UIC_DMB_IsEnabled == nil then
     UIC_DMB_IsEnabled = true
     encounteredNew = true
   end
-  
+
+  local isCvarShowPartyPets = GetCVar('showPartyPets') == 1
+
   if UIC_PPF_IsEnabled == nil then
-    UIC_PPF_IsEnabled = PPF_IsEnabled or false -- Special case for PPF users migrating to UIC
+    if isCvarShowPartyPets then
+      UIC_PPF_IsEnabled = true
+    else
+      UIC_PPF_IsEnabled = false
+    end
+
     encounteredNew = true
+  else
+    local cvar = isCvarShowPartyPets
+    local addonVar = UIC_PPF_IsEnabled
+
+    if cvar and addonVar == false then
+      UIC_PPF_IsEnabled = true
+    end
   end
-  
+
   if UIC_PA_IsEnabled == nil then
     UIC_PA_IsEnabled = true
     encounteredNew = true
   end
-  
+
   if UIC_PA_Party == nil then
     UIC_PA_Party = true
     encounteredNew = true
   end
-  
+
   if UIC_PA_Battleground == nil then
-    UIC_PA_Battleground = true
+    UIC_PA_Battleground = false
     encounteredNew = true
   end
-  
+
   if UIC_PA_Raid == nil then
-    UIC_PA_Raid = true
+    UIC_PA_Raid = false
     encounteredNew = true
   end
-  
+
   if UIC_PA_Arena == nil then
-    UIC_PA_Arena = true
+    UIC_PA_Arena = false
     encounteredNew = true
-  end  
+  end
 
   if encounteredNew then
     DEFAULT_CHAT_FRAME:AddMessage(L.FIRST_TIME)
@@ -143,6 +262,20 @@ mainFrame:SetScript('OnEvent', function(self, event, ...)
   if event == 'PLAYER_LOGIN' then
     initialize()
   elseif event == 'PLAYER_ENTERING_WORLD' then
-    hideEraMiniMapWorldMapButton()
+    if _G['UIC_Toggle_Hide_Era_Map_Button'] and WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+      hideEraMiniMapWorldMapButton()
+    end
+  end
+end)
+
+_G['MinimapZoomOut']:HookScript('OnClick', function()
+  if _G['UIC_Toggle_Quick_Zoom'] and IsShiftKeyDown() then
+    onMinimapZoomChange(0)
+  end
+end)
+
+_G['MinimapZoomIn']:HookScript('OnClick', function()
+  if _G['UIC_Toggle_Quick_Zoom'] and IsShiftKeyDown() then
+    onMinimapZoomChange(Minimap:GetZoomLevels() - 1)
   end
 end)

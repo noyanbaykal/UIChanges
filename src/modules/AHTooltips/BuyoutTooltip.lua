@@ -21,29 +21,95 @@ local C = UI_CHANGES_CONSTANTS
 
 local warningFrame, buyoutWarningText
 
-local setWarning = function(index)
-  if not index then
-    return
-  end
+local BROWSE_BUTTON_FRAMES
 
-  local bid = C.GetBidPrice(index)
-  local buyout = C.GetBuyoutPrice(index)
-  local newWarning = C.CheckScam(bid, buyout)
+local COUNT_BROWSE_FRAMES = 8
 
-  if newWarning then
-    C.UpdateWarningIcon(warningFrame, newWarning)
-  end
+local MULTIPLIER_GOLD = 10000
+local MULTIPLIER_SILVER = 100
 
-  buyoutWarningText = newWarning
+local SCAM_RATIO = 8
+local SUSPICIOUS_RATIO = 2
+local SCAM_TEXT = 'Scam'
+local SUSPICIOUS_TEXT = 'Warning'
+
+local getBidPrice = function(i)
+  local lookup = BROWSE_BUTTON_FRAMES[i]
+
+  local gold = lookup.bidGold:GetText()
+  local silver = lookup.bidSilver:GetText()
+  local copper = lookup.bidCopper:GetText()
+
+  return gold * MULTIPLIER_GOLD + silver * MULTIPLIER_SILVER + copper
 end
 
-local onBrowseSelect = function(self, buttonName, left, right)
-  local index = string.sub(self:GetName(), left, right)
-  setWarning(index)
+local getBuyoutPrice = function(i)
+  local lookup = BROWSE_BUTTON_FRAMES[i]
+
+  if not lookup.buyoutFrame:IsVisible() then
+    return nil
+  end
+
+  local gold = lookup.buyoutGold:GetText() or 0
+  local silver = lookup.buyoutSilver:GetText() or 0
+  local copper = lookup.buyoutCopper:GetText()
+
+  return gold * MULTIPLIER_GOLD + silver * MULTIPLIER_SILVER + copper
 end
 
-local hookAHButtonClicks = function()
-  for i = 1, 8 do
+local checkScam = function(bid, buyout)
+  if buyout == nil then
+    return nil
+  end
+
+  local ratio = buyout / bid
+
+  if ratio >= SCAM_RATIO then
+    return SCAM_TEXT
+  elseif ratio >= SUSPICIOUS_RATIO then
+    return SUSPICIOUS_TEXT
+  else
+    return nil
+  end
+end
+
+local setWarning = function()
+  local r = 1
+  local g = 1
+  local b = 0
+
+  if buyoutWarningText == SCAM_TEXT then
+    warningFrame.texture:SetVertexColor(1, 0, 0)
+    g = 0
+  else
+    warningFrame.texture:SetVertexColor(1, 1, 1)
+  end
+
+  warningFrame:SetBackdropBorderColor(r, g, b)
+
+  if _G['UIC_AHT_IsEnabled'] == true then
+    warningFrame:Show()
+  end
+end
+
+local onBrowseSelect = function(self, _, left, right)
+  local indexString = string.sub(self:GetName(), left, right)
+  local selectedBrowseFrameIndex = tonumber(indexString)
+
+  local bid = getBidPrice(selectedBrowseFrameIndex)
+  local buyout = getBuyoutPrice(selectedBrowseFrameIndex)
+
+  buyoutWarningText = checkScam(bid, buyout)
+
+  if not buyoutWarningText then
+    warningFrame:Hide()
+  else
+    setWarning()
+  end
+end
+
+local hookAHFrames = function()
+  for i = 1, COUNT_BROWSE_FRAMES do
     local button = _G['BrowseButton'..i]
     local item = _G['BrowseButton'..i..'Item']
 
@@ -55,13 +121,44 @@ local hookAHButtonClicks = function()
       onBrowseSelect(self, buttonName, -5, -5)
     end)
   end
+
+  _G['BrowseBuyoutButton']:HookScript('OnEnable', function()
+    if buyoutWarningText and _G['UIC_AHT_IsEnabled'] == true then
+      warningFrame:Show()
+    end
+  end)
+
+  _G['BrowseBuyoutButton']:HookScript('OnDisable', function()
+    warningFrame:Hide()
+  end)
+
+  _G['AuctionFrameTab2']:HookScript('OnClick', function()
+    warningFrame:Hide()
+  end)
+
+  _G['AuctionFrameTab3']:HookScript('OnClick', function()
+    warningFrame:Hide()
+  end)
+end
+
+local populateBrowseButtonLookup = function()
+  BROWSE_BUTTON_FRAMES = {}
+
+  for i = 1, COUNT_BROWSE_FRAMES do
+    local table = {}
+    table['bidGold'] = _G['BrowseButton'..i..'MoneyFrameGoldButtonText']
+    table['bidSilver'] = _G['BrowseButton'..i..'MoneyFrameSilverButtonText']
+    table['bidCopper'] = _G['BrowseButton'..i..'MoneyFrameCopperButtonText']
+    table['buyoutFrame'] = _G[ 'BrowseButton'..i..'BuyoutFrame']
+    table['buyoutGold'] = _G['BrowseButton'..i..'BuyoutFrameMoneyGoldButtonText']
+    table['buyoutSilver'] = _G['BrowseButton'..i..'BuyoutFrameMoneySilverButtonText']
+    table['buyoutCopper'] = _G['BrowseButton'..i..'BuyoutFrameMoneyCopperButtonText']
+
+    BROWSE_BUTTON_FRAMES[i] = table
+  end
 end
 
 local setWarningFramePosition = function()
-  if InCombatLockdown() then
-    return
-  end
-  
   local buyoutTextFrame = _G['BrowseBuyoutButtonText']
   local buyoutTextOffsetX = buyoutTextFrame:GetWidth() / 2
   local warningOffsetX = buyoutTextOffsetX - (warningFrame:GetWidth() / 2)
@@ -71,34 +168,37 @@ local setWarningFramePosition = function()
   warningFrame:SetPoint('LEFT', buyoutTextFrame, 'LEFT', warningOffsetX - 2, 0)
 end
 
+local createWarningFrame = function(frameName)
+  warningFrame = CreateFrame('Frame', frameName, _G['AuctionFrame'], 'BackdropTemplate')
+  warningFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
+  warningFrame:SetBackdropColor(0, 0, 0)
+  warningFrame:SetSize(30, 30)
+  warningFrame:SetFrameStrata('TOOLTIP')
+  warningFrame:Hide()
+
+  warningFrame.texture = warningFrame:CreateTexture(frameName..'_Texture', 'ARTWORK')
+  warningFrame.texture:SetTexture('Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew')
+  warningFrame.texture:SetPoint('CENTER', warningFrame, 'CENTER', 0, -1)
+  warningFrame.texture:SetSize(24, 24)
+
+  return warningFrame
+end
+
 BuyoutTooltip = {}
 
 BuyoutTooltip.new = function()
   local self = {}
-  
-  warningFrame = C.CreateWarningFrame('UIC_BuyoutTooltip')
+
+  warningFrame = createWarningFrame('UIC_BuyoutTooltip')
 
   function self.LoadedAH()
-    hookAHButtonClicks()
     setWarningFramePosition()
+    populateBrowseButtonLookup()
+    hookAHFrames()
   end
 
-  function self.Update()
-    local isBrowse = _G['AuctionFrameBrowse']:IsVisible()
-
-    if isBrowse and buyoutWarningText then
-      warningFrame:Show()
-    else
-      self.Hide()
-    end
-  end
-
-  function self.Hide(resetWarning)
+  function self.Hide()
     warningFrame:Hide()
-
-    if resetWarning then
-      buyoutWarningText = nil
-    end
   end
 
   return self

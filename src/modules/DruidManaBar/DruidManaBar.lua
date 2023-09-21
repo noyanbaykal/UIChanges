@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local C = UI_CHANGES_CONSTANTS
 local L = UI_CHANGES_LOCALE
 
-local mainFrame, manaBarBorder, manaBar
+local mainFrame, shouldRespond, manaBarBorder, manaBar
 
 local updateStatusTextStyle = function(style)
   if style == 'BOTH' then
@@ -139,15 +139,15 @@ local hideManaBar = function()
   manaBar.percentage:Hide()
 end
 
-local shouldRespond = function()
+local setShouldRespond = function()
   -- WOTLK classic already has a mana bar
-  local isClassicEraOrTBC = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC 
+  local isClassicEraOrTBC = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
   or WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC
 
   local _, playerClass = UnitClass('player')
   local isDruid = playerClass == 'DRUID'
 
-  return isClassicEraOrTBC and isDruid
+  shouldRespond = isClassicEraOrTBC and isDruid
 end
 
 DruidManaBar = {}
@@ -156,9 +156,11 @@ DruidManaBar.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_DruidManaBar', UIParent)
   mainFrame:Hide()
 
+  setShouldRespond()
+
   initializeManaBar()
 
-  if shouldRespond() then
+  if shouldRespond then
     mainFrame:SetScript('OnEvent', function(self, event, ...)
       EVENTS[event](...)
     end)
@@ -168,7 +170,7 @@ DruidManaBar.Initialize = function()
 end
 
 DruidManaBar.Enable = function()
-  if shouldRespond() then
+  if shouldRespond then
     C.REGISTER_EVENTS(mainFrame, EVENTS)
 
     updateManaBar()
@@ -176,7 +178,7 @@ DruidManaBar.Enable = function()
 end
 
 DruidManaBar.Disable = function()
-  if shouldRespond() then
+  if shouldRespond then
     C.UNREGISTER_EVENTS(mainFrame, EVENTS)
 
     hideManaBar()

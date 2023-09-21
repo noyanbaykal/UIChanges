@@ -28,8 +28,6 @@ local ESCAPE_TABLE = {
 local DIRECTION_MARGIN = 0.02
 local MINIMUM_SECONDS = 4
 
-local MAX_MINIMAP_ZOOM_LEVEL = Minimap:GetZoomLevels() - 1
-
 local mainFrame, lastPingTime
 
 local determineDirection = function(x, y)
@@ -104,7 +102,7 @@ local determineTargetChannel = function(unitId)
       isInArena and _G['UIC_PA_Arena'] == false or
       isInRaid and _G['UIC_PA_Raid'] == false or
       isInPartyOnly and (_G['UIC_PA_Party'] == false or isCTRL) or
-      isInPartyOnly == false then 
+      isInPartyOnly == false then
     return nil
   end
 
@@ -145,13 +143,6 @@ local handlePing = function(unitId, x, y)
   end
 end
 
-local onMinimapZoomChange = function(level)
-  Minimap:SetZoom(level)
-
-  -- Call the minimap update function to update the button states
-  Minimap_OnEvent(_G['MiniMap'], 'MINIMAP_UPDATE_ZOOM')
-end
-
 local EVENTS = {}
 EVENTS['MINIMAP_PING'] = function(...)
   handlePing(...)
@@ -162,14 +153,6 @@ PingAnnouncer = {}
 PingAnnouncer.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_PingAnnouncer', UIParent)
   mainFrame:Hide()
-
-  _G['MinimapZoomOut']:HookScript('OnClick', function()
-    if IsShiftKeyDown() then onMinimapZoomChange(0) end
-  end)
-
-  _G['MinimapZoomIn']:HookScript('OnClick', function()
-    if IsShiftKeyDown() then onMinimapZoomChange(MAX_MINIMAP_ZOOM_LEVEL) end
-  end)
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)
     EVENTS[event](...)

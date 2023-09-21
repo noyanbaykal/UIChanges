@@ -23,6 +23,20 @@ local L = UI_CHANGES_LOCALE
 -- Bundling all constants in a single object to avoid possible conflicts.
 UI_CHANGES_CONSTANTS = {}
 
+UI_CHANGES_CONSTANTS.AD_RESET_DISPLAY_LOCATION = function()
+  local adMainFrame = _G['UIC_AbsorbDisplay']
+  if adMainFrame and adMainFrame.ResetDisplayLocation then
+    adMainFrame:ResetDisplayLocation()
+  end
+end
+
+UI_CHANGES_CONSTANTS.CR_RESET_ERROR_FRAME_LOCATION = function()
+  local crMainFrame = _G['UIC_CriticalReminders']
+  if crMainFrame and crMainFrame.ResetErrorFrameLocation then
+    crMainFrame:ResetErrorFrameLocation()
+  end
+end
+
 UI_CHANGES_CONSTANTS.ENUM_ANCHOR_OPTIONS = {
   {'Off', nil},
   {'Top Left',      'TOPLEFT'},
@@ -35,30 +49,32 @@ UI_CHANGES_CONSTANTS.ENUM_ANCHOR_OPTIONS = {
   {'Left',          'LEFT'}
 }
 
+-- These toggles have the same schema as subToggles.entries
+UI_CHANGES_CONSTANTS.BASE_TOGGLES = {
+  {'UIC_Toggle_Quick_Zoom', L.MINIMAP_QUICK_ZOOM, false, nil, L.TOOLTIP_MINIMAP_QUICK_ZOOM},
+  {'UIC_Toggle_Hide_Era_Map_Button', L.ERA_HIDE_MINIMAP_MAP_BUTTON, false, nil, L.TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON},
+}
+
 UI_CHANGES_CONSTANTS.MODULES = {
   {
-    ['savedVariableName'] = 'UIC_AHT_IsEnabled', -- Name of the corresponding savedVariable
-    ['frameName'] = 'AHTooltips', -- Corresponds to the class that is exported in the module file
-    ['label'] = 'AHT', -- Used in subframe names
-    ['title'] = 'Auction House Tooltips',
-    ['description'] = L.AHT,
-  },
-  {
-    ['savedVariableName'] = 'UIC_AFR_IsEnabled',
-    ['frameName'] = 'AttackFailureReminder',
-    ['label'] = 'AFR',
-    ['title'] = 'Notification Reminder',
-    ['description'] = L.AFR,
+    ['savedVariableName'] = 'UIC_AD_IsEnabled', -- Name of the corresponding savedVariable
+    ['frameName'] = 'AbsorbDisplay', -- Corresponds to the class that is exported in the module file
+    ['label'] = 'AD', -- Used in subframe names
+    ['title'] = 'Absorb Display',
+    ['description'] = L.AD,
     ['subToggles'] = {
       ['offsetX'] = 35,
-      ['rowSize'] = 3,
       ['entries'] = {
-        {'UIC_AFR_EnteredCombat', L.ENTERED_COMBAT_CHECKBOX},
-        {'UIC_AFR_NoResource', L.NO_RESOURCE_CHECKBOX},
-        {'UIC_AFR_PlaySound', L.PLAY_SOUND_CHECKBOX},
-        {'UIC_AFR_TargetFrame', L.TARGETFRAME_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
+        {nil, L.RESET_POSITION, false, {'button', UI_CHANGES_CONSTANTS.AD_RESET_DISPLAY_LOCATION}},
       }
     },
+  },
+  {
+    ['savedVariableName'] = 'UIC_AHT_IsEnabled',
+    ['frameName'] = 'AHTooltips',
+    ['label'] = 'AHT',
+    ['title'] = 'Auction House Tooltips',
+    ['description'] = L.AHT,
   },
   {
     ['savedVariableName'] = 'UIC_BU_IsEnabled',
@@ -66,6 +82,42 @@ UI_CHANGES_CONSTANTS.MODULES = {
     ['label'] = 'BU',
     ['title'] = 'Bag Utilities ('..L.CLASSIC_ERA_ONLY..')',
     ['description'] = L.BU,
+  },
+  {
+    ['savedVariableName'] = 'UIC_CR_IsEnabled',
+    ['frameName'] = 'CriticalReminders',
+    ['label'] = 'CR',
+    ['title'] = 'Critical Reminders',
+    ['description'] = L.CR,
+    ['subToggles'] = {
+      ['offsetX'] = 42,
+      ['rowSize'] = 4,
+      ['entries'] = {
+        {'UIC_CR_BreathWarning', L.BREATH_WARNING},
+        {'UIC_CR_BreathWarning_Sound', L.BREATH_WARNING_SOUND, false, nil, L.BREATH_WARNING_SOUND_TOOLTIP},
+        {'UIC_CR_CombatWarning', L.COMBAT_WARNING},
+        {'UIC_CR_CombatWarning_Sound', L.COMBAT_WARNING_SOUND, false, nil, L.COMBAT_WARNING_SOUND_TOOLTIP},
+        {'UIC_CR_GatheringFailure', L.GATHERING_FAILURE},
+        {'UIC_CR_GatheringFailure_Sound', L.GATHERING_FAILURE_SOUND, false, nil, L.GATHERING_FAILURE_SOUND_TOOLTIP},
+        {'UIC_CR_CombatLos', L.COMBAT_LOS},
+        {'UIC_CR_CombatLos_Sound', L.COMBAT_LOS_SOUND, false, nil, L.COMBAT_LOS_SOUND_TOOLTIP},
+        {'UIC_CR_CombatDirection', L.COMBAT_DIRECTION},
+        {'UIC_CR_CombatDirection_Sound', L.COMBAT_DIRECTION_SOUND, false, nil, L.COMBAT_DIRECTION_SOUND_TOOLTIP},
+        {'UIC_CR_CombatRange', L.COMBAT_RANGE},
+        {'UIC_CR_CombatRange_Sound', L.COMBAT_RANGE_SOUND, false, nil, L.COMBAT_RANGE_SOUND_TOOLTIP},
+        {'UIC_CR_CombatInterrupted', L.COMBAT_INTERRUPTED},
+        {'UIC_CR_CombatInterrupted_Sound', L.COMBAT_INTERRUPTED_SOUND, false, nil, L.COMBAT_INTERRUPTED_SOUND_TOOLTIP},
+        {'UIC_CR_CombatCooldown', L.COMBAT_COOLDOWN},
+        {'UIC_CR_CombatCooldown_Sound', L.COMBAT_COOLDOWN_SOUND, false, nil, L.COMBAT_COOLDOWN_SOUND_TOOLTIP},
+        {'UIC_CR_CombatNoResource', L.COMBAT_NO_RESOURCE},
+        {'UIC_CR_CombatNoResource_Sound', L.COMBAT_NO_RESOURCE_SOUND, false, nil, L.COMBAT_NO_RESOURCE_SOUND_TOOLTIP},
+        {'UIC_CR_InteractionRange', L.INTERACTION_RANGE},
+        {'UIC_CR_InteractionRange_Sound', L.INTERACTION_RANGE_SOUND, false, nil, L.INTERACTION_RANGE_SOUND_TOOLTIP},
+        {'UIC_CR_ErrorFrameAnchor', L.ERROR_FRAME_ANCHOR_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
+        {nil, L.RESET_POSITION, false, {'button', UI_CHANGES_CONSTANTS.CR_RESET_ERROR_FRAME_LOCATION}},
+      },
+      ['separator'] = {3, 19}
+    },
   },
   {
     ['savedVariableName'] = 'UIC_DMB_IsEnabled',
@@ -114,88 +166,21 @@ end
 
 UI_CHANGES_CONSTANTS.BACKDROP_INFO = function(edgeSize, insetSize)
   return {
-    bgFile = 'Interface/Tooltips/UI-Tooltip-Background', 
-    edgeFile = 'Interface/Tooltips/UI-Tooltip-Border', 
+    bgFile = 'Interface/Tooltips/UI-Tooltip-Background',
+    edgeFile = 'Interface/Tooltips/UI-Tooltip-Border',
     edgeSize = edgeSize, 
     insets = { left = insetSize, right = insetSize, top = insetSize, bottom = insetSize }
   }
 end
 
--- AHTooltips
-UI_CHANGES_CONSTANTS.MULTIPLIER_GOLD = 10000
-UI_CHANGES_CONSTANTS.MULTIPLIER_SILVER = 100
-
-UI_CHANGES_CONSTANTS.SCAM_RATIO = 8
-UI_CHANGES_CONSTANTS.SUSPICIOUS_RATIO = 2
-UI_CHANGES_CONSTANTS.SCAM_TEXT = 'Scam'
-UI_CHANGES_CONSTANTS.SUSPICIOUS_TEXT = 'Warning' 
-
-UI_CHANGES_CONSTANTS.GetBidPrice = function(index)
-  local gold = _G['BrowseButton'..index..'MoneyFrameGoldButtonText']:GetText()
-  local silver = _G['BrowseButton'..index..'MoneyFrameSilverButtonText']:GetText()
-  local copper = _G['BrowseButton'..index..'MoneyFrameCopperButtonText']:GetText()
-
-  return gold * UI_CHANGES_CONSTANTS.MULTIPLIER_GOLD + silver * UI_CHANGES_CONSTANTS.MULTIPLIER_SILVER + copper
-end
-
-UI_CHANGES_CONSTANTS.GetBuyoutPrice = function(index)
-  if not _G['BrowseButton'..index..'BuyoutFrame']:IsVisible() then
-    return nil
-  end
-
-  local gold = _G['BrowseButton'..index..'BuyoutFrameMoneyGoldButtonText']:GetText() or 0
-  local silver = _G['BrowseButton'..index..'BuyoutFrameMoneySilverButtonText']:GetText() or 0
-  local copper = _G['BrowseButton'..index..'BuyoutFrameMoneyCopperButtonText']:GetText()
-
-  return gold * UI_CHANGES_CONSTANTS.MULTIPLIER_GOLD + silver * UI_CHANGES_CONSTANTS.MULTIPLIER_SILVER + copper
-end
-
-UI_CHANGES_CONSTANTS.CheckScam = function(bid, buyout)
-  if buyout == nil then
-    return nil
-  end
-
-  local ratio = buyout / bid
-
-  if ratio >= UI_CHANGES_CONSTANTS.SCAM_RATIO then
-    return UI_CHANGES_CONSTANTS.SCAM_TEXT
-  elseif ratio >= UI_CHANGES_CONSTANTS.SUSPICIOUS_RATIO then
-    return UI_CHANGES_CONSTANTS.SUSPICIOUS_TEXT
+UI_CHANGES_CONSTANTS.RoundToPixelCount = function(count)
+  if count == 0 then
+    return count
+  elseif count > 0 and count < 1 then
+    return 1
   else
-    return nil
+    return math.floor(0.5 + count)
   end
 end
-
-UI_CHANGES_CONSTANTS.CreateWarningFrame = function(frameName)
-  local warningFrame = CreateFrame('Frame', frameName, _G['AuctionFrame'], 'BackdropTemplate')
-  warningFrame:SetBackdrop(UI_CHANGES_CONSTANTS.BACKDROP_INFO(8, 1))
-  warningFrame:SetBackdropColor(0, 0, 0)
-  warningFrame:SetSize(30, 30)
-  warningFrame:SetFrameStrata('TOOLTIP')
-  warningFrame:Hide()
-
-  warningFrame.texture = warningFrame:CreateTexture(frameName..'_Texture', 'ARTWORK')
-  warningFrame.texture:SetTexture('Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew')
-  warningFrame.texture:SetPoint('CENTER', warningFrame, 'CENTER', 0, -1)
-  warningFrame.texture:SetSize(24, 24)
-
-  return warningFrame
-end
-
-UI_CHANGES_CONSTANTS.UpdateWarningIcon = function(warningFrame, warningLabel)
-  local r = 1
-  local g = 1
-  local b = 0
-
-  if warningLabel and warningLabel == UI_CHANGES_CONSTANTS.SCAM_TEXT then
-    warningFrame.texture:SetVertexColor(1, 0, 0)
-    g = 0
-  else
-    warningFrame.texture:SetVertexColor(1, 1, 1)
-  end
-
-  warningFrame:SetBackdropBorderColor(r, g, b)
-end
--- ~AHTooltips
 
 return UI_CHANGES_CONSTANTS

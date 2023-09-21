@@ -19,27 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 local C = UI_CHANGES_CONSTANTS
 
--- These calls differ between classic era and wotlk
-local ALIAS_GetContainerNumSlots
-local ALIAS_GetContainerItemLink
-
-local TIMER_INTERVAL = 0.08 -- Seconds
-local AH_SEARCH_INTERVAL = 0.3 -- Seconds
-
 -- Forward declaring modules
-local mainFrame, hoverTooltip, buyoutTooltip, calculator
-local trackingTimer
-local lastAHSearchTime
-local isWOTLK
-local loadedAH = false
+local mainFrame, buyoutTooltip, calculator
 
-local function checkFrames()
-  if hoverTooltip then
-    hoverTooltip.Update()
-  end
-  
-  buyoutTooltip.Update()
-end
+local AH_SEARCH_INTERVAL = 0.3 -- Seconds
+local loadedAH = false
+local lastAHSearchTime
 
 local function onShow()
   -- The first time the AH is shown, we'll hook into the button onClicks
@@ -50,54 +35,30 @@ local function onShow()
   end
 
   calculator.Show()
-  
-  trackingTimer = C_Timer.NewTicker(TIMER_INTERVAL, checkFrames)
-end
-
-local function hideTooltips()
-  if hoverTooltip then
-    hoverTooltip.Hide()
-  end
-
-  buyoutTooltip.Hide(true)
 end
 
 local function onClosed()
-  if trackingTimer and trackingTimer:IsCancelled() ~= true then
-    trackingTimer:Cancel()
-  end
-
   calculator.Hide()
-
-  hideTooltips()
+  buyoutTooltip.Hide()
 end
 
 local EVENTS = {}
-EVENTS['AUCTION_HOUSE_SHOW'] = function(...)
-  onShow(...)
+EVENTS['AUCTION_HOUSE_SHOW'] = function()
+  onShow()
 end
 
-EVENTS['AUCTION_HOUSE_CLOSED'] = function(...)
-  onClosed(...)
-end
-
-EVENTS['AUCTION_ITEM_LIST_UPDATE'] = function()
-  hideTooltips()
-end
-
-EVENTS['AUCTION_BIDDER_LIST_UPDATE'] = function()
-  hideTooltips()
+EVENTS['AUCTION_HOUSE_CLOSED'] = function()
+  onClosed()
 end
 
 local function searchItemInAH(bagID, slotID)
-  local item = ALIAS_GetContainerItemLink(bagID, slotID)
+  -- It is possible for this call to return nil and then result in an GET_ITEM_INFO_RECEIVED event but
+  -- that case is unlikely since we already have the bags visible and it takes a while for the player
+  -- to physically click on items etc.
+  local item = C_Container.GetContainerItemLink(bagID, slotID)
   if item then
-    local itemName = select(1, GetItemInfo(item))
+    local itemName = '"'..select(1, GetItemInfo(item))..'"'
 
-    if isWOTLK then
-      itemName = '"'..itemName..'"'
-    end
-    
     BrowseName:SetText(itemName)
     BrowseSearchButton:Click()
   end
@@ -113,7 +74,7 @@ local function quickAHSearch(containerFrame, itemFrameIndex)
   end
 
   local bagID = containerFrame:GetID()
-  local capacity = ALIAS_GetContainerNumSlots(bagID)
+  local capacity = C_Container.GetContainerNumSlots(bagID)
   local slotID = 1 + (capacity - itemFrameIndex)
 
   if slotID >= 0 then
@@ -127,7 +88,7 @@ local function hookContainerFrames()
 
     for slot = 1, 20 do
       local buttonFrame = _G['ContainerFrame'..container..'Item'..slot]
-  
+
       if buttonFrame then
         buttonFrame:HookScript('OnMouseUp', function(self, button)
           if _G['UIC_AHT_IsEnabled'] and button == 'MiddleButton'
@@ -147,23 +108,8 @@ AHTooltips.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_AHTooltips', UIParent)
   mainFrame:Hide()
 
-  if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then -- This was added to TBCC sometime after release
-    hoverTooltip = HoverTooltip.new()
-  end
-
   buyoutTooltip = BuyoutTooltip.new()
-
   calculator = Calculator.new()
-
-  if WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
-    ALIAS_GetContainerNumSlots = C_Container.GetContainerNumSlots
-    ALIAS_GetContainerItemLink = C_Container.GetContainerItemLink
-    isWOTLK = true
-  else
-    ALIAS_GetContainerNumSlots = GetContainerNumSlots
-    ALIAS_GetContainerItemLink = GetContainerItemLink
-    isWOTLK = false
-  end
 
   lastAHSearchTime = time()
 

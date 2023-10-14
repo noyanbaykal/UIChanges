@@ -24,7 +24,7 @@ Quick search: Clicking on an item in your bags with the mouse MiddleButton while
 Opens looted clams for convenience and avoiding inventory congestion. UseContainerItem is protected in WOTLK so this feature is classic era only.
 
 **Critical Reminders**
-This module makes the selected types of events / failures more noticable by displaying an error icon and optionally playing a sound.
+This module makes the selected types of events / failures more noticeable by displaying an error icon and optionally playing a sound.
 The 'Breath Warning' reminder displays a numeric timer next to the standard breath meter and the 'BW Sound' option will play various alarm sounds when the remaining breath time is 30, 15 and 5 seconds.
 The reminders that are turned on by default are breath timer with sound, enter combat event, ability / spell failed due to lack of line of sight and gathering failure. Many other reminders for combat events can be enabled. The error display can be moved with a CTRL click or anchored to the TargetFrame.
 

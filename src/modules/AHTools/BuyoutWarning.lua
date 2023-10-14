@@ -184,12 +184,12 @@ local createWarningFrame = function(frameName)
   return warningFrame
 end
 
-BuyoutTooltip = {}
+BuyoutWarning = {}
 
-BuyoutTooltip.new = function()
+BuyoutWarning.new = function()
   local self = {}
 
-  warningFrame = createWarningFrame('UIC_BuyoutTooltip')
+  warningFrame = createWarningFrame('UIC_BuyoutWarning')
 
   function self.LoadedAH()
     setWarningFramePosition()
@@ -204,4 +204,4 @@ BuyoutTooltip.new = function()
   return self
 end
 
-return BuyoutTooltip
+return BuyoutWarning

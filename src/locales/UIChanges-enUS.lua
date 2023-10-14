@@ -67,9 +67,9 @@ end
 UI_CHANGES_LOCALE.AD = {adStringHelper(), 'You can drag the display while holding CTRL.'}
 -- ~AbsorbDisplay
 
--- AHTooltips
+-- AHTools
 UI_CHANGES_LOCALE.AHT = {'Provides a simple stack price calculator and displays a warning sign for possible scams.', 'Also allows you to MiddleMouse click an item in your bags to initiate a search with the item\'s name.'}
--- ~AHTooltips
+-- ~AHTools
 
 -- BagUtilities
 UI_CHANGES_LOCALE.BU = {'Opens clams after picking them up.'}

@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local C = UI_CHANGES_CONSTANTS
 
 -- Forward declaring modules
-local mainFrame, buyoutTooltip, calculator
+local mainFrame, buyoutWarning, calculator
 
 local AH_SEARCH_INTERVAL = 0.3 -- Seconds
 local loadedAH = false
@@ -29,7 +29,7 @@ local lastAHSearchTime
 local function onShow()
   -- The first time the AH is shown, we'll hook into the button onClicks
   if loadedAH == false then
-    buyoutTooltip.LoadedAH()
+    buyoutWarning.LoadedAH()
     calculator.LoadedAH()
     loadedAH = true
   end
@@ -39,7 +39,7 @@ end
 
 local function onClosed()
   calculator.Hide()
-  buyoutTooltip.Hide()
+  buyoutWarning.Hide()
 end
 
 local EVENTS = {}
@@ -102,13 +102,13 @@ local function hookContainerFrames()
   end
 end
 
-AHTooltips = {}
+AHTools = {}
 
-AHTooltips.Initialize = function()
-  mainFrame = CreateFrame('Frame', 'UIC_AHTooltips', UIParent)
+AHTools.Initialize = function()
+  mainFrame = CreateFrame('Frame', 'UIC_AHTools', UIParent)
   mainFrame:Hide()
 
-  buyoutTooltip = BuyoutTooltip.new()
+  buyoutWarning = BuyoutWarning.new()
   calculator = Calculator.new()
 
   lastAHSearchTime = time()
@@ -120,7 +120,7 @@ AHTooltips.Initialize = function()
   end)
 end
 
-AHTooltips.Enable = function()
+AHTools.Enable = function()
   C.REGISTER_EVENTS(mainFrame, EVENTS)
 
   if _G['AuctionFrame'] and _G['AuctionFrame']:IsShown() then
@@ -128,9 +128,9 @@ AHTooltips.Enable = function()
   end
 end
 
-AHTooltips.Disable = function()
+AHTools.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
   onClosed()
 end
 
-return AHTooltips
+return AHTools

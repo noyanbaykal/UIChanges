@@ -28,9 +28,9 @@ src\locales\UIChanges-enUS.lua
 src\Constants.lua
 src\Options.lua
 src\modules\AbsorbDisplay\AbsorbDisplay.lua
-src\modules\AHTooltips\AHTooltips.lua
-src\modules\AHTooltips\BuyoutTooltip.lua
-src\modules\AHTooltips\Calculator.lua
+src\modules\AHTools\AHTools.lua
+src\modules\AHTools\BuyoutWarning.lua
+src\modules\AHTools\Calculator.lua
 src\modules\BagUtilities\BagUtilities.lua
 src\modules\CriticalReminders\CriticalReminders.lua
 src\modules\DruidManaBar\DruidManaBar.lua

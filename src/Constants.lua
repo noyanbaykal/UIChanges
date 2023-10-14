@@ -71,9 +71,9 @@ UI_CHANGES_CONSTANTS.MODULES = {
   },
   {
     ['savedVariableName'] = 'UIC_AHT_IsEnabled',
-    ['frameName'] = 'AHTooltips',
+    ['frameName'] = 'AHTools',
     ['label'] = 'AHT',
-    ['title'] = 'Auction House Tooltips',
+    ['title'] = 'Auction House Tools',
     ['description'] = L.AHT,
   },
   {

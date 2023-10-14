@@ -11,7 +11,7 @@ Hide the minimap worldMap button in classic era so it won't overlap with the tra
 Displays the approximate amount of damage absorption the player has from active Power Word: Shield, Sacrifice and Spellstone effects.
 It is not feasible to determine other player's talents or item bonuses so the display for Power Word: Shield cast by others will start off with a base amount and then show a residual sign for any remaining amounts. The shield display can be moved with a CTRL click.
 
-**Auction House Tooltips**
+**Auction House Tools**
 Provides utilities for the AH browse tab.
 
 Calculator: A simple calculator to help with determining the total cost of a bunch.

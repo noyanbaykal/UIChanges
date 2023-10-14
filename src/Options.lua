@@ -421,6 +421,12 @@ local populateOptions = function(parentFrame)
   scrollChild:SetWidth(outerPanelWidth)
   scrollChild:SetHeight(1) -- Absolutely necessary
 
+  local scrollBar = _G['UIC_Options_ScrollFrameScrollBar']
+  scrollBar.texture = scrollBar:CreateTexture(scrollBar:GetName()..'_Texture', 'ARTWORK')
+  scrollBar.texture:SetTexture('Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew')
+  scrollBar.texture:SetAllPoints()
+  scrollBar.texture:SetColorTexture(0, 0, 0, 0.35)
+
   lastFrameTop = scrollChild
   lastFrameLeft = scrollChild
 

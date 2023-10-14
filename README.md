@@ -1,55 +1,45 @@
 # UI Changes
 
-UI Changes consists of many modules that improve parts of the default UI. The modules can be individually toggled and not all are enabled by default. Please check out the in-game addon options page of UI Changes for all the available settings. UIChanges makes use of LibStub and LibUIDropDownMenu.
+UI Changes consists of modules that improve parts of the default UI. The modules and their features can be individually toggled and not all are enabled by default. Please check out the in-game addon options page to see everything UIChanges has to offer.
+
+**General**
+Minimap quick zoom in / out: Shift click the minimap plus / negative buttons to set the zoom level to max in / out.
+
+Hide the minimap worldMap button in classic era so it won't overlap with the tracking icon.
+
+**Absorb Display**
+Displays the approximate amount of damage absorption the player has from active Power Word: Shield, Sacrifice and Spellstone effects.
+It is not feasible to determine other player's talents or item bonuses so the display for Power Word: Shield cast by others will start off with a base amount and then show a residual sign for any remaining amounts. The shield display can be moved with a CTRL click.
 
 **Auction House Tooltips**
+Provides utilities for the AH browse tab.
 
-Provides a calculator that takes in a price and a multiplier, to help with determining the cost of a bunch.
-Shows the single bid and buyout prices for the entry you're hovering on (This feature is classic era only as it is present TBCC onwards).
-Also shows warnings for both the hovered over entry and the selected entry.
-Selected entry warning is displayed below the buyout button.
+Calculator: A simple calculator to help with determining the total cost of a bunch.
 
-This addon does not track AH prices and give smart suggestions. It blindly looks at the ratio of buyout / bid and warns you if the ratio is too high.
-If the ratio is >= 8, it displays a red warning sign. A yellow warning sign is displayed for when the ratio is 2 >= x < 8.
-False positives are very much possible. This feature is just to give you a heads up in case you are about to accidentally buyout a scam entry (for example, 40s bid and 311g buyout).
+Buyout warning: Whenever you select an item from the Browse Tab results, this module will calculate the ratio of buyout / bid amounts and might display a warning under the buyout button for suspected scam entries (for example, 40s bid and 311g buyout). The module does not track AH prices to give smart suggestions. It blindly compares the ratios to show a yellow sign if the ratio is 2 >= x < 8, or a red one if x >= 8 so false positives are possible!
 
-Also provides a simple calculator that takes in a price and a number to multiply it with, to calculate the stack buyout price from a single buyout price.
-Additionally, clicking on an itemFrame in a bag with the mouse middleButton allows for a quick search while the Browse tab of the AH is visible.
-
-**Notification Reminder**
-
-This module might come in handy for people who'd like the UI Error Messages that are displayed near the top center of the screen to be more prominent. The module adds an icon above the error messages to make sure the error doesn't get lost due to everything else that might be going on in the UI / the game world.
-
-Currently the following errors will display the icon:
-  Unable to attack / shoot due to range (min and max)
-  Unable to attack / shoot / cast due to direction (not facing target)
-  Unable to cast due to distance (shoot wand is considered casting, same as spells)
-  Cast interrupted due to movement
-  Unable to interact due to distance
-  Target not in line of sight
-  Ability / spell on cooldown
-  Failed attempt
-  Entered combat (needs to be enabled in the options page)
-  No energy/mana/rage (needs to be enabled in the options page)
+Quick search: Clicking on an item in your bags with the mouse MiddleButton while the AH Browse tab is visible will initiate a search with that item's name.
 
 **Bag Utilities**
-Opens looted clams to avoid extra work and inventory congestion. UseContainerItem is protected in WOTLK so this feature is classic era only.
+Opens looted clams for convenience and avoiding inventory congestion. UseContainerItem is protected in WOTLK so this feature is classic era only.
+
+**Critical Reminders**
+This module makes the selected types of events / failures more noticable by displaying an error icon and optionally playing a sound.
+The 'Breath Warning' reminder displays a numeric timer next to the standard breath meter and the 'BW Sound' option will play various alarm sounds when the remaining breath time is 30, 15 and 5 seconds.
+The reminders that are turned on by default are breath timer with sound, enter combat event, ability / spell failed due to lack of line of sight and gathering failure. Many other reminders for combat events can be enabled. The error display can be moved with a CTRL click or anchored to the TargetFrame.
 
 **Druid Mana Bar**
-Druid Mana Bar Displays the mana bar underneath the player frame when shapeshifted into a form that does not use mana as a druid. This feature exists in WOTLK classic so this is for classic era only. The mana bar obeys the "Status Text Display" preference under the Interface options.
+Displays a mana bar underneath the player frame when shapeshifted into a druid form that does not use mana. This feature exists in WOTLK classic so this is for classic era only. The mana bar obeys the "Status Text Display" preference under the Interface options.
 
 **Party Pet Frames**
-
-I ported over my previously stand-alone party pet frames addon into UIC. Back in vanilla the default party frames used to show party pet frames as well. This feature seems to have been hidden behind a console variable and the power frames dropped somewhere around patch 7.0.3. This module enables the console variable and implements the missing power bars. While porting this addon, I changed it to be more in line with the current state of the party pet frames of the modern client that classic now uses.
+Back in vanilla the default party frames used to show party pet frames as well. This feature seems to have been hidden behind a console variable and the pet power frames dropped somewhere around patch 7.0.3. This module enables the console variable and implements the missing power bars. The visibility provided might come in handy when you are in a dungeon with a hunter and see the hunters pet getting two shotted even though you don't expect anyone to be in combat or when you are forced to make a last stand and a clutch heal to a pet might make all the difference.
 
 **Ping Announcer**
-
-This is my second stand-alone addon that I ported. It listens to the player pinging in the mini-map on a marker with text and sends a message to chat mentioning the player's name, marker text and direction (in relation to the player). While porting this addon, I added the option to selectively disable its functionality while in a battleground, arena, raid or just a party. The module defaults to party chat, but if Control (CTRL) is pressed while the mini-map ping is sent out, the instance chat channel will be used instead. The instance chat channel only exists when in a battleground, arena or instance.
-The mouse click handlers for the minimap zoom in / out buttons will check for the shift button being held to set the zoom level to max in / out.
-
-This addon hides the minimap worldMap button on classic era.
+Listens to the player pinging in the mini-map on a marker with text and sends a message to chat mentioning the player's name, marker text and direction (in relation to the player). The module defaults to party chat, but if Control (CTRL) is pressed while the mini-map ping is sent out, the instance chat channel will be used instead. The instance chat channel only exists when in a battleground, arena or instance.
 
 Please let me know if you encounter any issues.
+
+UIChanges makes use of LibStub and LibUIDropDownMenu.
 
 ### License
 UIChanges

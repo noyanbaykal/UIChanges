@@ -45,7 +45,7 @@ UI_CHANGES_LOCALE.MINIMAP_QUICK_ZOOM = colorWhite..MINIMAP_QUICK_ZOOM_1..colorEs
 UI_CHANGES_LOCALE.TOOLTIP_MINIMAP_QUICK_ZOOM = MINIMAP_QUICK_ZOOM_1..'\n'..colorWhite..'Shift click the minimap + / - buttons for max zoom in / out.'..colorEscape
 local ERA_HIDE_MINIMAP_MAP_BUTTON_1 = 'Hide minimap map button'
 UI_CHANGES_LOCALE.ERA_HIDE_MINIMAP_MAP_BUTTON = colorWhite..ERA_HIDE_MINIMAP_MAP_BUTTON_1..colorEscape
-local TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON_1 = 'Hide the world map button attached to the minimap in '..UI_CHANGES_LOCALE.CLASSIC_ERA..' so it won\'t overlap the tracking icon.'
+local TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON_1 = 'Hide the world map button attached to the minimap in '..UI_CHANGES_LOCALE.CLASSIC_ERA..' so it won\'t overlap with the tracking icon.'
 UI_CHANGES_LOCALE.TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON = ERA_HIDE_MINIMAP_MAP_BUTTON_1..'\n'..colorWhite..TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON_1..'\n'..UI_CHANGES_LOCALE.NEEDS_RELOAD
 -- ~Base Options
 
@@ -68,7 +68,7 @@ UI_CHANGES_LOCALE.AD = {adStringHelper(), 'You can drag the display while holdin
 -- ~AbsorbDisplay
 
 -- AHTooltips
-UI_CHANGES_LOCALE.AHT = {'Provides a simple price calculator and displays a warning sign for possible scams.'}
+UI_CHANGES_LOCALE.AHT = {'Provides a simple stack price calculator and displays a warning sign for possible scams.', 'Also allows you to MiddleMouse click an item in your bags to initiate a search with the item\'s name.'}
 -- ~AHTooltips
 
 -- BagUtilities
@@ -76,7 +76,7 @@ UI_CHANGES_LOCALE.BU = {'Opens clams after picking them up.'}
 -- ~BagUtilities
 
 -- CriticalReminders
-UI_CHANGES_LOCALE.CR = {'Makes the selected warnings more noticeable by displaying an error icon and / or playing a sound.', 'When the anchor is set to Off, the display can be dragged while holding CTRL and reset with the button.'}
+UI_CHANGES_LOCALE.CR = {'Makes the selected warnings more noticeable by displaying an error icon and optionally playing a sound.', 'When the anchor option is set to Off, the display can be dragged while holding CTRL or reset with the button.'}
 UI_CHANGES_LOCALE.ERROR_FRAME_ANCHOR_DROPDOWN = 'Anchor to TargetFrame'
 
 UI_CHANGES_LOCALE.BREATH_WARNING = 'Breath Warning'
@@ -135,7 +135,7 @@ UI_CHANGES_LOCALE.DMB = {'Shows the mana bar while shapeshifted into a druid for
 -- ~DruidManaBar
 
 -- PartyPetFrames
-local PPF_1 = 'Re-enables the hidden pet frames & adds their missing power bars when using default party frames.'
+local PPF_1 = 'Re-enables the hidden pet frames and adds their missing power bars when using default party frames.'
 local PPF_2 = 'This modifies a console variable! If you\'re going to remove the addon, disable this and log off first.'
 UI_CHANGES_LOCALE.PPF = {PPF_1, colorRed..PPF_2..colorEscape}
 UI_CHANGES_LOCALE.CURRENT_CVAR_VALUE = function(enabled)

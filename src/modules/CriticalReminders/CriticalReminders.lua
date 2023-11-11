@@ -340,6 +340,14 @@ errorFrameAnchoringTable['LEFT'] = function()
   errorFrame:SetPoint('RIGHT', _G['TargetFrame'], 'LEFT', -10, 6)
 end
 
+local anchorToUIFrame = function()
+  local uiErrorsFrame = _G['UIErrorsFrame']
+  local offsetX = (uiErrorsFrame:GetWidth() / 2) - (errorFrame:GetWidth() / 2)
+
+  errorFrame:SetPoint('BOTTOM', uiErrorsFrame, 'TOP', 0, 15)
+  errorFrame:SetPoint('LEFT', uiErrorsFrame, 'LEFT', offsetX, 0)
+end
+
 local anchorErrorFrame = function()
   if InCombatLockdown() then
     return
@@ -380,13 +388,14 @@ local anchorErrorFrame = function()
       local offsetX = _G['UIC_CR_ErrorFrameInfo'].offsetX
       local offsetY = _G['UIC_CR_ErrorFrameInfo'].offsetY
 
-      errorFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY)
-    else
-      local uiErrorsFrame = _G['UIErrorsFrame']
-      local offsetX = (uiErrorsFrame:GetWidth() / 2) - (errorFrame:GetWidth() / 2)
+      local status, _ = pcall(function () errorFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY) end)
+      if status == false then
+        _G['UIC_CR_ErrorFrameInfo'] = nil
 
-      errorFrame:SetPoint('BOTTOM', uiErrorsFrame, 'TOP', 0, 15)
-      errorFrame:SetPoint('LEFT', uiErrorsFrame, 'LEFT', offsetX, 0)
+        anchorToUIFrame()
+      end
+    else
+      anchorToUIFrame()
     end
   else
     errorFrame:EnableMouse(false)

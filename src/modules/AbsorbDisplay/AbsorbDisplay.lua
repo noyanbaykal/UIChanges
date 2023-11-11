@@ -666,6 +666,10 @@ local initializeSpellShieldFrame = function()
   initializeSecondaryFrames(spellShieldFrame, 'SpellShield', SPELL_SHIELD_COLOR)
 end
 
+local anchorToCastingBarFrame = function()
+  shieldFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, BASE_OFFSET_Y)
+end
+
 local initializeShieldFrame = function()
   shieldFrame = CreateFrame('Frame', 'UIC_AD_Shield_Frame', UIParent, 'BackdropTemplate')
   shieldFrame:EnableMouse(true)
@@ -680,9 +684,14 @@ local initializeShieldFrame = function()
     local offsetX = _G['UIC_AD_FrameInfo'].offsetX
     local offsetY = _G['UIC_AD_FrameInfo'].offsetY
 
-    shieldFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY)
+    local status, _ = pcall(function () shieldFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY) end)
+    if status == false then
+      _G['UIC_AD_FrameInfo'] = nil
+
+      anchorToCastingBarFrame()
+    end
   else
-    shieldFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, BASE_OFFSET_Y)
+    anchorToCastingBarFrame()
   end
 
   shieldFrame:SetBackdrop(C.BACKDROP_INFO(2, 1))

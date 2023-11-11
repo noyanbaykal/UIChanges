@@ -17,7 +17,7 @@
 
 ## Interface: 11404
 ## Title: UIChanges
-## Version: 1.1.0
+## Version: 1.1.1
 ## Notes: Simple additions to the classic UI to make it nicer.
 ## SavedVariablesPerCharacter: UIC_Toggle_Quick_Zoom, UIC_Toggle_Hide_Era_Map_Button, UIC_AD_IsEnabled, UIC_AD_FrameInfo, UIC_AHT_IsEnabled, UIC_BU_IsEnabled, UIC_CR_IsEnabled, UIC_CR_ErrorFrameInfo, UIC_CR_ErrorFrameAnchor, UIC_CR_BreathWarning, UIC_CR_BreathWarning_Sound, UIC_CR_CombatWarning, UIC_CR_CombatWarning_Sound, UIC_CR_GatheringFailure, UIC_CR_GatheringFailure_Sound, UIC_CR_CombatLos, UIC_CR_CombatLos_Sound, UIC_CR_CombatDirection, UIC_CR_CombatDirection_Sound, UIC_CR_CombatRange, UIC_CR_CombatRange_Sound, UIC_CR_CombatInterrupted, UIC_CR_CombatInterrupted_Sound, UIC_CR_CombatCooldown, UIC_CR_CombatCooldown_Sound, UIC_CR_CombatNoResource, UIC_CR_CombatNoResource_Sound, UIC_CR_InteractionRange, UIC_CR_InteractionRange_Sound, UIC_DMB_IsEnabled, UIC_PPF_IsEnabled, UIC_PA_IsEnabled, UIC_PA_Party, UIC_PA_Battleground, UIC_PA_Raid, UIC_PA_Arena
 

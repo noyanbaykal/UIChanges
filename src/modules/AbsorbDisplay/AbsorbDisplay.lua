@@ -277,7 +277,7 @@ local getShieldBuffData = function(tableReference)
     i = i + 1
   end
 
-  return 0
+  return nil
 end
 
 local clearBuff = function(tableReference, index)
@@ -330,14 +330,14 @@ local handleAuraChange = function(isApplied, sourceName, spellName)
   local tableReference = lookup.table
   local calculateFinalAmount = lookup.calculateFinalAmount
 
-  if (isApplied == false) then
+  if isApplied == false then
     shields[index].max = 0
     shields[index].left = 0
 
     return true
   else
     local buffData = getShieldBuffData(tableReference)
-    if buffData ~= nil then -- Shouldn't be necessary but better to be safe
+    if buffData ~= nil then
       local amount = calculateFinalAmount(sourceName, dataTableReference, buffData)
 
       shields[index].max = amount
@@ -523,7 +523,7 @@ local cacheHighestKnownRanks = function()
   end
 end
 
-local calculatorPwsEra = function(buffData)
+local calculatorPwsHelperEra = function(buffData)
   local baseAmount
 
   if cachedHighestKnown[1].rank == buffData.rank then
@@ -533,6 +533,21 @@ local calculatorPwsEra = function(buffData)
   end
 
   local finalAmount = baseAmount + (spellpower * spellpowerCoefficientPWS)
+  return math.floor(finalAmount)
+end
+
+local calculatorPwsHelper = function(dataTable, buffData)
+  local amount
+
+  if playerLevel == MAX_LEVEL or buffData.rank == #dataTable or playerLevel >= dataTable[buffData.rank + 1].level then
+    amount = buffData.maxAmount
+  else
+    amount = buffData.amount
+  end
+
+  local coefficient = spellpowerCoefficientPWS + talentCoefficientBonusBT
+
+  local finalAmount = (amount + (spellpower * coefficient)) * talentModifierIPWS * setBonusModifierPWS
   return math.floor(finalAmount)
 end
 
@@ -546,21 +561,10 @@ local calculatorPws = function(sourceName, dataTable, buffData)
   end
 
   if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-    return calculatorPwsEra(buffData)
-  end
-
-  local amount
-
-  if playerLevel == MAX_LEVEL or buffData.rank == #dataTable or playerLevel >= dataTable[buffData.rank + 1].level then
-    amount = buffData.maxAmount
+    return calculatorPwsHelperEra(buffData)
   else
-    amount = buffData.amount
+    return calculatorPwsHelper(dataTable, buffData)
   end
-
-  local coefficient = spellpowerCoefficientPWS + talentCoefficientBonusBT
-
-  local finalAmount = (amount + (spellpower * coefficient)) * talentModifierIPWS * setBonusModifierPWS
-  return math.floor(finalAmount)
 end
 
 local calculatorSacrifice = function(_, dataTable, buffData)

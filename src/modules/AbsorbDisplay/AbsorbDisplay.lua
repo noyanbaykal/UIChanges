@@ -262,7 +262,7 @@ local getShieldBuffData = function(tableReference)
   local i = 1
 
   while isDone == false do
-    local buffInfo = {UnitBuff('player', i, 'PLAYER | CANCELABLE')}
+    local buffInfo = {UnitBuff('player', i, 'CANCELABLE')}
 
     if (buffInfo[1] == nil) then
       isDone = true
@@ -737,18 +737,23 @@ local EVENTS = {}
 EVENTS['COMBAT_LOG_EVENT_UNFILTERED'] = function()
   local info = {CombatLogGetCurrentEventInfo()}
 
-  if info[2] == 'SPELL_ABSORBED' then
+  local subevent = info[2]
+  local sourceName = info[5]
+  local destName = info[9]
+  local spellName = info[13]
+
+  if subevent == 'SPELL_ABSORBED' then
     local shouldUpdate = handleAbsorb(info)
     if shouldUpdate == false then
       return
     end
-  elseif info[2] == 'SPELL_AURA_APPLIED' and info[9] == playerName then
-    if handleAuraChange(true, info[5], info[13]) == false then
-      checkReapplication(true, info[13])
+  elseif subevent == 'SPELL_AURA_APPLIED' and destName == playerName then
+    if handleAuraChange(true, sourceName, spellName) == false then
+      checkReapplication(true, spellName)
     end
-  elseif info[2] == 'SPELL_AURA_REMOVED' and info[9] == playerName then
-    if handleAuraChange(false, info[5], info[13]) == false then
-      checkReapplication(false, info[13])
+  elseif subevent == 'SPELL_AURA_REMOVED' and destName == playerName then
+    if handleAuraChange(false, sourceName, spellName) == false then
+      checkReapplication(false, spellName)
     end
   else
     return

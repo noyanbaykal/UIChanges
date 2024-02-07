@@ -21,13 +21,6 @@ local C = UI_CHANGES_CONSTANTS
 
 local mainFrame, errorFrame, breathFrame, attackTimer, breathTimer, breathValues
 
-local ERROR_FAILURE = 51
-local ERROR_DIRECTION = 262
-local ERROR_RANGE_MELEE = 263
-local ERROR_RANGE_SPELL = 363
-
-local COMBAT_WARNING_TEXTURE_ID = 132147 -- Ability_DualWield
-
 local TIMER_INTERVAL = 4 -- Seconds
 local BREATH_TIMER_INTERVAL = 1 -- Seconds
 
@@ -67,132 +60,48 @@ local showInteractionRange = function()
   return _G['UIC_CR_InteractionRange']
 end
 
-local MessageMap = {
-  -- Got in combat
-  ['PLAYER_REGEN_DISABLED'] = showCombatWarning,
-  -- Gathering failure
-  [SPELL_FAILED_TRY_AGAIN] = showGatheringFailure,
-  -- Combat LOS
-  [SPELL_FAILED_LINE_OF_SIGHT] = showNoLos,
-  -- Combat direction
-  [ERR_BADATTACKFACING] = showCombatDirection,
-  [SPELL_FAILED_UNIT_NOT_INFRONT] = showCombatDirection,
-  -- Combat range
-  [ERR_BADATTACKPOS] = showCombatRange,
-  [ERR_OUT_OF_RANGE] = showCombatRange,
-  [SPELL_FAILED_TOO_CLOSE] = showCombatRange,
-  -- Combat interrupted
-  [SPELL_FAILED_MOVING] = showCombatInterrupted,
-  [ACTION_SPELL_INTERRUPT] = showCombatInterrupted,
-  [INTERRUPTED] = showCombatInterrupted,
-  [LOSS_OF_CONTROL_DISPLAY_INTERRUPT] = showCombatInterrupted,
-  [LOSS_OF_CONTROL_DISPLAY_SCHOOL_INTERRUPT] = showCombatInterrupted,
-  [SPELL_FAILED_INTERRUPTED] = showCombatInterrupted,
-  [SPELL_FAILED_INTERRUPTED_COMBAT] = showCombatInterrupted,
-  -- Combat cooldown
-  [ERR_SPELL_COOLDOWN] = showCombatCooldown,
-  [ERR_ABILITY_COOLDOWN] = showCombatCooldown,
-  -- Combat no resource
-  [ERR_OUT_OF_RAGE] = showNoResource,
-  [OUT_OF_RAGE] = showNoResource,
-  [ERR_OUT_OF_ENERGY] = showNoResource,
-  [OUT_OF_ENERGY] = showNoResource,
-  [ERR_OUT_OF_MANA] = showNoResource,
-  [OUT_OF_MANA] = showNoResource,
-  -- Interaction range
-  [ERR_TOO_FAR_TO_INTERACT] = showInteractionRange,
-  [ERR_USE_TOO_FAR] = showInteractionRange,
+local ErrorMap = {
+  ['PLAYER_REGEN_DISABLED'] =               {showCombatWarning,     'Interface\\ICONS\\Ability_DualWield',                  'UIC_CR_CombatWarning_Sound'},
+  [ERR_BADATTACKPOS] =                      {showCombatRange,       'Interface\\CURSOR\\UnableAttack',                      'UIC_CR_CombatRange_Sound'},
+  [ERR_BADATTACKFACING] =                   {showCombatDirection,   'Interface\\GLUES\\CharacterSelect\\CharacterUndelete', 'UIC_CR_CombatDirection_Sound', 52},
+  [ERR_OUT_OF_RANGE] =                      {showCombatRange,       'Interface\\CURSOR\\UnableCrosshairs',                  'UIC_CR_CombatRange_Sound'},
+  [ERR_SPELL_COOLDOWN] =                    {showCombatCooldown,    'Interface\\ICONS\\INV_Misc_PocketWatch_01',            'UIC_CR_CombatCooldown_Sound'},
+  [ERR_SPELL_FAILED_ANOTHER_IN_PROGRESS] =  {showCombatInterrupted, 'Interface\\CURSOR\\UnableCast',                        'UIC_CR_CombatInterrupted_Sound', nil, 1, -2},
+  [ERR_OUT_OF_MANA] =                       {showNoResource,        'Interface\\ICONS\\Spell_Shadow_ManaBurn',              'UIC_CR_CombatNoResource_Sound'},
+  [ERR_OUT_OF_RAGE] =                       {showNoResource,        'Interface\\ICONS\\Ability_Racial_BloodRage',           'UIC_CR_CombatNoResource_Sound'},
+  [ERR_OUT_OF_ENERGY] =                     {showNoResource,        'Interface\\ICONS\\ClassIcon_Rogue',                    'UIC_CR_CombatNoResource_Sound'},
+  [ERR_TOO_FAR_TO_INTERACT] =               {showInteractionRange,  'Interface\\CURSOR\\UnableInteract',                    'UIC_CR_InteractionRange_Sound', nil, 1, -2},
+  [SPELL_FAILED_TRY_AGAIN] =                {showGatheringFailure,  'Interface\\CURSOR\\UnableGatherHerbs',                 'UIC_CR_GatheringFailure_Sound'},
+  [SPELL_FAILED_LINE_OF_SIGHT] =            {showNoLos,             'Interface\\ICONS\\INV_Misc_Eye_01',                    'UIC_CR_CombatLos_Sound'},
+  [INTERRUPTED] =                           {showCombatInterrupted, 'Interface\\CURSOR\\UnableUI-Cursor-Move',              'UIC_CR_CombatInterrupted_Sound'},
 }
 
-local isInterruptedMessage = function(message)
-  return message == SPELL_FAILED_MOVING or
-    message == INTERRUPTED or
-    message == LOSS_OF_CONTROL_DISPLAY_INTERRUPT or
-    message == LOSS_OF_CONTROL_DISPLAY_SCHOOL_INTERRUPT or
-    message == SPELL_FAILED_INTERRUPTED or
-    message == SPELL_FAILED_INTERRUPTED_COMBAT
-end
+ErrorMap[SPELL_FAILED_UNIT_NOT_INFRONT] =             ErrorMap[ERR_BADATTACKFACING]
+ErrorMap[SPELL_FAILED_TOO_CLOSE] =                    ErrorMap[ERR_OUT_OF_RANGE]
+ErrorMap[ERR_ABILITY_COOLDOWN] =                      ErrorMap[ERR_SPELL_COOLDOWN]
+ErrorMap[OUT_OF_MANA] =                               ErrorMap[ERR_OUT_OF_MANA]
+ErrorMap[OUT_OF_RAGE] =                               ErrorMap[ERR_OUT_OF_RAGE]
+ErrorMap[OUT_OF_ENERGY] =                             ErrorMap[ERR_OUT_OF_ENERGY]
+ErrorMap[ERR_USE_TOO_FAR] =                           ErrorMap[ERR_TOO_FAR_TO_INTERACT]
+ErrorMap[SPELL_FAILED_MOVING] =                       ErrorMap[INTERRUPTED]
+ErrorMap[LOSS_OF_CONTROL_DISPLAY_INTERRUPT] =         ErrorMap[INTERRUPTED]
+ErrorMap[LOSS_OF_CONTROL_DISPLAY_SCHOOL_INTERRUPT] =  ErrorMap[INTERRUPTED]
+ErrorMap[SPELL_FAILED_INTERRUPTED] =                  ErrorMap[INTERRUPTED]
+ErrorMap[SPELL_FAILED_INTERRUPTED_COMBAT] =           ErrorMap[INTERRUPTED]
+ErrorMap[ACTION_SPELL_INTERRUPT] =                    ErrorMap[INTERRUPTED]
 
--- Return signature is textureName, playSound, size, offsetX, offsetY
-local checkError = function(errorType, message)
-  if errorType == ERROR_RANGE_MELEE then
-    return 'Interface\\CURSOR\\UnableAttack', _G['UIC_CR_CombatRange_Sound']
-  end
-
-  if errorType == ERROR_DIRECTION then
-    return 'Interface\\GLUES\\CharacterSelect\\CharacterUndelete', _G['UIC_CR_CombatDirection_Sound'], 52
-  end
-
-  if errorType == ERROR_RANGE_SPELL or message == ERR_SPELL_FAILED_ANOTHER_IN_PROGRESS then
-    return 'Interface\\CURSOR\\UnableCast', _G['UIC_CR_CombatInterrupted_Sound'], nil, 1, -2
-  end
-
-  if message == ERR_TOO_FAR_TO_INTERACT or message == ERR_USE_TOO_FAR then
-    return 'Interface\\CURSOR\\UnableInteract', _G['UIC_CR_InteractionRange_Sound'], nil, 1, -2
-  end
-
-  if errorType == ERROR_FAILURE then
-    if message == SPELL_FAILED_UNIT_NOT_INFRONT then
-      return 'Interface\\GLUES\\CharacterSelect\\CharacterUndelete', _G['UIC_CR_CombatDirection_Sound'], 52
-    elseif message == SPELL_FAILED_TOO_CLOSE then
-      return 'Interface\\CURSOR\\UnableCrosshairs', _G['UIC_CR_CombatRange_Sound']
-    elseif isInterruptedMessage(message) then
-      return 'Interface\\CURSOR\\UnableUI-Cursor-Move', _G['UIC_CR_CombatInterrupted_Sound']
-    elseif message == SPELL_FAILED_LINE_OF_SIGHT then
-      return 'Interface\\ICONS\\INV_Misc_Eye_01', _G['UIC_CR_CombatLos_Sound']
-    elseif message == SPELL_FAILED_TRY_AGAIN then
-      return 'Interface\\CURSOR\\UnableGatherHerbs', _G['UIC_CR_GatheringFailure_Sound']
-    end
-  end
-
-  if message == 'PLAYER_REGEN_DISABLED' then
-    return 'Interface\\ICONS\\Ability_DualWield', _G['UIC_CR_CombatWarning_Sound']
-  end
-
-  if message == ERR_SPELL_COOLDOWN or message == ERR_ABILITY_COOLDOWN then
-    return 'Interface\\ICONS\\INV_Misc_PocketWatch_01', _G['UIC_CR_CombatCooldown_Sound']
-  end
-
-  if message == ERR_OUT_OF_MANA or message == OUT_OF_MANA then
-    return 'Interface\\ICONS\\Spell_Shadow_ManaBurn', _G['UIC_CR_CombatNoResource_Sound']
-  end
-
-  if message == ERR_OUT_OF_RAGE or message == OUT_OF_RAGE then
-    return 'Interface\\ICONS\\Ability_Racial_BloodRage', _G['UIC_CR_CombatNoResource_Sound']
-  end
-
-  if message == ERR_OUT_OF_ENERGY or message == OUT_OF_ENERGY then
-    return 'Interface\\ICONS\\ClassIcon_Rogue', _G['UIC_CR_CombatNoResource_Sound']
-  end
-
-  if message == ERR_OUT_OF_RANGE then
-    return 'Interface\\CURSOR\\UnableCrosshairs', _G['UIC_CR_CombatRange_Sound']
-  end
-
-  return nil
-end
-
-local setErrorFrame = function(errorType, message)
-  local textureName
-  local playSound
-  local size
-  local offsetX
-  local offsetY
-
-  textureName, playSound, size, offsetX, offsetY = checkError(errorType, message)
+local setErrorFrame = function(textureName, playSound, size, offsetX, offsetY)
   size = size or 40
   offsetX = offsetX or 0
   offsetY = offsetY or 0
 
-  if textureName then
-    errorFrame.texture:SetPoint('CENTER', errorFrame, 'CENTER', offsetX or 0, offsetY or 0)
-    errorFrame.texture:SetSize(size, size)
-    errorFrame.texture:SetTexture(textureName)
-    errorFrame:Show()
+  errorFrame.texture:SetPoint('CENTER', errorFrame, 'CENTER', offsetX or 0, offsetY or 0)
+  errorFrame.texture:SetSize(size, size)
+  errorFrame.texture:SetTexture(textureName)
+  errorFrame:Show()
 
-    if playSound == true then
-      PlaySound(12889) -- AlarmClockWarning3
-    end
+  if playSound == true then
+    PlaySound(12889) -- AlarmClockWarning3
   end
 end
 
@@ -239,7 +148,7 @@ local updateBreathFrame = function()
       soundId = 7256 -- NsabbeyBell
     elseif secondsLeft == 15 then
       soundId = 12867 -- AlarmClockWarning2
-    elseif secondsLeft == 5 then
+    elseif secondsLeft == 10 or secondsLeft == 5 then
       soundId = 8959 -- RaidWarning
     end
 
@@ -284,24 +193,10 @@ local stopAttackTimer = function()
   errorFrame:Hide()
 end
 
-local isRelevantMessage = function(message)
-  local lookup = MessageMap[message]
-
-  if lookup == nil then
-    return false
-  elseif type(lookup) == 'function' then
-    return lookup()
-  else
-    return lookup
-  end
-end
-
-local gotUIErrorMessage = function(errorType, message)
-  if isRelevantMessage(message) then
-    stopAttackTimer()
-    attackTimer = C_Timer.NewTicker(TIMER_INTERVAL, stopAttackTimer)
-    setErrorFrame(errorType, message)
-  end
+local showUIErrorMessage = function(textureName, playSound, size, offsetX, offsetY)
+  stopAttackTimer()
+  attackTimer = C_Timer.NewTicker(TIMER_INTERVAL, stopAttackTimer)
+  setErrorFrame(textureName, playSound, size, offsetX, offsetY)
 end
 
 local errorFrameAnchoringTable = {}
@@ -340,11 +235,11 @@ errorFrameAnchoringTable['LEFT'] = function()
   errorFrame:SetPoint('RIGHT', _G['TargetFrame'], 'LEFT', -10, 6)
 end
 
-local anchorToUIFrame = function()
+local anchorToUIErrorsFrame = function()
   local uiErrorsFrame = _G['UIErrorsFrame']
   local offsetX = (uiErrorsFrame:GetWidth() / 2) - (errorFrame:GetWidth() / 2)
 
-  errorFrame:SetPoint('BOTTOM', uiErrorsFrame, 'TOP', 0, 15)
+  errorFrame:SetPoint('BOTTOM', _G['MirrorTimer1'], 'TOP', 0, 15)
   errorFrame:SetPoint('LEFT', uiErrorsFrame, 'LEFT', offsetX, 0)
 end
 
@@ -392,10 +287,10 @@ local anchorErrorFrame = function()
       if status == false then
         _G['UIC_CR_ErrorFrameInfo'] = nil
 
-        anchorToUIFrame()
+        anchorToUIErrorsFrame()
       end
     else
-      anchorToUIFrame()
+      anchorToUIErrorsFrame()
     end
   else
     errorFrame:EnableMouse(false)
@@ -445,17 +340,32 @@ local initializeErrorFrame = function()
   errorFrame:Hide()
 end
 
+local handleErrorMessage = function(message)
+  if ErrorMap[message] == nil then
+    return
+  end
+
+  local shouldShow, textureName, soundVariableName, size, offsetX, offsetY = unpack(ErrorMap[message])
+  if shouldShow() ~= true or not textureName then
+    return
+  end
+
+  local playSound = _G[soundVariableName] == true
+
+  showUIErrorMessage(textureName, playSound, size, offsetX, offsetY)
+end
+
 local EVENTS = {}
-EVENTS['UI_ERROR_MESSAGE'] = function(...)
-  gotUIErrorMessage(...)
+EVENTS['UI_ERROR_MESSAGE'] = function(errorType, message)
+  handleErrorMessage(message)
 end
 
 EVENTS['PLAYER_REGEN_DISABLED'] = function()
-  gotUIErrorMessage(nil, 'PLAYER_REGEN_DISABLED')
+  handleErrorMessage('PLAYER_REGEN_DISABLED')
 end
 
 EVENTS['PLAYER_REGEN_ENABLED'] = function(...)
-  if errorFrame.texture:GetTexture() == COMBAT_WARNING_TEXTURE_ID then
+  if errorFrame.texture:GetTexture() == 132147 then -- Ability_DualWield used when the player enters combat
     stopAttackTimer()
   end
 end

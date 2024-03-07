@@ -17,7 +17,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local C = UI_CHANGES_CONSTANTS
+local _, sharedTable = ...
+
+local C = sharedTable.C
 
 -- Forward declaring modules
 local mainFrame, buyoutWarning, calculator

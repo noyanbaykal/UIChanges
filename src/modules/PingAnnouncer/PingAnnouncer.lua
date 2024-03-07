@@ -17,8 +17,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local C = UI_CHANGES_CONSTANTS
-local L = UI_CHANGES_LOCALE
+local _, sharedTable = ...
+
+local L = sharedTable.L
+local C = sharedTable.C
 
 local ESCAPE_TABLE = {
   ['|c%x%x%x%x%x%x%x%x'] = '', -- color start

@@ -17,8 +17,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local C = UI_CHANGES_CONSTANTS
-local L = UI_CHANGES_LOCALE
+local _, sharedTable = ...
+
+local L = sharedTable.L
+local C = sharedTable.C
 
 -- Spells scale with the caster's level. There isn't a clean way of accounting for this so we store
 -- amount and maxAmount. We'll look at the player's level and use the maxAmount for lower level ranks.

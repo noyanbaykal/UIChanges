@@ -17,27 +17,27 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local L = UI_CHANGES_LOCALE
+local _, sharedTable = ...
 
--- All addons share the global namespace and global name conflicts are possible.
--- Bundling all constants in a single object to avoid possible conflicts.
-UI_CHANGES_CONSTANTS = {}
+local L = sharedTable.L
 
-UI_CHANGES_CONSTANTS.AD_RESET_DISPLAY_LOCATION = function()
+local constants = {}
+
+constants.AD_RESET_DISPLAY_LOCATION = function()
   local adMainFrame = _G['UIC_AbsorbDisplay']
   if adMainFrame and adMainFrame.ResetDisplayLocation then
     adMainFrame:ResetDisplayLocation()
   end
 end
 
-UI_CHANGES_CONSTANTS.CR_RESET_ERROR_FRAME_LOCATION = function()
+constants.CR_RESET_ERROR_FRAME_LOCATION = function()
   local crMainFrame = _G['UIC_CriticalReminders']
   if crMainFrame and crMainFrame.ResetErrorFrameLocation then
     crMainFrame:ResetErrorFrameLocation()
   end
 end
 
-UI_CHANGES_CONSTANTS.ENUM_ANCHOR_OPTIONS = {
+constants.ENUM_ANCHOR_OPTIONS = {
   {'Off', nil},
   {'Top Left',      'TOPLEFT'},
   {'Top',           'TOP'},
@@ -50,12 +50,12 @@ UI_CHANGES_CONSTANTS.ENUM_ANCHOR_OPTIONS = {
 }
 
 -- These toggles have the same schema as subToggles.entries
-UI_CHANGES_CONSTANTS.BASE_TOGGLES = {
+constants.BASE_TOGGLES = {
   {'UIC_Toggle_Quick_Zoom', L.MINIMAP_QUICK_ZOOM, false, nil, L.TOOLTIP_MINIMAP_QUICK_ZOOM},
   {'UIC_Toggle_Hide_Era_Map_Button', L.ERA_HIDE_MINIMAP_MAP_BUTTON, false, nil, L.TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON},
 }
 
-UI_CHANGES_CONSTANTS.MODULES = {
+constants.MODULES = {
   {
     ['savedVariableName'] = 'UIC_AD_IsEnabled', -- Name of the corresponding savedVariable
     ['frameName'] = 'AbsorbDisplay', -- Corresponds to the class that is exported in the module file
@@ -65,7 +65,7 @@ UI_CHANGES_CONSTANTS.MODULES = {
     ['subToggles'] = {
       ['offsetX'] = 35,
       ['entries'] = {
-        {nil, L.RESET_POSITION, false, {'button', UI_CHANGES_CONSTANTS.AD_RESET_DISPLAY_LOCATION}},
+        {nil, L.RESET_POSITION, false, {'button', constants.AD_RESET_DISPLAY_LOCATION}},
       }
     },
   },
@@ -114,7 +114,7 @@ UI_CHANGES_CONSTANTS.MODULES = {
         {'UIC_CR_InteractionRange', L.INTERACTION_RANGE},
         {'UIC_CR_InteractionRange_Sound', L.INTERACTION_RANGE_SOUND, false, nil, L.INTERACTION_RANGE_SOUND_TOOLTIP},
         {'UIC_CR_ErrorFrameAnchor', L.ERROR_FRAME_ANCHOR_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
-        {nil, L.RESET_POSITION, false, {'button', UI_CHANGES_CONSTANTS.CR_RESET_ERROR_FRAME_LOCATION}},
+        {nil, L.RESET_POSITION, false, {'button', constants.CR_RESET_ERROR_FRAME_LOCATION}},
       },
       ['separator'] = {3, 19}
     },
@@ -152,19 +152,19 @@ UI_CHANGES_CONSTANTS.MODULES = {
   },
 }
 
-UI_CHANGES_CONSTANTS.REGISTER_EVENTS = function(frame, eventsTable)
+constants.REGISTER_EVENTS = function(frame, eventsTable)
   for event, _ in pairs(eventsTable) do
     frame:RegisterEvent(event)
   end
 end
 
-UI_CHANGES_CONSTANTS.UNREGISTER_EVENTS = function(frame, eventsTable)
+constants.UNREGISTER_EVENTS = function(frame, eventsTable)
   for event, _ in pairs(eventsTable) do
     frame:UnregisterEvent(event)
   end
 end
 
-UI_CHANGES_CONSTANTS.BACKDROP_INFO = function(edgeSize, insetSize)
+constants.BACKDROP_INFO = function(edgeSize, insetSize)
   return {
     bgFile = 'Interface/Tooltips/UI-Tooltip-Background',
     edgeFile = 'Interface/Tooltips/UI-Tooltip-Border',
@@ -173,7 +173,7 @@ UI_CHANGES_CONSTANTS.BACKDROP_INFO = function(edgeSize, insetSize)
   }
 end
 
-UI_CHANGES_CONSTANTS.RoundToPixelCount = function(count)
+constants.RoundToPixelCount = function(count)
   if count == 0 then
     return count
   elseif count > 0 and count < 1 then
@@ -183,4 +183,4 @@ UI_CHANGES_CONSTANTS.RoundToPixelCount = function(count)
   end
 end
 
-return UI_CHANGES_CONSTANTS
+sharedTable.C = constants

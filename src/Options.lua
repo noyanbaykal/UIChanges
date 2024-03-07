@@ -19,8 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 local LibDD = LibStub:GetLibrary('LibUIDropDownMenu-4.0')
 
-local C = UI_CHANGES_CONSTANTS
-local L = UI_CHANGES_LOCALE
+local _, sharedTable = ...
+
+local L = sharedTable.L
+local C = sharedTable.C
 
 local gameFontColor = {} -- Yellow. This will override checkbox texts
 gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4] = _G['GameFontNormal']:GetTextColor()

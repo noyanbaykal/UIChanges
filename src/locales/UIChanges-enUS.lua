@@ -163,4 +163,5 @@ locale.NORTH = 'North'
 locale.SOUTH = 'South'
 -- ~PingAnnouncer
 
-sharedTable.L = locale
+-- Localization files should set a reference to themselves in the sharedTable with their locale code as the key
+sharedTable.enUS = locale

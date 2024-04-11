@@ -19,6 +19,38 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 local _, sharedTable = ...
 
+local languages = {
+	['enUS'] = true,
+	['koKR'] = true,
+	['frFR'] = true,
+	['deDE'] = true,
+	['zhCN'] = true,
+	['esES'] = true,
+	['zhTW'] = true,
+	['esMX'] = true,
+	['ruRU'] = true,
+	['ptBR'] = true,
+	['itIT'] = true,
+}
+
+-- Try to match the client's language
+local locale = GetLocale()
+
+if not sharedTable[locale] then
+  locale = 'enUS' -- Default to English
+end
+
+sharedTable.L = sharedTable[locale] -- Set the localization table for all the other files
+
+if locale ~= 'enUS' then
+  setmetatable(sharedTable.L, {__index = sharedTable.enUS}) -- Set the enUS table as fallback
+end
+
+-- Remove the direct refences to the language tables so the unused ones will be garbage collected
+for language, _ in pairs(languages) do
+  sharedTable[language] = nil
+end
+
 local L = sharedTable.L
 
 local constants = {}

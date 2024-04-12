@@ -400,7 +400,7 @@ local handleAbsorb = function(info)
   return true
 end
 
--- https://wowpedia.fandom.com/wiki/ItemLink
+-- https://warcraft.wiki.gg/wiki/ItemLink
 local getEquippedItemId = function(slot)
   local itemLink = GetInventoryItemLink('player', slot)
   if itemLink == nil then

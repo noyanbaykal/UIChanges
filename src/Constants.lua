@@ -19,6 +19,75 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 local _, sharedTable = ...
 
+-- Localization setup
+
+-- Injects the strings that need additional work. The work here is needed regardless of the language being used
+-- by the client. Having this function here prevents code duplication in locale files.
+local buildRemainingStrings = function (L)
+  local colorWhite = '|cFFFFFFFF'
+  local colorRed = '|cFFFF0000'
+  local colorOrange = '|cFFFF8000'
+  local colorEscape = '|r'
+
+  L.NEEDS_RELOAD = colorOrange .. L.NEEDS_RELOAD_1 .. colorEscape
+  L.OPTIONS_INFO = colorRed .. L.OPTIONS_INFO_1 .. colorEscape
+
+  L.MINIMAP_QUICK_ZOOM = colorWhite .. L.MINIMAP_QUICK_ZOOM_1 .. colorEscape
+  L.TOOLTIP_MINIMAP_QUICK_ZOOM = L.MINIMAP_QUICK_ZOOM_1 .. '\n' .. colorWhite .. L.MINIMAP_QUICK_ZOOM_2 .. colorEscape
+  L.ERA_HIDE_MINIMAP_MAP_BUTTON = colorWhite .. L.ERA_HIDE_MINIMAP_MAP_BUTTON_1 .. colorEscape
+  L.TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON = L.ERA_HIDE_MINIMAP_MAP_BUTTON_1 .. '\n' .. colorWhite .. L.TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON_1 .. '\n' .. L.NEEDS_RELOAD
+
+  L.PPF = {L.PPF_1, colorRed .. L.PPF_2 ..colorEscape}
+
+  local AbsorbDisplayStringHelper = function()
+    local namePws = GetSpellInfo(17)
+    local nameSacrifice = GetSpellInfo(7812)
+  
+    local spellstoneId = 128
+    if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
+      spellstoneId = 54730
+    end
+  
+    local nameSpellstone = GetSpellInfo(spellstoneId)
+  
+    return namePws..', '..nameSacrifice..' & '..nameSpellstone..'.'
+  end
+
+  L.AD = {L.ABSORB_DISPLAY_1 .. AbsorbDisplayStringHelper(), L.ABSORB_DISPLAY_2}
+  
+  local buildCriticalRemindersVariables = function()
+    local CRITICAL_REMINDERS_VARIABLES = {
+      'BREATH_WARNING',
+      'COMBAT_WARNING',
+      'GATHERING_FAILURE',
+      'COMBAT_LOS',
+      'COMBAT_DIRECTION',
+      'COMBAT_RANGE',
+      'COMBAT_INTERRUPTED',
+      'COMBAT_COOLDOWN',
+      'COMBAT_NO_RESOURCE',
+      'INTERACTION_RANGE',
+    }
+
+    for _, variableKey in ipairs(CRITICAL_REMINDERS_VARIABLES) do
+      local name = L[variableKey]
+
+      local shortName = ''
+      
+      for character in string.gmatch(name, '%u+') do -- Find all the uppercase letters
+        shortName = shortName .. character
+      end
+
+      local soundText = shortName .. ' ' ..SOUND
+      
+      L[variableKey .. '_SOUND'] = soundText
+      L[variableKey .. '_SOUND_TOOLTIP'] = soundText .. '\n' .. colorWhite .. L.PLAY_SOUND .. ' ' .. name .. colorEscape
+    end
+  end
+
+  buildCriticalRemindersVariables()
+end
+
 local languages = {
 	['enUS'] = true,
 	['koKR'] = true,
@@ -46,10 +115,14 @@ if locale ~= 'enUS' then
   setmetatable(sharedTable.L, {__index = sharedTable.enUS}) -- Set the enUS table as fallback
 end
 
+buildRemainingStrings(sharedTable.L)
+
 -- Remove the direct refences to the language tables so the unused ones will be garbage collected
 for language, _ in pairs(languages) do
   sharedTable[language] = nil
 end
+
+-- ~Localization setup
 
 local L = sharedTable.L
 
@@ -70,7 +143,7 @@ constants.CR_RESET_ERROR_FRAME_LOCATION = function()
 end
 
 constants.ENUM_ANCHOR_OPTIONS = {
-  {'Off', nil},
+  {OFF, nil},
   {'Top Left',      'TOPLEFT'},
   {'Top',           'TOP'},
   {'Top Right',     'TOPRIGHT'},
@@ -97,7 +170,7 @@ constants.MODULES = {
     ['subToggles'] = {
       ['offsetX'] = 35,
       ['entries'] = {
-        {nil, L.RESET_POSITION, false, {'button', constants.AD_RESET_DISPLAY_LOCATION}},
+        {nil, RESET_POSITION, false, {'button', constants.AD_RESET_DISPLAY_LOCATION}},
       }
     },
   },
@@ -146,7 +219,7 @@ constants.MODULES = {
         {'UIC_CR_InteractionRange', L.INTERACTION_RANGE},
         {'UIC_CR_InteractionRange_Sound', L.INTERACTION_RANGE_SOUND, false, nil, L.INTERACTION_RANGE_SOUND_TOOLTIP},
         {'UIC_CR_ErrorFrameAnchor', L.ERROR_FRAME_ANCHOR_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
-        {nil, L.RESET_POSITION, false, {'button', constants.CR_RESET_ERROR_FRAME_LOCATION}},
+        {nil, RESET_POSITION, false, {'button', constants.CR_RESET_ERROR_FRAME_LOCATION}},
       },
       ['separator'] = {3, 19}
     },
@@ -175,10 +248,10 @@ constants.MODULES = {
     ['subToggles'] = {
       ['offsetX'] = 72,
       ['entries'] = {
-        {'UIC_PA_Raid', L.RAID},
-        {'UIC_PA_Arena', L.ARENA},
-        {'UIC_PA_Battleground', L.BATTLEGROUND},
-        {'UIC_PA_Party', L.PARTY},
+        {'UIC_PA_Raid', RAID},
+        {'UIC_PA_Arena', ARENA},
+        {'UIC_PA_Battleground', BATTLEGROUND},
+        {'UIC_PA_Party', PARTY},
       }
     },
   },

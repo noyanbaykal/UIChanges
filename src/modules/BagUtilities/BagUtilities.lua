@@ -180,7 +180,7 @@ local toggleGuard = function()
   end
 end
 
-BagUtilities = {}
+local BagUtilities = {}
 
 BagUtilities.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_BagUtilities', UIParent)
@@ -216,4 +216,4 @@ BagUtilities.Disable = function()
   end
 end
 
-return BagUtilities
+sharedTable.BagUtilities = BagUtilities

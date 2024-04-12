@@ -384,7 +384,7 @@ EVENTS['MIRROR_TIMER_STOP'] = function(timerName)
   end
 end
 
-CriticalReminders = {}
+local CriticalReminders = {}
 
 CriticalReminders.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_CriticalReminders', UIParent)
@@ -413,4 +413,4 @@ CriticalReminders.Update = function()
   anchorErrorFrame()
 end
 
-return CriticalReminders
+sharedTable.CriticalReminders = CriticalReminders

@@ -780,7 +780,7 @@ EVENTS['PLAYER_EQUIPMENT_CHANGED'] = function()
   checkItemBonuses()
 end
 
-AbsorbDisplay = {}
+local AbsorbDisplay = {}
 
 AbsorbDisplay.Initialize = function()
   adjustDataForExpansion()
@@ -827,4 +827,4 @@ AbsorbDisplay.Disable = function()
   updateDisplay()
 end
 
-return AbsorbDisplay
+sharedTable.AbsorbDisplay = AbsorbDisplay

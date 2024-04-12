@@ -233,7 +233,7 @@ local initialize = function()
   setMissingVariables()
 
   for _, moduleInfo in ipairs(C.MODULES) do
-    local frame = _G[moduleInfo['frameName']]
+    local frame = sharedTable[moduleInfo['frameName']]
     frame:Initialize()
 
     if _G[moduleInfo['savedVariableName']] then
@@ -241,7 +241,7 @@ local initialize = function()
     end
   end
 
-  UIC_Options.Initialize()
+  sharedTable.UIC_Options.Initialize()
 end
 
 -- The addon entry is right here

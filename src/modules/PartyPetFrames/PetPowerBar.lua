@@ -21,7 +21,7 @@ local _, sharedTable = ...
 
 local C = sharedTable.C
 
-PetPowerBar = {}
+local PetPowerBar = {}
 
 -- This class isn't a singleton, things need to be defined within new
 PetPowerBar.new = function(index)
@@ -90,4 +90,4 @@ PetPowerBar.new = function(index)
   return self
 end
 
-return PetPowerBar
+sharedTable.PetPowerBar = PetPowerBar

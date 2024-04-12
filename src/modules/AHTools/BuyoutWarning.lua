@@ -186,7 +186,7 @@ local createWarningFrame = function(frameName)
   return warningFrame
 end
 
-BuyoutWarning = {}
+local BuyoutWarning = {}
 
 BuyoutWarning.new = function()
   local self = {}
@@ -206,4 +206,4 @@ BuyoutWarning.new = function()
   return self
 end
 
-return BuyoutWarning
+sharedTable.BuyoutWarning = BuyoutWarning

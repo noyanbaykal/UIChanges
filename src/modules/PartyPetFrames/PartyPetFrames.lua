@@ -122,7 +122,7 @@ EVENTS['UNIT_MAXPOWER'] = function(unitTarget, powerType)
   onUpdate(unitTarget)
 end
 
-PartyPetFrames = {}
+local PartyPetFrames = {}
 
 PartyPetFrames.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_PartyPetFrames', UIParent)
@@ -131,7 +131,7 @@ PartyPetFrames.Initialize = function()
   petFrames = {}
   for i = 1, 4 do
     local petFrame = _G['PartyMemberFrame'..i..'PetFrame']
-    local petPowerBar = PetPowerBar.new(i)
+    local petPowerBar = sharedTable.PetPowerBar.new(i)
 
     petFrames[i] = {
       ['frame'] = petFrame,
@@ -152,4 +152,4 @@ PartyPetFrames.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
 end
 
-return PartyPetFrames
+sharedTable.PartyPetFrames = PartyPetFrames

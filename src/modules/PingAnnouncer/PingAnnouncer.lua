@@ -150,7 +150,7 @@ EVENTS['MINIMAP_PING'] = function(...)
   handlePing(...)
 end
 
-PingAnnouncer = {}
+local PingAnnouncer = {}
 
 PingAnnouncer.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_PingAnnouncer', UIParent)
@@ -171,4 +171,4 @@ PingAnnouncer.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
 end
 
-return PingAnnouncer
+sharedTable.PingAnnouncer = PingAnnouncer

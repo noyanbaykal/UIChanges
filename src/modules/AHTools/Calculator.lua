@@ -126,7 +126,7 @@ local initializeFrames = function()
   hookFrameScripts()
 end
 
-Calculator = {}
+local Calculator = {}
 
 Calculator.new = function()
   local self = {}
@@ -149,4 +149,4 @@ Calculator.new = function()
   return self
 end
 
-return Calculator
+sharedTable.Calculator = Calculator

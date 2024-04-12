@@ -439,7 +439,7 @@ local populateOptions = function(parentFrame)
   end
 end
 
-UIC_Options = {}
+local UIC_Options = {}
 
 UIC_Options.Initialize = function()
   cvarMap = {}
@@ -464,4 +464,4 @@ UIC_Options.Initialize = function()
   InterfaceOptions_AddCategory(optionsPanel)
 end
 
-return UIC_Options
+sharedTable.UIC_Options = UIC_Options

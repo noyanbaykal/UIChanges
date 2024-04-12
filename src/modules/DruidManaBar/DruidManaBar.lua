@@ -152,7 +152,7 @@ local setShouldRespond = function()
   shouldRespond = isClassicEraOrTBC and isDruid
 end
 
-DruidManaBar = {}
+local DruidManaBar = {}
 
 DruidManaBar.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_DruidManaBar', UIParent)
@@ -187,4 +187,4 @@ DruidManaBar.Disable = function()
   end
 end
 
-return DruidManaBar
+sharedTable.DruidManaBar = DruidManaBar

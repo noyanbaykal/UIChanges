@@ -104,14 +104,14 @@ local function hookContainerFrames()
   end
 end
 
-AHTools = {}
+local AHTools = {}
 
 AHTools.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_AHTools', UIParent)
   mainFrame:Hide()
 
-  buyoutWarning = BuyoutWarning.new()
-  calculator = Calculator.new()
+  buyoutWarning = sharedTable.BuyoutWarning.new()
+  calculator = sharedTable.Calculator.new()
 
   lastAHSearchTime = time()
 
@@ -135,4 +135,4 @@ AHTools.Disable = function()
   onClosed()
 end
 
-return AHTools
+sharedTable.AHTools = AHTools

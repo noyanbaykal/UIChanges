@@ -126,45 +126,36 @@ local L = addonTable.L
 
 local constants = {}
 
--- There is a single SavedVariablesPerCharacter named UIChanges_Profile. All the entries listed below
--- correspond to entries in the UIChanges_Profile table.
-constants.savedVariableEntries = {
-  {'UIC_Toggle_Quick_Zoom',           true},
-  {'UIC_AD_IsEnabled',                true},
-  {'UIC_AD_FrameInfo',                {}},
-  {'UIC_AHT_IsEnabled',               true},
-  {'UIC_BU_IsEnabled',                true},
-  {'UIC_CR_IsEnabled',                true},
-  {'UIC_CR_ErrorFrameAnchor',         1},
-  {'UIC_CR_ErrorFrameInfo',           {}},
-  {'UIC_CR_BreathWarning',            true},
-  {'UIC_CR_BreathWarning_Sound',      true},
-  {'UIC_CR_CombatWarning',            true},
-  {'UIC_CR_CombatWarning_Sound',      false},
-  {'UIC_CR_GatheringFailure',         true},
-  {'UIC_CR_GatheringFailure_Sound',   false},
-  {'UIC_CR_CombatLos',                true},
-  {'UIC_CR_CombatLos_Sound',          false},
-  {'UIC_CR_CombatDirection',          false},
-  {'UIC_CR_CombatDirection_Sound',    false},
-  {'UIC_CR_CombatRange',              false},
-  {'UIC_CR_CombatRange_Sound',        false},
-  {'UIC_CR_CombatInterrupted',        false},
-  {'UIC_CR_CombatInterrupted_Sound',  false},
-  {'UIC_CR_CombatCooldown',           false},
-  {'UIC_CR_CombatCooldown_Sound',     false},
-  {'UIC_CR_CombatNoResource',         false},
-  {'UIC_CR_CombatNoResource_Sound',   false},
-  {'UIC_CR_InteractionRange',         false},
-  {'UIC_CR_InteractionRange_Sound',   false},
-  {'UIC_DMB_IsEnabled',               true},
-  {'UIC_PPF_IsEnabled',               function() return GetCVar('showPartyPets') == 1 end},
-  {'UIC_PA_IsEnabled',                true},
-  {'UIC_PA_Party',                    true},
-  {'UIC_PA_Battleground',             false},
-  {'UIC_PA_Raid',                     false},
-  {'UIC_PA_Arena',                    false},
-}
+constants.REGISTER_EVENTS = function(frame, eventsTable)
+  for event, _ in pairs(eventsTable) do
+    frame:RegisterEvent(event)
+  end
+end
+
+constants.UNREGISTER_EVENTS = function(frame, eventsTable)
+  for event, _ in pairs(eventsTable) do
+    frame:UnregisterEvent(event)
+  end
+end
+
+constants.BACKDROP_INFO = function(edgeSize, insetSize)
+  return {
+    bgFile = 'Interface/Tooltips/UI-Tooltip-Background',
+    edgeFile = 'Interface/Tooltips/UI-Tooltip-Border',
+    edgeSize = edgeSize, 
+    insets = { left = insetSize, right = insetSize, top = insetSize, bottom = insetSize }
+  }
+end
+
+constants.RoundToPixelCount = function(count)
+  if count == 0 then
+    return count
+  elseif count > 0 and count < 1 then
+    return 1
+  else
+    return math.floor(0.5 + count)
+  end
+end
 
 constants.AD_RESET_DISPLAY_LOCATION = function()
   local adMainFrame = _G['UIC_AbsorbDisplay']
@@ -298,34 +289,93 @@ constants.MODULES = {
   },
 }
 
-constants.REGISTER_EVENTS = function(frame, eventsTable)
-  for event, _ in pairs(eventsTable) do
-    frame:RegisterEvent(event)
+-- There is a single SavedVariablesPerCharacter named UIChanges_Profile. All the entries listed below
+-- correspond to entries in the UIChanges_Profile table.
+constants.savedVariableEntries = {
+  ['UIC_Toggle_Quick_Zoom'] =           true,
+  ['UIC_AD_IsEnabled'] =                true,
+  ['UIC_AD_FrameInfo'] =                {},
+  ['UIC_AHT_IsEnabled'] =               true,
+  ['UIC_BU_IsEnabled'] =                true,
+  ['UIC_CR_IsEnabled'] =                true,
+  ['UIC_CR_ErrorFrameAnchor'] =         1,
+  ['UIC_CR_ErrorFrameInfo'] =           {},
+  ['UIC_CR_BreathWarning'] =            true,
+  ['UIC_CR_BreathWarning_Sound'] =      true,
+  ['UIC_CR_CombatWarning'] =            true,
+  ['UIC_CR_CombatWarning_Sound'] =      false,
+  ['UIC_CR_GatheringFailure'] =         true,
+  ['UIC_CR_GatheringFailure_Sound'] =   false,
+  ['UIC_CR_CombatLos'] =                true,
+  ['UIC_CR_CombatLos_Sound'] =          false,
+  ['UIC_CR_CombatDirection'] =          false,
+  ['UIC_CR_CombatDirection_Sound'] =    false,
+  ['UIC_CR_CombatRange'] =              false,
+  ['UIC_CR_CombatRange_Sound'] =        false,
+  ['UIC_CR_CombatInterrupted'] =        false,
+  ['UIC_CR_CombatInterrupted_Sound'] =  false,
+  ['UIC_CR_CombatCooldown'] =           false,
+  ['UIC_CR_CombatCooldown_Sound'] =     false,
+  ['UIC_CR_CombatNoResource'] =         false,
+  ['UIC_CR_CombatNoResource_Sound'] =   false,
+  ['UIC_CR_InteractionRange'] =         false,
+  ['UIC_CR_InteractionRange_Sound'] =   false,
+  ['UIC_DMB_IsEnabled'] =               true,
+  ['UIC_PPF_IsEnabled'] =               function() return GetCVar('showPartyPets') == 1 end,
+  ['UIC_PA_IsEnabled'] =                true,
+  ['UIC_PA_Party'] =                    true,
+  ['UIC_PA_Battleground'] =             false,
+  ['UIC_PA_Raid'] =                     false,
+  ['UIC_PA_Arena'] =                    false,
+}
+
+constants.INITIALIZE_PROFILE = function()
+  local hasUnexpectedChanges = false
+
+  if not UIChanges_Profile then -- Either first time using UIChanges or upgrading from version < 1.2.0
+    hasUnexpectedChanges = true
+
+    UIChanges_Profile = {}
   end
-end
 
-constants.UNREGISTER_EVENTS = function(frame, eventsTable)
-  for event, _ in pairs(eventsTable) do
-    frame:UnregisterEvent(event)
+  -- Store all the keys from the profile in case there are any no-longer-used ones
+  local keysToBeDeleted = {}
+  for variableName, _ in pairs(UIChanges_Profile) do
+    keysToBeDeleted[variableName] = true
   end
-end
 
-constants.BACKDROP_INFO = function(edgeSize, insetSize)
-  return {
-    bgFile = 'Interface/Tooltips/UI-Tooltip-Background',
-    edgeFile = 'Interface/Tooltips/UI-Tooltip-Border',
-    edgeSize = edgeSize, 
-    insets = { left = insetSize, right = insetSize, top = insetSize, bottom = insetSize }
-  }
-end
+  -- Initialize variables if they haven't been initialized already
+  for name, defaultValue in pairs(constants.savedVariableEntries) do
+    keysToBeDeleted[name] = nil -- Remove this from the set of keys to be deleted
 
-constants.RoundToPixelCount = function(count)
-  if count == 0 then
-    return count
-  elseif count > 0 and count < 1 then
-    return 1
-  else
-    return math.floor(0.5 + count)
+    if UIChanges_Profile[name] == nil then
+      hasUnexpectedChanges = true
+
+      if type(defaultValue) == 'function' then
+        defaultValue = defaultValue()
+      end
+
+      -- If the user is upgrading from version < 1.2.0, they have the old, individual savedVariables.
+      -- The old savedVariables will be wiped out the next time the client saves the savedVariables.
+      -- There is a one time chance of reading those variables and converting them into the new format
+      -- so we won't reset the user's preferences.
+      local previousVersionValue = _G[name]
+    
+      if previousVersionValue and type(previousVersionValue) == type(defaultValue) then
+        UIChanges_Profile[name] = previousVersionValue
+      else
+        UIChanges_Profile[name] = defaultValue
+      end
+    end
+  end
+
+  -- Remove any no-longer-used variables
+  for variableName, _ in pairs(keysToBeDeleted) do
+    UIChanges_Profile[variableName] = nil
+  end
+
+  if hasUnexpectedChanges then
+    DEFAULT_CHAT_FRAME:AddMessage(L.FIRST_TIME)
   end
 end
 

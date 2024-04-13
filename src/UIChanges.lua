@@ -29,46 +29,8 @@ local onMinimapZoomChange = function(level)
   Minimap_OnEvent(_G['MiniMap'], 'MINIMAP_UPDATE_ZOOM')
 end
 
-local checkSavedVariables = function()
-  local hasUnexpectedChanges = false
-
-  if not UIChanges_Profile then -- Either first time using UIChanges or upgrading from version < 1.2.0
-    hasUnexpectedChanges = true
-
-    UIChanges_Profile = {}
-  end
-
-  for _, entry in ipairs(C.savedVariableEntries) do
-    local name = entry[1]
-
-    if UIChanges_Profile[name] == nil then
-      hasUnexpectedChanges = true
-
-      local defaultValue = entry[2]
-      if type(defaultValue) == 'function' then
-        defaultValue = defaultValue()
-      end
-
-      -- If the user is upgrading from version < 1.2.0, they have the old, individual savedVariables.
-      -- The old savedVariables will be wiped out the next time the client saves the savedVariables.
-      -- There is a one time chance of reading those variables and converting them into the new format.
-      local previousVersionValue = _G[name]
-    
-      if previousVersionValue and type(previousVersionValue) == type(defaultValue) then
-        UIChanges_Profile[name] = previousVersionValue
-      else
-        UIChanges_Profile[name] = defaultValue
-      end
-    end
-  end
-
-  if hasUnexpectedChanges then
-    DEFAULT_CHAT_FRAME:AddMessage(L.FIRST_TIME)
-  end
-end
-
 local initialize = function()
-  checkSavedVariables()
+  C.INITIALIZE_PROFILE()
 
   for _, moduleInfo in ipairs(C.MODULES) do
     local module = addonTable[moduleInfo['moduleName']]

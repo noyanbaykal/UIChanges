@@ -228,10 +228,10 @@ end
 
 local createSubToggleEntry = function(subToggleEntry, i, parentName, offsetX, subLeftAnchor, subFrames, changeKey)
   local subChangeKey = subToggleEntry[1]
-  local subTitle = subToggleEntry[2]
-  local changeNeedsRestart = subToggleEntry[3] == true
-  local controlData = subToggleEntry[4]
-  local tooltipText = subToggleEntry[5]
+  local subTitle = subToggleEntry[3]
+  local changeNeedsRestart = subToggleEntry[4] == true
+  local controlData = subToggleEntry[5]
+  local tooltipText = subToggleEntry[6]
 
   local subLabel = parentName..'_'..subTitle
   local currentOffsetX = i == 1 and 0 or offsetX
@@ -296,8 +296,8 @@ local separateSubTogglesIntoRows = function(rowSize, subToggleEntries, subFrames
     local offsetY = -4
     local rowOffsetY = -4
 
-    if subToggleEntries[i][4] ~= nil then
-      local controlType = subToggleEntries[i][4][1]
+    if subToggleEntries[i][5] ~= nil then
+      local controlType = subToggleEntries[i][5][1]
 
       if controlType == 'dropdown' then
         offsetX = -15
@@ -321,7 +321,7 @@ local separateSubTogglesIntoRows = function(rowSize, subToggleEntries, subFrames
 end
 
 local createModuleOptions = function(moduleInfo)
-  local changeKey = moduleInfo['savedVariableName']
+  local changeKey = moduleInfo['savedVariableName'][1]
   local label = moduleInfo['label']
   local title = moduleInfo['title']
   local description = moduleInfo['description']
@@ -366,7 +366,7 @@ local createModuleOptions = function(moduleInfo)
 
     drawSeparator(subFrames, subToggles['separator'])
 
-    local subToggleFrameName = subToggleEntries[#subToggleEntries][2]:gsub('%s+', '_')
+    local subToggleFrameName = subToggleEntries[#subToggleEntries][3]:gsub('%s+', '_')
     local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subToggleFrameName
     lastFrameTop = _G[lastAddedSubCheckboxName]
   end

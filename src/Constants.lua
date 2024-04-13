@@ -185,12 +185,13 @@ constants.ENUM_ANCHOR_OPTIONS = {
 
 -- These toggles have the same schema as subToggles.entries
 constants.BASE_TOGGLES = {
-  {'UIC_Toggle_Quick_Zoom', L.MINIMAP_QUICK_ZOOM, false, nil, L.TOOLTIP_MINIMAP_QUICK_ZOOM},
+  {'UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, false, nil, L.TOOLTIP_MINIMAP_QUICK_ZOOM},
 }
 
 constants.MODULES = {
   {
-    ['savedVariableName'] = 'UIC_AD_IsEnabled', -- Name of the corresponding savedVariable
+    ['savedVariableName'] = {'UIC_AD_IsEnabled', true}, -- Name of the corresponding entry in the profile and
+      --a boolean or a function for whether the module should be enabled by default
     ['moduleName'] = 'AbsorbDisplay', -- Corresponds to the class that is exported in the module file
     ['label'] = 'AD', -- Used in subframe names
     ['title'] = 'Absorb Display',
@@ -201,27 +202,28 @@ constants.MODULES = {
         -- Unlike the checkbox and dropdown subToggles, the button subToggles don't change their display based
         -- on the relevant variable's value. To escape that type of behaviour the entries that map to buttons
         -- should not have a string in the first index. Still want to keep the relevant variable name around
-        -- though so the string is inside a table.
-        {{'UIC_AD_FrameInfo'}, RESET_POSITION, false, {'button', constants.AD_RESET_DISPLAY_LOCATION}},
+        -- though so the string is inside a table
+        -- The second value is the default value
+        {{'UIC_AD_FrameInfo'}, {}, RESET_POSITION, false, {'button', constants.AD_RESET_DISPLAY_LOCATION}},
       }
     },
   },
   {
-    ['savedVariableName'] = 'UIC_AHT_IsEnabled',
+    ['savedVariableName'] = {'UIC_AHT_IsEnabled', true},
     ['moduleName'] = 'AHTools',
     ['label'] = 'AHT',
     ['title'] = 'Auction House Tools',
     ['description'] = L.AHT,
   },
   {
-    ['savedVariableName'] = 'UIC_BU_IsEnabled',
+    ['savedVariableName'] = {'UIC_BU_IsEnabled', true},
     ['moduleName'] = 'BagUtilities',
     ['label'] = 'BU',
     ['title'] = 'Bag Utilities ('..L.CLASSIC_ERA_ONLY..')',
     ['description'] = L.BU,
   },
   {
-    ['savedVariableName'] = 'UIC_CR_IsEnabled',
+    ['savedVariableName'] = {'UIC_CR_IsEnabled', true},
     ['moduleName'] = 'CriticalReminders',
     ['label'] = 'CR',
     ['title'] = 'Critical Reminders',
@@ -230,41 +232,41 @@ constants.MODULES = {
       ['offsetX'] = 42,
       ['rowSize'] = 4,
       ['entries'] = {
-        {'UIC_CR_BreathWarning', L.BREATH_WARNING},
-        {'UIC_CR_BreathWarning_Sound', L.BREATH_WARNING_SOUND, false, nil, L.BREATH_WARNING_SOUND_TOOLTIP},
-        {'UIC_CR_CombatWarning', L.COMBAT_WARNING},
-        {'UIC_CR_CombatWarning_Sound', L.COMBAT_WARNING_SOUND, false, nil, L.COMBAT_WARNING_SOUND_TOOLTIP},
-        {'UIC_CR_GatheringFailure', L.GATHERING_FAILURE},
-        {'UIC_CR_GatheringFailure_Sound', L.GATHERING_FAILURE_SOUND, false, nil, L.GATHERING_FAILURE_SOUND_TOOLTIP},
-        {'UIC_CR_CombatLos', L.COMBAT_LOS},
-        {'UIC_CR_CombatLos_Sound', L.COMBAT_LOS_SOUND, false, nil, L.COMBAT_LOS_SOUND_TOOLTIP},
-        {'UIC_CR_CombatDirection', L.COMBAT_DIRECTION},
-        {'UIC_CR_CombatDirection_Sound', L.COMBAT_DIRECTION_SOUND, false, nil, L.COMBAT_DIRECTION_SOUND_TOOLTIP},
-        {'UIC_CR_CombatRange', L.COMBAT_RANGE},
-        {'UIC_CR_CombatRange_Sound', L.COMBAT_RANGE_SOUND, false, nil, L.COMBAT_RANGE_SOUND_TOOLTIP},
-        {'UIC_CR_CombatInterrupted', L.COMBAT_INTERRUPTED},
-        {'UIC_CR_CombatInterrupted_Sound', L.COMBAT_INTERRUPTED_SOUND, false, nil, L.COMBAT_INTERRUPTED_SOUND_TOOLTIP},
-        {'UIC_CR_CombatCooldown', L.COMBAT_COOLDOWN},
-        {'UIC_CR_CombatCooldown_Sound', L.COMBAT_COOLDOWN_SOUND, false, nil, L.COMBAT_COOLDOWN_SOUND_TOOLTIP},
-        {'UIC_CR_CombatNoResource', L.COMBAT_NO_RESOURCE},
-        {'UIC_CR_CombatNoResource_Sound', L.COMBAT_NO_RESOURCE_SOUND, false, nil, L.COMBAT_NO_RESOURCE_SOUND_TOOLTIP},
-        {'UIC_CR_InteractionRange', L.INTERACTION_RANGE},
-        {'UIC_CR_InteractionRange_Sound', L.INTERACTION_RANGE_SOUND, false, nil, L.INTERACTION_RANGE_SOUND_TOOLTIP},
-        {'UIC_CR_ErrorFrameAnchor', L.ERROR_FRAME_ANCHOR_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
-        {{'UIC_CR_ErrorFrameInfo'}, RESET_POSITION, false, {'button', constants.CR_RESET_ERROR_FRAME_LOCATION}},
+        {'UIC_CR_BreathWarning', true, L.BREATH_WARNING},
+        {'UIC_CR_BreathWarning_Sound', true, L.BREATH_WARNING_SOUND, false, nil, L.BREATH_WARNING_SOUND_TOOLTIP},
+        {'UIC_CR_CombatWarning', true, L.COMBAT_WARNING},
+        {'UIC_CR_CombatWarning_Sound', false, L.COMBAT_WARNING_SOUND, false, nil, L.COMBAT_WARNING_SOUND_TOOLTIP},
+        {'UIC_CR_GatheringFailure', true, L.GATHERING_FAILURE},
+        {'UIC_CR_GatheringFailure_Sound', false, L.GATHERING_FAILURE_SOUND, false, nil, L.GATHERING_FAILURE_SOUND_TOOLTIP},
+        {'UIC_CR_CombatLos', true, L.COMBAT_LOS},
+        {'UIC_CR_CombatLos_Sound', false, L.COMBAT_LOS_SOUND, false, nil, L.COMBAT_LOS_SOUND_TOOLTIP},
+        {'UIC_CR_CombatDirection', false, L.COMBAT_DIRECTION},
+        {'UIC_CR_CombatDirection_Sound', false, L.COMBAT_DIRECTION_SOUND, false, nil, L.COMBAT_DIRECTION_SOUND_TOOLTIP},
+        {'UIC_CR_CombatRange', false, L.COMBAT_RANGE},
+        {'UIC_CR_CombatRange_Sound', false, L.COMBAT_RANGE_SOUND, false, nil, L.COMBAT_RANGE_SOUND_TOOLTIP},
+        {'UIC_CR_CombatInterrupted', false, L.COMBAT_INTERRUPTED},
+        {'UIC_CR_CombatInterrupted_Sound', false, L.COMBAT_INTERRUPTED_SOUND, false, nil, L.COMBAT_INTERRUPTED_SOUND_TOOLTIP},
+        {'UIC_CR_CombatCooldown', false, L.COMBAT_COOLDOWN},
+        {'UIC_CR_CombatCooldown_Sound', false, L.COMBAT_COOLDOWN_SOUND, false, nil, L.COMBAT_COOLDOWN_SOUND_TOOLTIP},
+        {'UIC_CR_CombatNoResource', false, L.COMBAT_NO_RESOURCE},
+        {'UIC_CR_CombatNoResource_Sound', false, L.COMBAT_NO_RESOURCE_SOUND, false, nil, L.COMBAT_NO_RESOURCE_SOUND_TOOLTIP},
+        {'UIC_CR_InteractionRange', false, L.INTERACTION_RANGE},
+        {'UIC_CR_InteractionRange_Sound', false, L.INTERACTION_RANGE_SOUND, false, nil, L.INTERACTION_RANGE_SOUND_TOOLTIP},
+        {'UIC_CR_ErrorFrameAnchor', 1, L.ERROR_FRAME_ANCHOR_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
+        {{'UIC_CR_ErrorFrameInfo'}, {}, RESET_POSITION, false, {'button', constants.CR_RESET_ERROR_FRAME_LOCATION}},
       },
       ['separator'] = {3, 19}
     },
   },
   {
-    ['savedVariableName'] = 'UIC_DMB_IsEnabled',
+    ['savedVariableName'] = {'UIC_DMB_IsEnabled', true},
     ['moduleName'] = 'DruidManaBar',
     ['label'] = 'DMB',
     ['title'] = 'Druid Mana Bar ('..L.CLASSIC_ERA_ONLY..')',
     ['description'] = L.DMB,
   },
   {
-    ['savedVariableName'] = 'UIC_PPF_IsEnabled',
+    ['savedVariableName'] = {'UIC_PPF_IsEnabled', function() return GetCVar('showPartyPets') == 1 end},
     ['moduleName'] = 'PartyPetFrames',
     ['consoleVariableName'] = 'showPartyPets', -- Modules that change console variables must be toggled outside of combat
     ['label'] = 'PPF',
@@ -272,7 +274,7 @@ constants.MODULES = {
     ['description'] = L.PPF,
   },
   {
-    ['savedVariableName'] = 'UIC_PA_IsEnabled',
+    ['savedVariableName'] = {'UIC_PA_IsEnabled', true},
     ['moduleName'] = 'PingAnnouncer',
     ['label'] = 'PA',
     ['title'] = 'Ping Announcer',
@@ -280,54 +282,54 @@ constants.MODULES = {
     ['subToggles'] = {
       ['offsetX'] = 72,
       ['entries'] = {
-        {'UIC_PA_Raid', RAID},
-        {'UIC_PA_Arena', ARENA},
-        {'UIC_PA_Battleground', BATTLEGROUND},
-        {'UIC_PA_Party', PARTY},
+        {'UIC_PA_Raid', false, RAID},
+        {'UIC_PA_Arena', false, ARENA},
+        {'UIC_PA_Battleground', false, BATTLEGROUND},
+        {'UIC_PA_Party', true, PARTY},
       }
     },
   },
 }
 
--- There is a single SavedVariablesPerCharacter named UIChanges_Profile. All the entries listed below
--- correspond to entries in the UIChanges_Profile table.
-constants.savedVariableEntries = {
-  ['UIC_Toggle_Quick_Zoom'] =           true,
-  ['UIC_AD_IsEnabled'] =                true,
-  ['UIC_AD_FrameInfo'] =                {},
-  ['UIC_AHT_IsEnabled'] =               true,
-  ['UIC_BU_IsEnabled'] =                true,
-  ['UIC_CR_IsEnabled'] =                true,
-  ['UIC_CR_ErrorFrameAnchor'] =         1,
-  ['UIC_CR_ErrorFrameInfo'] =           {},
-  ['UIC_CR_BreathWarning'] =            true,
-  ['UIC_CR_BreathWarning_Sound'] =      true,
-  ['UIC_CR_CombatWarning'] =            true,
-  ['UIC_CR_CombatWarning_Sound'] =      false,
-  ['UIC_CR_GatheringFailure'] =         true,
-  ['UIC_CR_GatheringFailure_Sound'] =   false,
-  ['UIC_CR_CombatLos'] =                true,
-  ['UIC_CR_CombatLos_Sound'] =          false,
-  ['UIC_CR_CombatDirection'] =          false,
-  ['UIC_CR_CombatDirection_Sound'] =    false,
-  ['UIC_CR_CombatRange'] =              false,
-  ['UIC_CR_CombatRange_Sound'] =        false,
-  ['UIC_CR_CombatInterrupted'] =        false,
-  ['UIC_CR_CombatInterrupted_Sound'] =  false,
-  ['UIC_CR_CombatCooldown'] =           false,
-  ['UIC_CR_CombatCooldown_Sound'] =     false,
-  ['UIC_CR_CombatNoResource'] =         false,
-  ['UIC_CR_CombatNoResource_Sound'] =   false,
-  ['UIC_CR_InteractionRange'] =         false,
-  ['UIC_CR_InteractionRange_Sound'] =   false,
-  ['UIC_DMB_IsEnabled'] =               true,
-  ['UIC_PPF_IsEnabled'] =               function() return GetCVar('showPartyPets') == 1 end,
-  ['UIC_PA_IsEnabled'] =                true,
-  ['UIC_PA_Party'] =                    true,
-  ['UIC_PA_Battleground'] =             false,
-  ['UIC_PA_Raid'] =                     false,
-  ['UIC_PA_Arena'] =                    false,
-}
+-- Traverses the BASE_TOGGLES and MODULES tables to dynamically gather the names and default values
+-- of all the entries that will be stored in the UIChanges_Profile savedVariablePerCharacter.
+local generateSavedVariableEntries = function()
+  local entries = {}
+
+  for i = 1, #constants.BASE_TOGGLES do
+    local baseToggle = constants.BASE_TOGGLES[i]
+
+    entries[baseToggle[1]] = baseToggle[2]
+  end
+
+  for i = 1, #constants.MODULES do
+    local module = constants.MODULES[i]
+
+    local moduleName = module.savedVariableName[1]
+
+    local defaultState = module.savedVariableName[2]
+    if type(defaultState) == 'function' then
+      defaultState = defaultState()
+    end
+
+    entries[moduleName] = defaultState
+
+    if module.subToggles and module.subToggles.entries then
+      for i = 1, #module.subToggles.entries do
+        local entry = module.subToggles.entries[i]
+
+        local entryName = entry[1]
+        if type(entryName) == 'table' then
+          entryName = entryName[1]
+        end
+
+        entries[entryName] = entry[2]
+      end
+    end
+  end
+
+  return entries
+end
 
 constants.INITIALIZE_PROFILE = function()
   local hasUnexpectedChanges = false
@@ -344,16 +346,14 @@ constants.INITIALIZE_PROFILE = function()
     keysToBeDeleted[variableName] = true
   end
 
+  local savedVariableEntries = generateSavedVariableEntries()
+
   -- Initialize variables if they haven't been initialized already
-  for name, defaultValue in pairs(constants.savedVariableEntries) do
+  for name, defaultValue in pairs(savedVariableEntries) do
     keysToBeDeleted[name] = nil -- Remove this from the set of keys to be deleted
 
     if UIChanges_Profile[name] == nil then
       hasUnexpectedChanges = true
-
-      if type(defaultValue) == 'function' then
-        defaultValue = defaultValue()
-      end
 
       -- If the user is upgrading from version < 1.2.0, they have the old, individual savedVariables.
       -- The old savedVariables will be wiped out the next time the client saves the savedVariables.

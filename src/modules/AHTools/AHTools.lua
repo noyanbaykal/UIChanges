@@ -17,9 +17,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
-local C = sharedTable.C
+local C = addonTable.C
 
 -- Forward declaring modules
 local mainFrame, buyoutWarning, calculator
@@ -93,7 +93,7 @@ local function hookContainerFrames()
 
       if buttonFrame then
         buttonFrame:HookScript('OnMouseUp', function(self, button)
-          if _G['UIC_AHT_IsEnabled'] and button == 'MiddleButton'
+          if UIChanges_Profile['UIC_AHT_IsEnabled'] and button == 'MiddleButton'
             and _G['AuctionFrame'] and _G['AuctionFrame']:IsShown() and BrowseName:IsVisible()
           then
             quickAHSearch(containerFrame, slot)
@@ -110,8 +110,8 @@ AHTools.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_AHTools', UIParent)
   mainFrame:Hide()
 
-  buyoutWarning = sharedTable.BuyoutWarning.new()
-  calculator = sharedTable.Calculator.new()
+  buyoutWarning = addonTable.BuyoutWarning.new()
+  calculator = addonTable.Calculator.new()
 
   lastAHSearchTime = time()
 
@@ -135,4 +135,4 @@ AHTools.Disable = function()
   onClosed()
 end
 
-sharedTable.AHTools = AHTools
+addonTable.AHTools = AHTools

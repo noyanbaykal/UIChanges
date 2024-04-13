@@ -17,10 +17,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
-local L = sharedTable.L
-local C = sharedTable.C
+local L = addonTable.L
+local C = addonTable.C
 
 local mainFrame, shouldRespond, manaBarBorder, manaBar
 
@@ -187,4 +187,4 @@ DruidManaBar.Disable = function()
   end
 end
 
-sharedTable.DruidManaBar = DruidManaBar
+addonTable.DruidManaBar = DruidManaBar

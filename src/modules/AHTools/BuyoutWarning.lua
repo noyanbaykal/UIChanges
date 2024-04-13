@@ -17,9 +17,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
-local C = sharedTable.C
+local C = addonTable.C
 
 local warningFrame, buyoutWarningText
 
@@ -89,7 +89,7 @@ local setWarning = function()
 
   warningFrame:SetBackdropBorderColor(r, g, b)
 
-  if _G['UIC_AHT_IsEnabled'] == true then
+  if UIChanges_Profile['UIC_AHT_IsEnabled'] == true then
     warningFrame:Show()
   end
 end
@@ -125,7 +125,7 @@ local hookAHFrames = function()
   end
 
   _G['BrowseBuyoutButton']:HookScript('OnEnable', function()
-    if buyoutWarningText and _G['UIC_AHT_IsEnabled'] == true then
+    if buyoutWarningText and UIChanges_Profile['UIC_AHT_IsEnabled'] == true then
       warningFrame:Show()
     end
   end)
@@ -206,4 +206,4 @@ BuyoutWarning.new = function()
   return self
 end
 
-sharedTable.BuyoutWarning = BuyoutWarning
+addonTable.BuyoutWarning = BuyoutWarning

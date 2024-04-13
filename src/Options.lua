@@ -19,10 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 local LibDD = LibStub:GetLibrary('LibUIDropDownMenu-4.0')
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
-local L = sharedTable.L
-local C = sharedTable.C
+local L = addonTable.L
+local C = addonTable.C
 
 local gameFontColor = {} -- Yellow. This will override checkbox texts
 gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4] = _G['GameFontNormal']:GetTextColor()
@@ -70,21 +70,21 @@ local applyChange = function(savedVariableName, newValue)
     end
   end
 
-  _G[savedVariableName] = newValue
+  UIChanges_Profile[savedVariableName] = newValue
 
   if cvarMap[savedVariableName] ~= nil then
-    if cvarMap[savedVariableName]['frame'] then
-      local frame = cvarMap[savedVariableName]['frame']
+    if cvarMap[savedVariableName]['module'] then
+      local module = cvarMap[savedVariableName]['module']
 
       if newValue then
-        frame:Enable()
+        module:Enable()
       else
-        frame:Disable()
+        module:Disable()
       end
-    elseif cvarMap[savedVariableName]['mainFrame'] ~= nil then
-      local frame = cvarMap[savedVariableName]['mainFrame']
+    elseif cvarMap[savedVariableName]['mainModule'] ~= nil then
+      local module = cvarMap[savedVariableName]['mainModule']
 
-      frame:Update(savedVariableName, newValue)
+      module:Update(savedVariableName, newValue)
     end
   end
 end
@@ -93,7 +93,7 @@ local createCheckBox = function(frameName, title, changeKey, tooltipText)
   local checkbox = CreateFrame('CheckButton', frameName, scrollChild, 'InterfaceOptionsCheckButtonTemplate')
   checkbox.Text:SetText(title)
   checkbox.Text:SetTextColor(gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4])
-  checkbox:SetChecked(_G[changeKey])
+  checkbox:SetChecked(UIChanges_Profile[changeKey])
   checkbox:SetScript('OnClick', function(self, button, down)
     local newValue = self:GetChecked()
 
@@ -130,7 +130,7 @@ local createDropDown = function(frameName, title, changeKey, enumTable)
   LibDD:UIDropDownMenu_Initialize(dropdown, function(self, level, _)
     local info = LibDD:UIDropDownMenu_CreateInfo()
 
-    local selectedIndex = _G[changeKey]
+    local selectedIndex = UIChanges_Profile[changeKey]
 
     for i, enum in ipairs(enumTable) do
       local label = enum[1]
@@ -253,9 +253,9 @@ local createSubToggleEntry = function(subToggleEntry, i, parentName, offsetX, su
     cvarMap[subChangeKey]['option'] = subOption
 
     -- A subToggle with this index set means that upon modification, we need the module to update
-    -- so we need to store the frame reference
+    -- so we need to separately store the module reference
     if changeNeedsRestart then
-      cvarMap[subChangeKey]['mainFrame'] = cvarMap[changeKey]['frame']
+      cvarMap[subChangeKey]['mainModule'] = cvarMap[changeKey]['module']
     end
   end
 
@@ -332,7 +332,7 @@ local createModuleOptions = function(moduleInfo)
   checkbox:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, -16)
 
   cvarMap[changeKey] = {}
-  cvarMap[changeKey]['frame'] = _G[moduleInfo['frameName']]
+  cvarMap[changeKey]['module'] = addonTable[moduleInfo['moduleName']]
   cvarMap[changeKey]['option'] = checkbox
   cvarMap[changeKey]['consoleVariableName'] = moduleInfo['consoleVariableName']
 
@@ -390,7 +390,7 @@ local createBaseOptions = function()
     subLeftAnchor = createSubToggleEntry(C.BASE_TOGGLES[i], i, anchorFrame:GetName(), offsetX, subLeftAnchor, subFrames, changeKey)
   end
 
-  -- This is rather simple since we only have 2 entries here so far
+  -- This is rather simple since we only have 1 entry here so far
   local firstCheckBox = cvarMap['UIC_Toggle_Quick_Zoom']['option']
   lastFrameTop = firstCheckBox
   lastFrameLeft = firstCheckBox
@@ -450,7 +450,7 @@ UIC_Options.Initialize = function()
 
   optionsPanel:SetScript('OnShow', function()
     for cvar, frames in pairs(cvarMap) do -- read the current values and set the options
-      local isSet = _G[cvar]
+      local isSet = UIChanges_Profile[cvar]
       frames['option']:SetValue(isSet)
 
       if frames['subFrames'] then -- Enable/Disable subframes
@@ -464,4 +464,4 @@ UIC_Options.Initialize = function()
   InterfaceOptions_AddCategory(optionsPanel)
 end
 
-sharedTable.UIC_Options = UIC_Options
+addonTable.UIC_Options = UIC_Options

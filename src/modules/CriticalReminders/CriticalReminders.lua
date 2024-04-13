@@ -17,9 +17,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
-local C = sharedTable.C
+local C = addonTable.C
 
 local mainFrame, errorFrame, breathFrame, attackTimer, breathTimer, breathValues
 
@@ -27,39 +27,39 @@ local TIMER_INTERVAL = 4 -- Seconds
 local BREATH_TIMER_INTERVAL = 1 -- Seconds
 
 local showCombatWarning = function()
-  return _G['UIC_CR_CombatWarning']
+  return UIChanges_Profile['UIC_CR_CombatWarning']
 end
 
 local showGatheringFailure = function()
-  return _G['UIC_CR_GatheringFailure']
+  return UIChanges_Profile['UIC_CR_GatheringFailure']
 end
 
 local showNoLos = function()
-  return _G['UIC_CR_CombatLos']
+  return UIChanges_Profile['UIC_CR_CombatLos']
 end
 
 local showCombatDirection = function()
-  return _G['UIC_CR_CombatDirection']
+  return UIChanges_Profile['UIC_CR_CombatDirection']
 end
 
 local showCombatRange = function()
-  return _G['UIC_CR_CombatRange']
+  return UIChanges_Profile['UIC_CR_CombatRange']
 end
 
 local showCombatInterrupted = function()
-  return _G['UIC_CR_CombatInterrupted']
+  return UIChanges_Profile['UIC_CR_CombatInterrupted']
 end
 
 local showCombatCooldown = function()
-  return _G['UIC_CR_CombatCooldown']
+  return UIChanges_Profile['UIC_CR_CombatCooldown']
 end
 
 local showNoResource = function()
-  return _G['UIC_CR_CombatNoResource']
+  return UIChanges_Profile['UIC_CR_CombatNoResource']
 end
 
 local showInteractionRange = function()
-  return _G['UIC_CR_InteractionRange']
+  return UIChanges_Profile['UIC_CR_InteractionRange']
 end
 
 local ErrorMap = {
@@ -143,7 +143,7 @@ local updateBreathFrame = function()
 
   breathFrame:Show()
 
-  if _G['UIC_CR_BreathWarning_Sound'] == true then
+  if UIChanges_Profile['UIC_CR_BreathWarning_Sound'] == true then
     local soundId
 
     if secondsLeft == 30 then
@@ -201,40 +201,44 @@ local showUIErrorMessage = function(textureName, playSound, size, offsetX, offse
   setErrorFrame(textureName, playSound, size, offsetX, offsetY)
 end
 
+local targetFrame = _G['TargetFrame']
+local targetFramePortrait = _G['TargetFramePortrait']
+local targetFrameTextureFrame = _G['TargetFrameTextureFrame']
+
 local errorFrameAnchoringTable = {}
 errorFrameAnchoringTable['TOPLEFT'] = function()
-  errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'LEFT', 2, 0)
-  errorFrame:SetPoint('BOTTOM', _G['TargetFramePortrait'], 'TOP', 0, 5)
+  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', 2, 0)
+  errorFrame:SetPoint('BOTTOM', targetFramePortrait, 'TOP', 0, 5)
 end
 errorFrameAnchoringTable['TOP'] = function()
-  local x = (_G['TargetFrameTextureFrame']:GetRight() - _G['TargetFrameTextureFrame']:GetLeft()) / 4
+  local x = (targetFrameTextureFrame:GetRight() - targetFrameTextureFrame:GetLeft()) / 4
 
-  errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'LEFT', x, 0)
-  errorFrame:SetPoint('BOTTOM', _G['TargetFramePortrait'], 'TOP', 0, 5)
+  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', x, 0)
+  errorFrame:SetPoint('BOTTOM', targetFramePortrait, 'TOP', 0, 5)
 end
 errorFrameAnchoringTable['TOPRIGHT'] = function()
-  errorFrame:SetPoint('RIGHT', _G['TargetFramePortrait'], 'RIGHT', 0)
-  errorFrame:SetPoint('BOTTOM', _G['TargetFramePortrait'], 'TOP', 0, 5)
+  errorFrame:SetPoint('RIGHT', targetFramePortrait, 'RIGHT', 0)
+  errorFrame:SetPoint('BOTTOM', targetFramePortrait, 'TOP', 0, 5)
 end
 errorFrameAnchoringTable['RIGHT'] = function()
-  errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'RIGHT', -10, 0)
+  errorFrame:SetPoint('LEFT', targetFrame, 'RIGHT', -10, 0)
 end
 errorFrameAnchoringTable['BOTTOMRIGHT'] = function()
-  errorFrame:SetPoint('RIGHT', _G['TargetFramePortrait'], 'RIGHT', 0)
-  errorFrame:SetPoint('TOP', _G['TargetFramePortrait'], 'BOTTOM', 0, -5)
+  errorFrame:SetPoint('RIGHT', targetFramePortrait, 'RIGHT', 0)
+  errorFrame:SetPoint('TOP', targetFramePortrait, 'BOTTOM', 0, -5)
 end
 errorFrameAnchoringTable['BOTTOM'] = function()
-  local x = (_G['TargetFrameTextureFrame']:GetRight() - _G['TargetFrameTextureFrame']:GetLeft()) / 4
+  local x = (targetFrameTextureFrame:GetRight() - targetFrameTextureFrame:GetLeft()) / 4
 
-  errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'LEFT', x, 0)
-  errorFrame:SetPoint('TOP', _G['TargetFramePortrait'], 'BOTTOM', 0, -5)
+  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', x, 0)
+  errorFrame:SetPoint('TOP', targetFramePortrait, 'BOTTOM', 0, -5)
 end
 errorFrameAnchoringTable['BOTTOMLEFT'] = function()
-  errorFrame:SetPoint('LEFT', _G['TargetFrame'], 'LEFT', 2, 0)
-  errorFrame:SetPoint('TOP', _G['TargetFramePortrait'], 'BOTTOM', 0, -5)
+  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', 2, 0)
+  errorFrame:SetPoint('TOP', targetFramePortrait, 'BOTTOM', 0, -5)
 end
 errorFrameAnchoringTable['LEFT'] = function()
-  errorFrame:SetPoint('RIGHT', _G['TargetFrame'], 'LEFT', -10, 6)
+  errorFrame:SetPoint('RIGHT', targetFrame, 'LEFT', -10, 6)
 end
 
 local anchorToUIErrorsFrame = function()
@@ -250,7 +254,7 @@ local anchorErrorFrame = function()
     return
   end
 
-  local anchorDirection = C.ENUM_ANCHOR_OPTIONS[_G['UIC_CR_ErrorFrameAnchor']][2]
+  local anchorDirection = C.ENUM_ANCHOR_OPTIONS[UIChanges_Profile['UIC_CR_ErrorFrameAnchor']][2]
 
   errorFrame:ClearAllPoints()
 
@@ -269,7 +273,7 @@ local anchorErrorFrame = function()
 
       local point, relativeTo, relativePoint, offsetX, offsetY = frame:GetPoint()
 
-      _G['UIC_CR_ErrorFrameInfo'] = {
+      UIChanges_Profile['UIC_CR_ErrorFrameInfo'] = {
         point = point,
         relativeTo = relativeTo,
         relativePoint = relativePoint,
@@ -278,16 +282,18 @@ local anchorErrorFrame = function()
       }
     end)
 
-    if _G['UIC_CR_ErrorFrameInfo'] then
-      local point = _G['UIC_CR_ErrorFrameInfo'].point
-      local relativeTo = _G['UIC_CR_ErrorFrameInfo'].relativeTo
-      local relativePoint = _G['UIC_CR_ErrorFrameInfo'].relativePoint
-      local offsetX = _G['UIC_CR_ErrorFrameInfo'].offsetX
-      local offsetY = _G['UIC_CR_ErrorFrameInfo'].offsetY
+    if UIChanges_Profile['UIC_CR_ErrorFrameInfo'] then
+      local errorFrameInfo = UIChanges_Profile['UIC_CR_ErrorFrameInfo']
+
+      local point = errorFrameInfo.point
+      local relativeTo = errorFrameInfo.relativeTo
+      local relativePoint = errorFrameInfo.relativePoint
+      local offsetX = errorFrameInfo.offsetX
+      local offsetY = errorFrameInfo.offsetY
 
       local status, _ = pcall(function () errorFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY) end)
       if status == false then
-        _G['UIC_CR_ErrorFrameInfo'] = nil
+        UIChanges_Profile['UIC_CR_ErrorFrameInfo'] = nil
 
         anchorToUIErrorsFrame()
       end
@@ -319,9 +325,9 @@ local initializeBreathFrame = function()
 end
 
 local resetErrorFrameLocation = function()
-  _G['UIC_CR_ErrorFrameInfo'] = nil
+  UIChanges_Profile['UIC_CR_ErrorFrameInfo'] = nil
 
-  if _G['UIC_CR_ErrorFrameAnchor'] == 1 then
+  if UIChanges_Profile['UIC_CR_ErrorFrameAnchor'] == 1 then
     errorFrame:SetUserPlaced(false)
     anchorErrorFrame()
   end
@@ -352,7 +358,7 @@ local handleErrorMessage = function(message)
     return
   end
 
-  local playSound = _G[soundVariableName] == true
+  local playSound = UIChanges_Profile[soundVariableName] == true
 
   showUIErrorMessage(textureName, playSound, size, offsetX, offsetY)
 end
@@ -373,7 +379,7 @@ EVENTS['PLAYER_REGEN_ENABLED'] = function(...)
 end
 
 EVENTS['MIRROR_TIMER_START'] = function(timerName, value, maxValue, scale, paused, timerLabel)
-  if timerName == 'BREATH' and _G['UIC_CR_BreathWarning'] == true then
+  if timerName == 'BREATH' and UIChanges_Profile['UIC_CR_BreathWarning'] == true then
     breathStart(value, maxValue, scale, paused)
   end
 end
@@ -413,4 +419,4 @@ CriticalReminders.Update = function()
   anchorErrorFrame()
 end
 
-sharedTable.CriticalReminders = CriticalReminders
+addonTable.CriticalReminders = CriticalReminders

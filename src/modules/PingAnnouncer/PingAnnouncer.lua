@@ -17,10 +17,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
-local L = sharedTable.L
-local C = sharedTable.C
+local L = addonTable.L
+local C = addonTable.C
 
 local ESCAPE_TABLE = {
   ['|c%x%x%x%x%x%x%x%x'] = '', -- color start
@@ -100,10 +100,10 @@ local determineTargetChannel = function(unitId)
   local isInPartyOnly = IsInGroup() and isInBattleground == false and isInArena == false and isInRaid == false
 
   -- Check cvars against status + instance chat edge case
-  if isInBattleground and _G['UIC_PA_Battleground'] == false or
-      isInArena and _G['UIC_PA_Arena'] == false or
-      isInRaid and _G['UIC_PA_Raid'] == false or
-      isInPartyOnly and (_G['UIC_PA_Party'] == false or isCTRL) or
+  if isInBattleground and UIChanges_Profile['UIC_PA_Battleground'] == false or
+      isInArena and UIChanges_Profile['UIC_PA_Arena'] == false or
+      isInRaid and UIChanges_Profile['UIC_PA_Raid'] == false or
+      isInPartyOnly and (UIChanges_Profile['UIC_PA_Party'] == false or isCTRL) or
       isInPartyOnly == false then
     return nil
   end
@@ -171,4 +171,4 @@ PingAnnouncer.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
 end
 
-sharedTable.PingAnnouncer = PingAnnouncer
+addonTable.PingAnnouncer = PingAnnouncer

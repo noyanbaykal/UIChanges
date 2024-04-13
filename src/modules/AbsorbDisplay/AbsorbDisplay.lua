@@ -17,10 +17,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
-local L = sharedTable.L
-local C = sharedTable.C
+local L = addonTable.L
+local C = addonTable.C
 
 -- Spells scale with the caster's level. There isn't a clean way of accounting for this so we store
 -- amount and maxAmount. We'll look at the player's level and use the maxAmount for lower level ranks.
@@ -627,7 +627,7 @@ local initializeSpellLookup = function()
 end
 
 local resetDisplayLocation = function()
-  _G['UIC_AD_FrameInfo'] = nil
+  UIChanges_Profile['UIC_AD_FrameInfo'] = nil
 
   shieldFrame:SetUserPlaced(false)
   shieldFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, BASE_OFFSET_Y)
@@ -683,16 +683,18 @@ local initializeShieldFrame = function()
   shieldFrame:SetClampedToScreen(true)
   shieldFrame:Hide()
 
-  if _G['UIC_AD_FrameInfo'] then
-    local point = _G['UIC_AD_FrameInfo'].point
-    local relativeTo = _G['UIC_AD_FrameInfo'].relativeTo
-    local relativePoint = _G['UIC_AD_FrameInfo'].relativePoint
-    local offsetX = _G['UIC_AD_FrameInfo'].offsetX
-    local offsetY = _G['UIC_AD_FrameInfo'].offsetY
+  if UIChanges_Profile['UIC_AD_FrameInfo'] then
+    local frameInfo = UIChanges_Profile['UIC_AD_FrameInfo']
+
+    local point = frameInfo.point
+    local relativeTo = frameInfo.relativeTo
+    local relativePoint = frameInfo.relativePoint
+    local offsetX = frameInfo.offsetX
+    local offsetY = frameInfo.offsetY
 
     local status, _ = pcall(function () shieldFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY) end)
     if status == false then
-      _G['UIC_AD_FrameInfo'] = nil
+      UIChanges_Profile['UIC_AD_FrameInfo'] = nil
 
       anchorToCastingBarFrame()
     end
@@ -714,7 +716,7 @@ local initializeShieldFrame = function()
 
     local point, relativeTo, relativePoint, offsetX, offsetY = frame:GetPoint()
 
-    _G['UIC_AD_FrameInfo'] = {
+    UIChanges_Profile['UIC_AD_FrameInfo'] = {
       point = point,
       relativeTo = relativeTo,
       relativePoint = relativePoint,
@@ -827,4 +829,4 @@ AbsorbDisplay.Disable = function()
   updateDisplay()
 end
 
-sharedTable.AbsorbDisplay = AbsorbDisplay
+addonTable.AbsorbDisplay = AbsorbDisplay

@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
 local locale = {}
 
@@ -31,11 +31,18 @@ locale.CLASSIC_ERA = 'Classic Era'
 locale.CLASSIC_ERA_ONLY = locale.CLASSIC_ERA..' Only'
 locale.PLAY_SOUND = 'Play '..SOUND..' for'
 
+locale.ANCHOR_TOPLEFT = 'Top Left'
+locale.ANCHOR_TOP = 'Top'
+locale.ANCHOR_TOPRIGHT = 'Top Right'
+locale.ANCHOR_RIGHT = 'Right'
+locale.ANCHOR_BOTTOMRIGHT = 'Bottom Right'
+locale.ANCHOR_BOTTOM = 'Bottom'
+locale.ANCHOR_BOTTOMLEFT = 'Bottom Left'
+locale.ANCHOR_LEFT = 'Left'
+
 -- Base Options
 locale.MINIMAP_QUICK_ZOOM_1 = 'Minimap quick zoom'
 locale.MINIMAP_QUICK_ZOOM_2 = 'Shift click the minimap + / - buttons for max zoom in / out.'
-locale.ERA_HIDE_MINIMAP_MAP_BUTTON_1 = 'Hide minimap map button'
-locale.TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON_1 = 'Hide the world map button attached to the minimap in '..locale.CLASSIC_ERA..' so it won\'t overlap with the tracking icon.'
 -- ~Base Options
 
 -- AbsorbDisplay
@@ -89,5 +96,5 @@ locale.NORTH = 'North'
 locale.SOUTH = 'South'
 -- ~PingAnnouncer
 
--- Localization files should set a reference to themselves in the sharedTable with their locale code as the key
-sharedTable.enUS = locale
+-- Localization files should set a reference to themselves in the addonTable with their locale code as the key
+addonTable.enUS = locale

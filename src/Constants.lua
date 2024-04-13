@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
 -- Localization setup
 
@@ -34,8 +34,6 @@ local buildRemainingStrings = function (L)
 
   L.MINIMAP_QUICK_ZOOM = colorWhite .. L.MINIMAP_QUICK_ZOOM_1 .. colorEscape
   L.TOOLTIP_MINIMAP_QUICK_ZOOM = L.MINIMAP_QUICK_ZOOM_1 .. '\n' .. colorWhite .. L.MINIMAP_QUICK_ZOOM_2 .. colorEscape
-  L.ERA_HIDE_MINIMAP_MAP_BUTTON = colorWhite .. L.ERA_HIDE_MINIMAP_MAP_BUTTON_1 .. colorEscape
-  L.TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON = L.ERA_HIDE_MINIMAP_MAP_BUTTON_1 .. '\n' .. colorWhite .. L.TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON_1 .. '\n' .. L.NEEDS_RELOAD
 
   L.PPF = {L.PPF_1, colorRed .. L.PPF_2 ..colorEscape}
 
@@ -105,28 +103,68 @@ local languages = {
 -- Try to match the client's language
 local locale = GetLocale()
 
-if not sharedTable[locale] then
+if not addonTable[locale] then
   locale = 'enUS' -- Default to English
 end
 
-sharedTable.L = sharedTable[locale] -- Set the localization table for all the other files
+addonTable.L = addonTable[locale] -- Set the localization table for all the other files
 
 if locale ~= 'enUS' then
-  setmetatable(sharedTable.L, {__index = sharedTable.enUS}) -- Set the enUS table as fallback
+  setmetatable(addonTable.L, {__index = addonTable.enUS}) -- Set the enUS table as fallback
 end
 
-buildRemainingStrings(sharedTable.L)
+buildRemainingStrings(addonTable.L)
 
 -- Remove the direct refences to the language tables so the unused ones will be garbage collected
 for language, _ in pairs(languages) do
-  sharedTable[language] = nil
+  addonTable[language] = nil
 end
 
 -- ~Localization setup
 
-local L = sharedTable.L
+local L = addonTable.L
 
 local constants = {}
+
+-- There is a single SavedVariablesPerCharacter named UIChanges_Profile. All the entries listed below
+-- correspond to entries in the UIChanges_Profile table.
+constants.savedVariableEntries = {
+  {'UIC_Toggle_Quick_Zoom',           true},
+  {'UIC_AD_IsEnabled',                true},
+  -- There is also UIC_AD_FrameInfo but it's defaultValue would be nil.
+  {'UIC_AHT_IsEnabled',               true},
+  {'UIC_BU_IsEnabled',                true},
+  {'UIC_CR_IsEnabled',                true},
+  {'UIC_CR_ErrorFrameAnchor',         1},
+  -- There is also UIC_CR_ErrorFrameInfo but it's defaultValue would be nil.
+  {'UIC_CR_BreathWarning',            true},
+  {'UIC_CR_BreathWarning_Sound',      true},
+  {'UIC_CR_CombatWarning',            true},
+  {'UIC_CR_CombatWarning_Sound',      false},
+  {'UIC_CR_GatheringFailure',         true},
+  {'UIC_CR_GatheringFailure_Sound',   false},
+  {'UIC_CR_CombatLos',                true},
+  {'UIC_CR_CombatLos_Sound',          false},
+  {'UIC_CR_CombatDirection',          false},
+  {'UIC_CR_CombatDirection_Sound',    false},
+  {'UIC_CR_CombatRange',              false},
+  {'UIC_CR_CombatRange_Sound',        false},
+  {'UIC_CR_CombatInterrupted',        false},
+  {'UIC_CR_CombatInterrupted_Sound',  false},
+  {'UIC_CR_CombatCooldown',           false},
+  {'UIC_CR_CombatCooldown_Sound',     false},
+  {'UIC_CR_CombatNoResource',         false},
+  {'UIC_CR_CombatNoResource_Sound',   false},
+  {'UIC_CR_InteractionRange',         false},
+  {'UIC_CR_InteractionRange_Sound',   false},
+  {'UIC_DMB_IsEnabled',               true},
+  {'UIC_PPF_IsEnabled',               function() return GetCVar('showPartyPets') == 1 end},
+  {'UIC_PA_IsEnabled',                true},
+  {'UIC_PA_Party',                    true},
+  {'UIC_PA_Battleground',             false},
+  {'UIC_PA_Raid',                     false},
+  {'UIC_PA_Arena',                    false},
+}
 
 constants.AD_RESET_DISPLAY_LOCATION = function()
   local adMainFrame = _G['UIC_AbsorbDisplay']
@@ -143,27 +181,26 @@ constants.CR_RESET_ERROR_FRAME_LOCATION = function()
 end
 
 constants.ENUM_ANCHOR_OPTIONS = {
-  {OFF, nil},
-  {'Top Left',      'TOPLEFT'},
-  {'Top',           'TOP'},
-  {'Top Right',     'TOPRIGHT'},
-  {'Right',         'RIGHT'},
-  {'Bottom Right',  'BOTTOMRIGHT'},
-  {'Bottom',        'BOTTOM'},
-  {'Bottom Left',   'BOTTOMLEFT'},
-  {'Left',          'LEFT'}
+  {OFF,                    nil},
+  {L.ANCHOR_TOPLEFT,       'TOPLEFT'},
+  {L.ANCHOR_TOP,           'TOP'},
+  {L.ANCHOR_TOPRIGHT,      'TOPRIGHT'},
+  {L.ANCHOR_RIGHT,         'RIGHT'},
+  {L.ANCHOR_BOTTOMRIGHT,   'BOTTOMRIGHT'},
+  {L.ANCHOR_BOTTOM,        'BOTTOM'},
+  {L.ANCHOR_BOTTOMLEFT,    'BOTTOMLEFT'},
+  {L.ANCHOR_LEFT,          'LEFT'}
 }
 
 -- These toggles have the same schema as subToggles.entries
 constants.BASE_TOGGLES = {
   {'UIC_Toggle_Quick_Zoom', L.MINIMAP_QUICK_ZOOM, false, nil, L.TOOLTIP_MINIMAP_QUICK_ZOOM},
-  {'UIC_Toggle_Hide_Era_Map_Button', L.ERA_HIDE_MINIMAP_MAP_BUTTON, false, nil, L.TOOLTIP_ERA_HIDE_MINIMAP_MAP_BUTTON},
 }
 
 constants.MODULES = {
   {
     ['savedVariableName'] = 'UIC_AD_IsEnabled', -- Name of the corresponding savedVariable
-    ['frameName'] = 'AbsorbDisplay', -- Corresponds to the class that is exported in the module file
+    ['moduleName'] = 'AbsorbDisplay', -- Corresponds to the class that is exported in the module file
     ['label'] = 'AD', -- Used in subframe names
     ['title'] = 'Absorb Display',
     ['description'] = L.AD,
@@ -176,21 +213,21 @@ constants.MODULES = {
   },
   {
     ['savedVariableName'] = 'UIC_AHT_IsEnabled',
-    ['frameName'] = 'AHTools',
+    ['moduleName'] = 'AHTools',
     ['label'] = 'AHT',
     ['title'] = 'Auction House Tools',
     ['description'] = L.AHT,
   },
   {
     ['savedVariableName'] = 'UIC_BU_IsEnabled',
-    ['frameName'] = 'BagUtilities',
+    ['moduleName'] = 'BagUtilities',
     ['label'] = 'BU',
     ['title'] = 'Bag Utilities ('..L.CLASSIC_ERA_ONLY..')',
     ['description'] = L.BU,
   },
   {
     ['savedVariableName'] = 'UIC_CR_IsEnabled',
-    ['frameName'] = 'CriticalReminders',
+    ['moduleName'] = 'CriticalReminders',
     ['label'] = 'CR',
     ['title'] = 'Critical Reminders',
     ['description'] = L.CR,
@@ -226,14 +263,14 @@ constants.MODULES = {
   },
   {
     ['savedVariableName'] = 'UIC_DMB_IsEnabled',
-    ['frameName'] = 'DruidManaBar',
+    ['moduleName'] = 'DruidManaBar',
     ['label'] = 'DMB',
     ['title'] = 'Druid Mana Bar ('..L.CLASSIC_ERA_ONLY..')',
     ['description'] = L.DMB,
   },
   {
     ['savedVariableName'] = 'UIC_PPF_IsEnabled',
-    ['frameName'] = 'PartyPetFrames',
+    ['moduleName'] = 'PartyPetFrames',
     ['consoleVariableName'] = 'showPartyPets', -- Modules that change console variables must be toggled outside of combat
     ['label'] = 'PPF',
     ['title'] = 'Party Pet Frames',
@@ -241,7 +278,7 @@ constants.MODULES = {
   },
   {
     ['savedVariableName'] = 'UIC_PA_IsEnabled',
-    ['frameName'] = 'PingAnnouncer',
+    ['moduleName'] = 'PingAnnouncer',
     ['label'] = 'PA',
     ['title'] = 'Ping Announcer',
     ['description'] = L.PA,
@@ -288,4 +325,4 @@ constants.RoundToPixelCount = function(count)
   end
 end
 
-sharedTable.C = constants
+addonTable.C = constants

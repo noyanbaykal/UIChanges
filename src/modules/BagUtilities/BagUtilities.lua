@@ -17,10 +17,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
-local L = sharedTable.L
-local C = sharedTable.C
+local L = addonTable.L
+local C = addonTable.C
 
 local CLAMS_TOTAL = 5
 local CLAM_IDS = {
@@ -216,4 +216,4 @@ BagUtilities.Disable = function()
   end
 end
 
-sharedTable.BagUtilities = BagUtilities
+addonTable.BagUtilities = BagUtilities

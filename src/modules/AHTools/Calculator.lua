@@ -17,9 +17,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
-local C = sharedTable.C
+local C = addonTable.C
 
 local calculatorFrame, inputFrame, multiplierFrame, resultFrame
 
@@ -149,4 +149,4 @@ Calculator.new = function()
   return self
 end
 
-sharedTable.Calculator = Calculator
+addonTable.Calculator = Calculator

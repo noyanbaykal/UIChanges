@@ -17,9 +17,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, sharedTable = ...
+local _, addonTable = ...
 
-local C = sharedTable.C
+local C = addonTable.C
 
 local REF_PARTY = {
 	['party1'] = 1,
@@ -131,7 +131,7 @@ PartyPetFrames.Initialize = function()
   petFrames = {}
   for i = 1, 4 do
     local petFrame = _G['PartyMemberFrame'..i..'PetFrame']
-    local petPowerBar = sharedTable.PetPowerBar.new(i)
+    local petPowerBar = addonTable.PetPowerBar.new(i)
 
     petFrames[i] = {
       ['frame'] = petFrame,
@@ -152,4 +152,4 @@ PartyPetFrames.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
 end
 
-sharedTable.PartyPetFrames = PartyPetFrames
+addonTable.PartyPetFrames = PartyPetFrames

@@ -131,12 +131,12 @@ local constants = {}
 constants.savedVariableEntries = {
   {'UIC_Toggle_Quick_Zoom',           true},
   {'UIC_AD_IsEnabled',                true},
-  -- There is also UIC_AD_FrameInfo but it's defaultValue would be nil.
+  {'UIC_AD_FrameInfo',                {}},
   {'UIC_AHT_IsEnabled',               true},
   {'UIC_BU_IsEnabled',                true},
   {'UIC_CR_IsEnabled',                true},
   {'UIC_CR_ErrorFrameAnchor',         1},
-  -- There is also UIC_CR_ErrorFrameInfo but it's defaultValue would be nil.
+  {'UIC_CR_ErrorFrameInfo',           {}},
   {'UIC_CR_BreathWarning',            true},
   {'UIC_CR_BreathWarning_Sound',      true},
   {'UIC_CR_CombatWarning',            true},
@@ -207,7 +207,11 @@ constants.MODULES = {
     ['subToggles'] = {
       ['offsetX'] = 35,
       ['entries'] = {
-        {nil, RESET_POSITION, false, {'button', constants.AD_RESET_DISPLAY_LOCATION}},
+        -- Unlike the checkbox and dropdown subToggles, the button subToggles don't change their display based
+        -- on the relevant variable's value. To escape that type of behaviour the entries that map to buttons
+        -- should not have a string in the first index. Still want to keep the relevant variable name around
+        -- though so the string is inside a table.
+        {{'UIC_AD_FrameInfo'}, RESET_POSITION, false, {'button', constants.AD_RESET_DISPLAY_LOCATION}},
       }
     },
   },
@@ -256,7 +260,7 @@ constants.MODULES = {
         {'UIC_CR_InteractionRange', L.INTERACTION_RANGE},
         {'UIC_CR_InteractionRange_Sound', L.INTERACTION_RANGE_SOUND, false, nil, L.INTERACTION_RANGE_SOUND_TOOLTIP},
         {'UIC_CR_ErrorFrameAnchor', L.ERROR_FRAME_ANCHOR_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
-        {nil, RESET_POSITION, false, {'button', constants.CR_RESET_ERROR_FRAME_LOCATION}},
+        {{'UIC_CR_ErrorFrameInfo'}, RESET_POSITION, false, {'button', constants.CR_RESET_ERROR_FRAME_LOCATION}},
       },
       ['separator'] = {3, 19}
     },

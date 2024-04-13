@@ -627,7 +627,7 @@ local initializeSpellLookup = function()
 end
 
 local resetDisplayLocation = function()
-  UIChanges_Profile['UIC_AD_FrameInfo'] = nil
+  UIChanges_Profile['UIC_AD_FrameInfo'] = {}
 
   shieldFrame:SetUserPlaced(false)
   shieldFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, BASE_OFFSET_Y)
@@ -683,9 +683,9 @@ local initializeShieldFrame = function()
   shieldFrame:SetClampedToScreen(true)
   shieldFrame:Hide()
 
-  if UIChanges_Profile['UIC_AD_FrameInfo'] then
-    local frameInfo = UIChanges_Profile['UIC_AD_FrameInfo']
+  local frameInfo = UIChanges_Profile['UIC_AD_FrameInfo']
 
+  if frameInfo and frameInfo.point ~= nil then
     local point = frameInfo.point
     local relativeTo = frameInfo.relativeTo
     local relativePoint = frameInfo.relativePoint
@@ -694,7 +694,7 @@ local initializeShieldFrame = function()
 
     local status, _ = pcall(function () shieldFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY) end)
     if status == false then
-      UIChanges_Profile['UIC_AD_FrameInfo'] = nil
+      UIChanges_Profile['UIC_AD_FrameInfo'] = {}
 
       anchorToCastingBarFrame()
     end

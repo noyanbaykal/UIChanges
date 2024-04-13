@@ -49,7 +49,10 @@ local checkSavedVariables = function()
         defaultValue = defaultValue()
       end
 
-      local previousVersionValue = _G[name] -- Only when upgrading from version < 1.2.0
+      -- If the user is upgrading from version < 1.2.0, they have the old, individual savedVariables.
+      -- The old savedVariables will be wiped out the next time the client saves the savedVariables.
+      -- There is a one time chance of reading those variables and converting them into the new format.
+      local previousVersionValue = _G[name]
     
       if previousVersionValue and type(previousVersionValue) == type(defaultValue) then
         UIChanges_Profile[name] = previousVersionValue

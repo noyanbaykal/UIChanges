@@ -282,9 +282,9 @@ local anchorErrorFrame = function()
       }
     end)
 
-    if UIChanges_Profile['UIC_CR_ErrorFrameInfo'] then
-      local errorFrameInfo = UIChanges_Profile['UIC_CR_ErrorFrameInfo']
+    local errorFrameInfo = UIChanges_Profile['UIC_CR_ErrorFrameInfo']
 
+    if errorFrameInfo and errorFrameInfo.point ~= nil then
       local point = errorFrameInfo.point
       local relativeTo = errorFrameInfo.relativeTo
       local relativePoint = errorFrameInfo.relativePoint
@@ -293,7 +293,7 @@ local anchorErrorFrame = function()
 
       local status, _ = pcall(function () errorFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY) end)
       if status == false then
-        UIChanges_Profile['UIC_CR_ErrorFrameInfo'] = nil
+        UIChanges_Profile['UIC_CR_ErrorFrameInfo'] = {}
 
         anchorToUIErrorsFrame()
       end
@@ -325,7 +325,7 @@ local initializeBreathFrame = function()
 end
 
 local resetErrorFrameLocation = function()
-  UIChanges_Profile['UIC_CR_ErrorFrameInfo'] = nil
+  UIChanges_Profile['UIC_CR_ErrorFrameInfo'] = {}
 
   if UIChanges_Profile['UIC_CR_ErrorFrameAnchor'] == 1 then
     errorFrame:SetUserPlaced(false)

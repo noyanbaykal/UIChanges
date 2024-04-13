@@ -248,7 +248,7 @@ local createSubToggleEntry = function(subToggleEntry, i, parentName, offsetX, su
     subFrames[#subFrames + 1] = subOption
   end
 
-  if subChangeKey then
+  if subChangeKey and type(subChangeKey) == 'string' then
     cvarMap[subChangeKey] = {}
     cvarMap[subChangeKey]['option'] = subOption
 

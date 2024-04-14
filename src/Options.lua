@@ -320,21 +320,15 @@ local separateSubTogglesIntoRows = function(rowSize, subToggleEntries, subFrames
   end
 end
 
-local createModuleOptions = function(moduleInfo)
-  local changeKey = moduleInfo['savedVariableName'][1]
-  local label = moduleInfo['label']
-  local title = moduleInfo['title']
-  local description = moduleInfo['description']
-  local subToggles = moduleInfo['subToggles']
-
+local createModuleOptions = function(moduleName, changeKey, label, title, description, subToggles, consoleVariableName)
   local checkbox = createCheckBox('UIC_Options_CB_'..label, title, changeKey)
   checkbox:SetPoint('LEFT', lastFrameLeft, 'LEFT', 0, 0)
   checkbox:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, -16)
 
   cvarMap[changeKey] = {}
-  cvarMap[changeKey]['module'] = addonTable[moduleInfo['moduleName']]
+  cvarMap[changeKey]['module'] = addonTable[moduleName]
   cvarMap[changeKey]['option'] = checkbox
-  cvarMap[changeKey]['consoleVariableName'] = moduleInfo['consoleVariableName']
+  cvarMap[changeKey]['consoleVariableName'] = consoleVariableName
 
   -- Module description
   local extraTextOffsetY = -16
@@ -434,8 +428,15 @@ local populateOptions = function(parentFrame)
 
   createBaseOptions()
 
-  for _, moduleInfo in ipairs(C.MODULES) do
-    createModuleOptions(moduleInfo)
+  for moduleName, attributes in pairs(C.MODULES) do
+    local changeKey = attributes['savedVariableEntry']
+    local label = attributes['label']
+    local title = attributes['title']
+    local description = attributes['description']
+    local subToggles = attributes['subToggles']
+    local consoleVariableName = attributes['consoleVariableName']
+
+    createModuleOptions(moduleName, changeKey, label, title, description, subToggles, consoleVariableName)
   end
 end
 

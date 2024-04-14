@@ -19,111 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 local _, addonTable = ...
 
--- Localization setup
-
--- Injects the strings that need additional work. The work here is needed regardless of the language being used
--- by the client. Having this function here prevents code duplication in locale files.
-local buildRemainingStrings = function (L)
-  local colorWhite = '|cFFFFFFFF'
-  local colorRed = '|cFFFF0000'
-  local colorOrange = '|cFFFF8000'
-  local colorEscape = '|r'
-
-  L.NEEDS_RELOAD = colorOrange .. L.NEEDS_RELOAD_1 .. colorEscape
-  L.OPTIONS_INFO = colorRed .. L.OPTIONS_INFO_1 .. colorEscape
-
-  L.MINIMAP_QUICK_ZOOM = colorWhite .. L.MINIMAP_QUICK_ZOOM_1 .. colorEscape
-  L.TOOLTIP_MINIMAP_QUICK_ZOOM = L.MINIMAP_QUICK_ZOOM_1 .. '\n' .. colorWhite .. L.MINIMAP_QUICK_ZOOM_2 .. colorEscape
-
-  L.PPF = {L.PPF_1, colorRed .. L.PPF_2 ..colorEscape}
-
-  local AbsorbDisplayStringHelper = function()
-    local namePws = GetSpellInfo(17)
-    local nameSacrifice = GetSpellInfo(7812)
-  
-    local spellstoneId = 128
-    if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
-      spellstoneId = 54730
-    end
-  
-    local nameSpellstone = GetSpellInfo(spellstoneId)
-  
-    return namePws..', '..nameSacrifice..' & '..nameSpellstone..'.'
-  end
-
-  L.AD = {L.ABSORB_DISPLAY_1 .. AbsorbDisplayStringHelper(), L.ABSORB_DISPLAY_2}
-  
-  local buildCriticalRemindersVariables = function()
-    local CRITICAL_REMINDERS_VARIABLES = {
-      'BREATH_WARNING',
-      'COMBAT_WARNING',
-      'GATHERING_FAILURE',
-      'COMBAT_LOS',
-      'COMBAT_DIRECTION',
-      'COMBAT_RANGE',
-      'COMBAT_INTERRUPTED',
-      'COMBAT_COOLDOWN',
-      'COMBAT_NO_RESOURCE',
-      'INTERACTION_RANGE',
-    }
-
-    for _, variableKey in ipairs(CRITICAL_REMINDERS_VARIABLES) do
-      local name = L[variableKey]
-
-      local shortName = ''
-      
-      for character in string.gmatch(name, '%u+') do -- Find all the uppercase letters
-        shortName = shortName .. character
-      end
-
-      local soundText = shortName .. ' ' ..SOUND
-      
-      L[variableKey .. '_SOUND'] = soundText
-      L[variableKey .. '_SOUND_TOOLTIP'] = soundText .. '\n' .. colorWhite .. L.PLAY_SOUND .. ' ' .. name .. colorEscape
-    end
-  end
-
-  buildCriticalRemindersVariables()
-end
-
-local languages = {
-	['enUS'] = true,
-	['koKR'] = true,
-	['frFR'] = true,
-	['deDE'] = true,
-	['zhCN'] = true,
-	['esES'] = true,
-	['zhTW'] = true,
-	['esMX'] = true,
-	['ruRU'] = true,
-	['ptBR'] = true,
-	['itIT'] = true,
-}
-
--- Try to match the client's language
-local locale = GetLocale()
-
-if not addonTable[locale] then
-  locale = 'enUS' -- Default to English
-end
-
-addonTable.L = addonTable[locale] -- Set the localization table for all the other files
-
-if locale ~= 'enUS' then
-  setmetatable(addonTable.L, {__index = addonTable.enUS}) -- Set the enUS table as fallback
-end
-
-buildRemainingStrings(addonTable.L)
-
--- Remove the direct refences to the language tables so the unused ones will be garbage collected
-for language, _ in pairs(languages) do
-  addonTable[language] = nil
-end
-
--- ~Localization setup
-
-local L = addonTable.L
-
+local L
 local constants = {}
 
 constants.REGISTER_EVENTS = function(frame, eventsTable)
@@ -157,6 +53,107 @@ constants.RoundToPixelCount = function(count)
   end
 end
 
+-- Injects the strings that need additional work. The work here is needed regardless of the language being used
+-- by the client. Having this function here prevents code duplication in locale files.
+local buildCommonStrings = function (L)
+  local colorWhite = '|cFFFFFFFF'
+  local colorRed = '|cFFFF0000'
+  local colorOrange = '|cFFFF8000'
+  local colorEscape = '|r'
+
+  L.NEEDS_RELOAD = colorOrange .. L.NEEDS_RELOAD_1 .. colorEscape
+  L.OPTIONS_INFO = colorRed .. L.OPTIONS_INFO_1 .. colorEscape
+
+  L.MINIMAP_QUICK_ZOOM = colorWhite .. L.MINIMAP_QUICK_ZOOM_1 .. colorEscape
+  L.TOOLTIP_MINIMAP_QUICK_ZOOM = L.MINIMAP_QUICK_ZOOM_1 .. '\n' .. colorWhite .. L.MINIMAP_QUICK_ZOOM_2 .. colorEscape
+
+  L.PPF = {L.PPF_1, colorRed .. L.PPF_2 ..colorEscape}
+
+  local AbsorbDisplayStringHelper = function()
+    local namePws = GetSpellInfo(17)
+    local nameSacrifice = GetSpellInfo(7812)
+  
+    local spellstoneId = 128
+    if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
+      spellstoneId = 54730
+    end
+  
+    local nameSpellstone = GetSpellInfo(spellstoneId)
+  
+    return namePws..', '..nameSacrifice..' & '..nameSpellstone..'.'
+  end
+
+  L.AD = {L.ABSORB_DISPLAY_1 .. AbsorbDisplayStringHelper(), L.ABSORB_DISPLAY_2}
+  
+  local buildCriticalRemindersVariables = function(L)
+    for variableName, value in pairs(L.CR_SUBTOGGLE_STRINGS) do
+      local shortName = ''
+      
+      for character in string.gmatch(value, '%u+') do -- Find all the uppercase letters
+        shortName = shortName .. character
+      end
+
+      local soundText = shortName .. ' ' ..SOUND
+      
+      L[variableName] = value
+      L[variableName .. '_SOUND'] = soundText
+      L[variableName .. '_SOUND_TOOLTIP'] = soundText .. '\n' .. colorWhite .. L.PLAY_SOUND .. ' ' .. value .. colorEscape
+    end
+  end
+
+  buildCriticalRemindersVariables(L)
+end
+
+local initializeLocalization = function()
+  local languages = {
+    ['enUS'] = true,
+    ['koKR'] = true,
+    ['frFR'] = true,
+    ['deDE'] = true,
+    ['zhCN'] = true,
+    ['esES'] = true,
+    ['zhTW'] = true,
+    ['esMX'] = true,
+    ['ruRU'] = true,
+    ['ptBR'] = true,
+    ['itIT'] = true,
+  }
+
+  -- Try to match the client's language
+  local locale = GetLocale()
+
+  if not addonTable[locale] then
+    locale = 'enUS' -- Default to English
+  end
+
+  addonTable.L = addonTable[locale] -- Set the localization table for all the other files
+
+  if locale ~= 'enUS' then
+    setmetatable(addonTable.L, {__index = addonTable.enUS}) -- Set the enUS table as fallback
+  end
+
+  buildCommonStrings(addonTable.L)
+
+  -- Remove the direct refences to the language tables so the unused ones will be garbage collected
+  for language, _ in pairs(languages) do
+    addonTable[language] = nil
+  end
+
+  L = addonTable.L -- Set the localization table for this file
+
+  constants.ENUM_ANCHOR_OPTIONS = {
+    {OFF,                    nil},
+    {L.ANCHOR_TOPLEFT,       'TOPLEFT'},
+    {L.ANCHOR_TOP,           'TOP'},
+    {L.ANCHOR_TOPRIGHT,      'TOPRIGHT'},
+    {L.ANCHOR_RIGHT,         'RIGHT'},
+    {L.ANCHOR_BOTTOMRIGHT,   'BOTTOMRIGHT'},
+    {L.ANCHOR_BOTTOM,        'BOTTOM'},
+    {L.ANCHOR_BOTTOMLEFT,    'BOTTOMLEFT'},
+    {L.ANCHOR_LEFT,          'LEFT'}
+  }
+end
+
 constants.AD_RESET_DISPLAY_LOCATION = function()
   local adMainFrame = _G['UIC_AbsorbDisplay']
   if adMainFrame and adMainFrame.ResetDisplayLocation then
@@ -171,164 +168,150 @@ constants.CR_RESET_ERROR_FRAME_LOCATION = function()
   end
 end
 
-constants.ENUM_ANCHOR_OPTIONS = {
-  {OFF,                    nil},
-  {L.ANCHOR_TOPLEFT,       'TOPLEFT'},
-  {L.ANCHOR_TOP,           'TOP'},
-  {L.ANCHOR_TOPRIGHT,      'TOPRIGHT'},
-  {L.ANCHOR_RIGHT,         'RIGHT'},
-  {L.ANCHOR_BOTTOMRIGHT,   'BOTTOMRIGHT'},
-  {L.ANCHOR_BOTTOM,        'BOTTOM'},
-  {L.ANCHOR_BOTTOMLEFT,    'BOTTOMLEFT'},
-  {L.ANCHOR_LEFT,          'LEFT'}
-}
+constants.DEFINE_MODULES = function()
+  -- These toggles have the same schema as subToggles.entries
+  constants.BASE_TOGGLES = {
+    {'UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, false, nil, L.TOOLTIP_MINIMAP_QUICK_ZOOM},
+  }
 
--- These toggles have the same schema as subToggles.entries
-constants.BASE_TOGGLES = {
-  {'UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, false, nil, L.TOOLTIP_MINIMAP_QUICK_ZOOM},
-}
-
-constants.MODULES = {
-  {
-    ['savedVariableName'] = {'UIC_AD_IsEnabled', true}, -- Name of the corresponding entry in the profile and
-      --a boolean or a function for whether the module should be enabled by default
-    ['moduleName'] = 'AbsorbDisplay', -- Corresponds to the class that is exported in the module file
-    ['label'] = 'AD', -- Used in subframe names
-    ['title'] = 'Absorb Display',
-    ['description'] = L.AD,
-    ['subToggles'] = {
-      ['offsetX'] = 35,
-      ['entries'] = {
-        -- Unlike the checkbox and dropdown subToggles, the button subToggles don't change their display based
-        -- on the relevant variable's value. To escape that type of behaviour the entries that map to buttons
-        -- should not have a string in the first index. Still want to keep the relevant variable name around
-        -- though so the string is inside a table
-        -- The second value is the default value
-        {{'UIC_AD_FrameInfo'}, {}, RESET_POSITION, false, {'button', constants.AD_RESET_DISPLAY_LOCATION}},
-      }
-    },
-  },
-  {
-    ['savedVariableName'] = {'UIC_AHT_IsEnabled', true},
-    ['moduleName'] = 'AHTools',
-    ['label'] = 'AHT',
-    ['title'] = 'Auction House Tools',
-    ['description'] = L.AHT,
-  },
-  {
-    ['savedVariableName'] = {'UIC_BU_IsEnabled', true},
-    ['moduleName'] = 'BagUtilities',
-    ['label'] = 'BU',
-    ['title'] = 'Bag Utilities ('..L.CLASSIC_ERA_ONLY..')',
-    ['description'] = L.BU,
-  },
-  {
-    ['savedVariableName'] = {'UIC_CR_IsEnabled', true},
-    ['moduleName'] = 'CriticalReminders',
-    ['label'] = 'CR',
-    ['title'] = 'Critical Reminders',
-    ['description'] = L.CR,
-    ['subToggles'] = {
-      ['offsetX'] = 42,
-      ['rowSize'] = 4,
-      ['entries'] = {
-        {'UIC_CR_BreathWarning', true, L.BREATH_WARNING},
-        {'UIC_CR_BreathWarning_Sound', true, L.BREATH_WARNING_SOUND, false, nil, L.BREATH_WARNING_SOUND_TOOLTIP},
-        {'UIC_CR_CombatWarning', true, L.COMBAT_WARNING},
-        {'UIC_CR_CombatWarning_Sound', false, L.COMBAT_WARNING_SOUND, false, nil, L.COMBAT_WARNING_SOUND_TOOLTIP},
-        {'UIC_CR_GatheringFailure', true, L.GATHERING_FAILURE},
-        {'UIC_CR_GatheringFailure_Sound', false, L.GATHERING_FAILURE_SOUND, false, nil, L.GATHERING_FAILURE_SOUND_TOOLTIP},
-        {'UIC_CR_CombatLos', true, L.COMBAT_LOS},
-        {'UIC_CR_CombatLos_Sound', false, L.COMBAT_LOS_SOUND, false, nil, L.COMBAT_LOS_SOUND_TOOLTIP},
-        {'UIC_CR_CombatDirection', false, L.COMBAT_DIRECTION},
-        {'UIC_CR_CombatDirection_Sound', false, L.COMBAT_DIRECTION_SOUND, false, nil, L.COMBAT_DIRECTION_SOUND_TOOLTIP},
-        {'UIC_CR_CombatRange', false, L.COMBAT_RANGE},
-        {'UIC_CR_CombatRange_Sound', false, L.COMBAT_RANGE_SOUND, false, nil, L.COMBAT_RANGE_SOUND_TOOLTIP},
-        {'UIC_CR_CombatInterrupted', false, L.COMBAT_INTERRUPTED},
-        {'UIC_CR_CombatInterrupted_Sound', false, L.COMBAT_INTERRUPTED_SOUND, false, nil, L.COMBAT_INTERRUPTED_SOUND_TOOLTIP},
-        {'UIC_CR_CombatCooldown', false, L.COMBAT_COOLDOWN},
-        {'UIC_CR_CombatCooldown_Sound', false, L.COMBAT_COOLDOWN_SOUND, false, nil, L.COMBAT_COOLDOWN_SOUND_TOOLTIP},
-        {'UIC_CR_CombatNoResource', false, L.COMBAT_NO_RESOURCE},
-        {'UIC_CR_CombatNoResource_Sound', false, L.COMBAT_NO_RESOURCE_SOUND, false, nil, L.COMBAT_NO_RESOURCE_SOUND_TOOLTIP},
-        {'UIC_CR_InteractionRange', false, L.INTERACTION_RANGE},
-        {'UIC_CR_InteractionRange_Sound', false, L.INTERACTION_RANGE_SOUND, false, nil, L.INTERACTION_RANGE_SOUND_TOOLTIP},
-        {'UIC_CR_ErrorFrameAnchor', 1, L.ERROR_FRAME_ANCHOR_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
-        {{'UIC_CR_ErrorFrameInfo'}, {}, RESET_POSITION, false, {'button', constants.CR_RESET_ERROR_FRAME_LOCATION}},
+  constants.MODULES = {
+    ['AbsorbDisplay'] = { -- The key corresponds to the class that is exported in the module file
+      ['savedVariableEntry'] = 'UIC_AD_IsEnabled', -- Name of the corresponding entry in the profile
+      ['isEnabledByDefault'] = true,
+      ['label'] = 'AD', -- Used in subframe names
+      ['title'] = 'Absorb Display',
+      ['description'] = L.AD,
+      ['subToggles'] = {
+        ['offsetX'] = 35,
+        ['entries'] = {
+            -- Unlike the checkbox and dropdown subToggles, the button subToggles don't change their display based
+            -- on the relevant variable's value. To escape that type of behaviour the entries that map to buttons
+            -- should not have a string in the first index. Still want to keep the relevant variable name around
+            -- though so the string is inside a table
+            -- The second value is the default value
+            {{'UIC_AD_FrameInfo'}, {}, RESET_POSITION, false, {'button', constants.AD_RESET_DISPLAY_LOCATION}},
+        },
       },
-      ['separator'] = {3, 19}
     },
-  },
-  {
-    ['savedVariableName'] = {'UIC_DMB_IsEnabled', true},
-    ['moduleName'] = 'DruidManaBar',
-    ['label'] = 'DMB',
-    ['title'] = 'Druid Mana Bar ('..L.CLASSIC_ERA_ONLY..')',
-    ['description'] = L.DMB,
-  },
-  {
-    ['savedVariableName'] = {'UIC_PPF_IsEnabled', function() return GetCVar('showPartyPets') == 1 end},
-    ['moduleName'] = 'PartyPetFrames',
-    ['consoleVariableName'] = 'showPartyPets', -- Modules that change console variables must be toggled outside of combat
-    ['label'] = 'PPF',
-    ['title'] = 'Party Pet Frames',
-    ['description'] = L.PPF,
-  },
-  {
-    ['savedVariableName'] = {'UIC_PA_IsEnabled', true},
-    ['moduleName'] = 'PingAnnouncer',
-    ['label'] = 'PA',
-    ['title'] = 'Ping Announcer',
-    ['description'] = L.PA,
-    ['subToggles'] = {
-      ['offsetX'] = 72,
-      ['entries'] = {
-        {'UIC_PA_Raid', false, RAID},
-        {'UIC_PA_Arena', false, ARENA},
-        {'UIC_PA_Battleground', false, BATTLEGROUND},
-        {'UIC_PA_Party', true, PARTY},
-      }
+    ['AHTools'] = {
+      ['savedVariableEntry'] = 'UIC_AHT_IsEnabled',
+      ['isEnabledByDefault'] = true,
+      ['label'] = 'AHT',
+      ['title'] = 'Auction House Tools',
+      ['description'] = L.AHT,
     },
-  },
-}
+    ['BagUtilities'] = {
+      ['savedVariableEntry'] = 'UIC_BU_IsEnabled',
+      ['isEnabledByDefault'] = true,
+      ['label'] = 'BU',
+      ['title'] = 'Bag Utilities ('..L.CLASSIC_ERA_ONLY..')',
+      ['description'] = L.BU,
+    },
+    ['CriticalReminders'] = {
+      ['savedVariableEntry'] = 'UIC_CR_IsEnabled',
+      ['isEnabledByDefault'] = true,
+      ['label'] = 'CR',
+      ['title'] = 'Critical Reminders',
+      ['description'] = L.CR,
+      ['subToggles'] = {
+        ['offsetX'] = 42,
+        ['rowSize'] = 4,
+        ['separator'] = {3, 19},
+        ['entries'] = {
+          {'UIC_CR_BreathWarning', true, L.BREATH_WARNING},
+          {'UIC_CR_BreathWarning_Sound', true, L.BREATH_WARNING_SOUND, false, nil, L.BREATH_WARNING_SOUND_TOOLTIP},
+          {'UIC_CR_CombatWarning', true, L.COMBAT_WARNING},
+          {'UIC_CR_CombatWarning_Sound', false, L.COMBAT_WARNING_SOUND, false, nil, L.COMBAT_WARNING_SOUND_TOOLTIP},
+          {'UIC_CR_GatheringFailure', true, L.GATHERING_FAILURE},
+          {'UIC_CR_GatheringFailure_Sound', false, L.GATHERING_FAILURE_SOUND, false, nil, L.GATHERING_FAILURE_SOUND_TOOLTIP},
+          {'UIC_CR_CombatLos', true, L.COMBAT_LOS},
+          {'UIC_CR_CombatLos_Sound', false, L.COMBAT_LOS_SOUND, false, nil, L.COMBAT_LOS_SOUND_TOOLTIP},
+          {'UIC_CR_CombatDirection', false, L.COMBAT_DIRECTION},
+          {'UIC_CR_CombatDirection_Sound', false, L.COMBAT_DIRECTION_SOUND, false, nil, L.COMBAT_DIRECTION_SOUND_TOOLTIP},
+          {'UIC_CR_CombatRange', false, L.COMBAT_RANGE},
+          {'UIC_CR_CombatRange_Sound', false, L.COMBAT_RANGE_SOUND, false, nil, L.COMBAT_RANGE_SOUND_TOOLTIP},
+          {'UIC_CR_CombatInterrupted', false, L.COMBAT_INTERRUPTED},
+          {'UIC_CR_CombatInterrupted_Sound', false, L.COMBAT_INTERRUPTED_SOUND, false, nil, L.COMBAT_INTERRUPTED_SOUND_TOOLTIP},
+          {'UIC_CR_CombatCooldown', false, L.COMBAT_COOLDOWN},
+          {'UIC_CR_CombatCooldown_Sound', false, L.COMBAT_COOLDOWN_SOUND, false, nil, L.COMBAT_COOLDOWN_SOUND_TOOLTIP},
+          {'UIC_CR_CombatNoResource', false, L.COMBAT_NO_RESOURCE},
+          {'UIC_CR_CombatNoResource_Sound', false, L.COMBAT_NO_RESOURCE_SOUND, false, nil, L.COMBAT_NO_RESOURCE_SOUND_TOOLTIP},
+          {'UIC_CR_InteractionRange', false, L.INTERACTION_RANGE},
+          {'UIC_CR_InteractionRange_Sound', false, L.INTERACTION_RANGE_SOUND, false, nil, L.INTERACTION_RANGE_SOUND_TOOLTIP},
+          {'UIC_CR_ErrorFrameAnchor', 1, L.ERROR_FRAME_ANCHOR_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
+          {{'UIC_CR_ErrorFrameInfo'}, {}, RESET_POSITION, false, {'button', constants.CR_RESET_ERROR_FRAME_LOCATION}},
+        },
+      },
+    },
+    ['DruidManaBar'] = {
+      ['savedVariableEntry'] = 'UIC_DMB_IsEnabled',
+      ['isEnabledByDefault'] = true,
+      ['label'] = 'DMB',
+      ['title'] = 'Druid Mana Bar ('..L.CLASSIC_ERA_ONLY..')',
+      ['description'] = L.DMB,
+    },
+    ['PartyPetFrames'] = {
+      ['savedVariableEntry'] = 'UIC_PPF_IsEnabled',
+      ['isEnabledByDefault'] = GetCVar('showPartyPets') == 1,
+      ['label'] = 'PPF',
+      ['title'] = 'Party Pet Frames',
+      ['description'] = L.PPF,
+      ['consoleVariableName'] = 'showPartyPets', -- Modules that change console variables must be toggled outside of combat
+    },
+    ['PingAnnouncer'] = {
+      ['savedVariableEntry'] = 'UIC_PA_IsEnabled',
+      ['isEnabledByDefault'] = true,
+      ['label'] = 'PA',
+      ['title'] = 'Ping Announcer',
+      ['description'] = L.PA,
+      ['subToggles'] = {
+        ['offsetX'] = 72,
+        ['entries'] = {
+          {'UIC_PA_Raid', false, RAID},
+          {'UIC_PA_Arena', false, ARENA},
+          {'UIC_PA_Battleground', false, BATTLEGROUND},
+          {'UIC_PA_Party', true, PARTY},
+        }
+      },
+    },
+  }
+end
 
 -- Traverses the BASE_TOGGLES and MODULES tables to dynamically gather the names and default values
 -- of all the entries that will be stored in the UIChanges_Profile savedVariablePerCharacter.
-local generateSavedVariableEntries = function()
-  local entries = {}
+local generateSavedVariableEntryDefaults = function()
+  local entryDefaults = {}
 
   for i = 1, #constants.BASE_TOGGLES do
     local baseToggle = constants.BASE_TOGGLES[i]
 
-    entries[baseToggle[1]] = baseToggle[2]
+    entryDefaults[baseToggle[1]] = baseToggle[2]
   end
 
-  for i = 1, #constants.MODULES do
-    local module = constants.MODULES[i]
+  for moduleName, attributes in pairs(constants.MODULES) do
+    local savedVariableEntry = attributes['savedVariableEntry']
+    local defaultState = attributes['isEnabledByDefault']
+    local subToggles = attributes['subToggles']
 
-    local moduleName = module.savedVariableName[1]
+    entryDefaults[savedVariableEntry] = defaultState
 
-    local defaultState = module.savedVariableName[2]
-    if type(defaultState) == 'function' then
-      defaultState = defaultState()
-    end
+    if subToggles and subToggles.entries then
+      local subtoggleEntries = subToggles.entries
 
-    entries[moduleName] = defaultState
-
-    if module.subToggles and module.subToggles.entries then
-      for i = 1, #module.subToggles.entries do
-        local entry = module.subToggles.entries[i]
+      for i = 1, #subtoggleEntries do
+        local entry = subtoggleEntries[i]
 
         local entryName = entry[1]
         if type(entryName) == 'table' then
           entryName = entryName[1]
         end
 
-        entries[entryName] = entry[2]
+        entryDefaults[entryName] = entry[2]
       end
     end
   end
 
-  return entries
+  return entryDefaults
 end
 
 constants.INITIALIZE_PROFILE = function()
@@ -346,10 +329,10 @@ constants.INITIALIZE_PROFILE = function()
     keysToBeDeleted[variableName] = true
   end
 
-  local savedVariableEntries = generateSavedVariableEntries()
+  local savedVariableEntryDefaults = generateSavedVariableEntryDefaults()
 
   -- Initialize variables if they haven't been initialized already
-  for name, defaultValue in pairs(savedVariableEntries) do
+  for name, defaultValue in pairs(savedVariableEntryDefaults) do
     keysToBeDeleted[name] = nil -- Remove this from the set of keys to be deleted
 
     if UIChanges_Profile[name] == nil then
@@ -378,5 +361,7 @@ constants.INITIALIZE_PROFILE = function()
     DEFAULT_CHAT_FRAME:AddMessage(L.FIRST_TIME)
   end
 end
+
+initializeLocalization()
 
 addonTable.C = constants

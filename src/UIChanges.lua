@@ -30,13 +30,16 @@ local onMinimapZoomChange = function(level)
 end
 
 local initialize = function()
+  C.DEFINE_MODULES()
   C.INITIALIZE_PROFILE()
 
-  for _, moduleInfo in ipairs(C.MODULES) do
-    local module = addonTable[moduleInfo['moduleName']]
+  for moduleName, attributes in pairs(C.MODULES) do
+    local module = addonTable[moduleName]
     module:Initialize()
 
-    if UIChanges_Profile[moduleInfo['savedVariableName'][1]] then
+    local savedVariableEntry = attributes['savedVariableEntry']
+
+    if UIChanges_Profile[savedVariableEntry] then
       module:Enable()
     end
   end

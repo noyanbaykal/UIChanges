@@ -62,16 +62,18 @@ locale.BU = {'Opens clams after picking them up.'}
 locale.CR = {'Makes the selected warnings more noticeable by displaying an error icon and optionally playing a sound.', 'When the anchor option is set to Off, the display can be dragged while holding CTRL or reset with the button.'}
 locale.ERROR_FRAME_ANCHOR_DROPDOWN = 'Anchor to TargetFrame'
 
-locale.BREATH_WARNING = 'Breath Warning'
-locale.COMBAT_WARNING = 'Combat Warning'
-locale.GATHERING_FAILURE = 'Gathering Failure'
-locale.COMBAT_LOS = 'Combat LOS'
-locale.COMBAT_DIRECTION = 'Combat Direction'
-locale.COMBAT_RANGE = 'Combat Range'
-locale.COMBAT_INTERRUPTED = 'Combat Interrupted'
-locale.COMBAT_COOLDOWN = 'Combat Cooldown'
-locale.COMBAT_NO_RESOURCE = 'Combat No Resource'
-locale.INTERACTION_RANGE = 'Interaction Range'
+locale.CR_SUBTOGGLE_STRINGS = {
+  ['BREATH_WARNING']      = 'Breath Warning',
+  ['COMBAT_WARNING']      = 'Combat Warning',
+  ['GATHERING_FAILURE']   = 'Gathering Failure',
+  ['COMBAT_LOS']          = 'Combat LOS',
+  ['COMBAT_DIRECTION']    = 'Combat Direction',
+  ['COMBAT_RANGE']        = 'Combat Range',
+  ['COMBAT_INTERRUPTED']  = 'Combat Interrupted',
+  ['COMBAT_COOLDOWN']     = 'Combat Cooldown',
+  ['COMBAT_NO_RESOURCE']  = 'Combat No Resource',
+  ['INTERACTION_RANGE']   = 'Interaction Range',
+}
 -- ~CriticalReminders
 
 -- DruidManaBar

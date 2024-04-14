@@ -65,7 +65,7 @@ locale.BU = {'Opens clams after picking them up.'}
 locale.CR = {'Makes the selected warnings more noticeable by displaying an error icon and optionally playing a sound.', 'When the anchor option is set to Off, the display can be dragged while holding CTRL or reset with the button.'}
 locale.ERROR_FRAME_ANCHOR_DROPDOWN = 'Anchor to TargetFrame'
 
-locale.CR_SUBTOGGLE_STRINGS = {
+locale.CR_SUBSETTING_STRINGS = {
   ['BREATH_WARNING']      = 'Breath Warning',
   ['COMBAT_WARNING']      = 'Combat Warning',
   ['GATHERING_FAILURE']   = 'Gathering Failure',

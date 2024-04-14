@@ -105,7 +105,7 @@ local createCheckBox = function(frameName, title, changeKey, tooltipText)
       PlaySound(857) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF
     end
 
-    if cvarMap[changeKey] and cvarMap[changeKey]['subFrames'] then -- if this is not a subToggle variable
+    if cvarMap[changeKey] and cvarMap[changeKey]['subFrames'] then -- if this is not a subsetting variable
       subFramesSetEnable(cvarMap[changeKey]['subFrames'], newValue) -- Enable/disable subcomponents, if any
     end
   end)
@@ -217,7 +217,7 @@ local createSubOptionFrame = function(
   end
 
   -- If we need to have a single row of mixed elements, we'd have to make adjustments here.
-  -- Alternatively, the separateSubTogglesIntoRows method could become a more generic way of dealing
+  -- Alternatively, the separateSubsettingsIntoRows method could become a more generic way of dealing
   -- with mixed element cases.
 
   subOption:SetPoint('LEFT', subLeftAnchor, 'RIGHT', offsetX + subOffsetX, 0)
@@ -226,12 +226,12 @@ local createSubOptionFrame = function(
   return subOption, nextSubLeftAnchor
 end
 
-local createSubToggleEntry = function(subToggleEntry, i, parentName, offsetX, subLeftAnchor, subFrames, changeKey)
-  local subChangeKey = subToggleEntry[1]
-  local subTitle = subToggleEntry[3]
-  local changeNeedsRestart = subToggleEntry[4] == true
-  local controlData = subToggleEntry[5]
-  local tooltipText = subToggleEntry[6]
+local createSubsettingEntry = function(subsettingEntry, i, parentName, offsetX, subLeftAnchor, subFrames, changeKey)
+  local subChangeKey = subsettingEntry[1]
+  local subTitle = subsettingEntry[3]
+  local changeNeedsRestart = subsettingEntry[4] == true
+  local controlData = subsettingEntry[5]
+  local tooltipText = subsettingEntry[6]
 
   local subLabel = parentName..'_'..subTitle
   local currentOffsetX = i == 1 and 0 or offsetX
@@ -252,7 +252,7 @@ local createSubToggleEntry = function(subToggleEntry, i, parentName, offsetX, su
     cvarMap[subChangeKey] = {}
     cvarMap[subChangeKey]['option'] = subOption
 
-    -- A subToggle with this index set means that upon modification, we need the module to update
+    -- A subsetting with this index set means that upon modification, we need the module to update
     -- so we need to separately store the module reference
     if changeNeedsRestart then
       cvarMap[subChangeKey]['mainModule'] = cvarMap[changeKey]['module']
@@ -281,14 +281,14 @@ end
 -- If we need to support more cases, this function would need to be changed into a generic function
 -- which would separate elements into rows and then for each row, account for element types to correctly
 -- adjust Y offsets.
-local separateSubTogglesIntoRows = function(rowSize, subToggleEntries, subFrames)
+local separateSubsettingsIntoRows = function(rowSize, subsettingEntries, subFrames)
   if rowSize == nil then
     return
   end
 
   local i = rowSize + 1
 
-  while i <= #subToggleEntries do
+  while i <= #subsettingEntries do
     local prevRowStart = subFrames[i - rowSize]
     local rowStart = subFrames[i]
 
@@ -296,8 +296,8 @@ local separateSubTogglesIntoRows = function(rowSize, subToggleEntries, subFrames
     local offsetY = -4
     local rowOffsetY = -4
 
-    if subToggleEntries[i][5] ~= nil then
-      local controlType = subToggleEntries[i][5][1]
+    if subsettingEntries[i][5] ~= nil then
+      local controlType = subsettingEntries[i][5][1]
 
       if controlType == 'dropdown' then
         offsetX = -15
@@ -310,7 +310,7 @@ local separateSubTogglesIntoRows = function(rowSize, subToggleEntries, subFrames
     rowStart:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, offsetY)
 
     local j = i + 1
-    while j < i + rowSize and j <= #subToggleEntries do
+    while j < i + rowSize and j <= #subsettingEntries do
       subFrames[j]:SetPoint('LEFT', subFrames[j - rowSize], 'LEFT', 0, 0)
       subFrames[j]:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, rowOffsetY)
       j = j + 1
@@ -320,7 +320,7 @@ local separateSubTogglesIntoRows = function(rowSize, subToggleEntries, subFrames
   end
 end
 
-local createModuleOptions = function(moduleName, changeKey, label, title, description, subToggles, consoleVariableName)
+local createModuleOptions = function(moduleName, changeKey, label, title, description, subsettings, consoleVariableName)
   local checkbox = createCheckBox('UIC_Options_CB_'..label, title, changeKey)
   checkbox:SetPoint('LEFT', lastFrameLeft, 'LEFT', 0, 0)
   checkbox:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, -16)
@@ -343,25 +343,25 @@ local createModuleOptions = function(moduleName, changeKey, label, title, descri
     lastFrameTop = descriptionText
   end
 
-  -- Module subToggles
-  if subToggles then
+  -- Module subsettings
+  if subsettings then
     cvarMap[changeKey]['subFrames'] = {}
 
-    local subToggleEntries = subToggles['entries']
-    local offsetX = subToggles['offsetX']
+    local subsettingEntries = subsettings['entries']
+    local offsetX = subsettings['offsetX']
     local subFrames = cvarMap[changeKey]['subFrames']
     local subLeftAnchor = checkbox
 
-    for i = 1, #subToggleEntries do
-      subLeftAnchor = createSubToggleEntry(subToggleEntries[i], i, checkbox:GetName(), offsetX, subLeftAnchor, subFrames, changeKey)
+    for i = 1, #subsettingEntries do
+      subLeftAnchor = createSubsettingEntry(subsettingEntries[i], i, checkbox:GetName(), offsetX, subLeftAnchor, subFrames, changeKey)
     end
 
-    separateSubTogglesIntoRows(subToggles['rowSize'], subToggleEntries, subFrames)
+    separateSubsettingsIntoRows(subsettings['rowSize'], subsettingEntries, subFrames)
 
-    drawSeparator(subFrames, subToggles['separator'])
+    drawSeparator(subFrames, subsettings['separator'])
 
-    local subToggleFrameName = subToggleEntries[#subToggleEntries][3]:gsub('%s+', '_')
-    local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subToggleFrameName
+    local subsettingFrameName = subsettingEntries[#subsettingEntries][3]:gsub('%s+', '_')
+    local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subsettingFrameName
     lastFrameTop = _G[lastAddedSubCheckboxName]
   end
 end
@@ -371,7 +371,7 @@ local traverseModulesInOrder = function()
   local orderedModules = {}
 
   for moduleName, attributes in pairs(C.MODULES) do
-    modules[attributes['optionsPanelIndex']] = moduleName
+    orderedModules[attributes['optionsPanelIndex']] = moduleName
   end
 
   for _, moduleName in ipairs(orderedModules) do
@@ -381,14 +381,14 @@ local traverseModulesInOrder = function()
     local label = attributes['label']
     local title = attributes['title']
     local description = attributes['description']
-    local subToggles = attributes['subToggles']
+    local subsettings = attributes['subsettings']
     local consoleVariableName = attributes['consoleVariableName']
 
-    createModuleOptions(moduleName, changeKey, label, title, description, subToggles, consoleVariableName)
+    createModuleOptions(moduleName, changeKey, label, title, description, subsettings, consoleVariableName)
   end
 end
 
--- These options lack the module association of subToggles but are otherwise very similar to them.
+-- These options lack the module association of subsettings but are otherwise very similar to them.
 local createBaseOptions = function()
   local anchorFrame = CreateFrame('Frame', 'UIC_BT', scrollChild)
   anchorFrame:SetPoint('LEFT', lastFrameLeft, 'LEFT', 0, 0)
@@ -403,7 +403,7 @@ local createBaseOptions = function()
   local subLeftAnchor = anchorFrame
 
   for i = 1, #C.BASE_SETTINGS do
-    subLeftAnchor = createSubToggleEntry(C.BASE_SETTINGS[i], i, anchorFrame:GetName(), offsetX, subLeftAnchor, subFrames, changeKey)
+    subLeftAnchor = createSubsettingEntry(C.BASE_SETTINGS[i], i, anchorFrame:GetName(), offsetX, subLeftAnchor, subFrames, changeKey)
   end
 
   -- This is rather simple since we only have 1 entry here so far

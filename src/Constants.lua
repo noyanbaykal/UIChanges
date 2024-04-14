@@ -88,7 +88,7 @@ local buildCommonStrings = function (L)
   L.AD = {L.ABSORB_DISPLAY_1 .. AbsorbDisplayStringHelper(), L.ABSORB_DISPLAY_2}
   
   local buildCriticalRemindersVariables = function(L)
-    for variableName, value in pairs(L.CR_SUBTOGGLE_STRINGS) do
+    for variableName, value in pairs(L.CR_SUBSETTING_STRINGS) do
       local shortName = ''
       
       for character in string.gmatch(value, '%u+') do -- Find all the uppercase letters
@@ -171,7 +171,7 @@ C.CR_RESET_ERROR_FRAME_LOCATION = function()
 end
 
 C.DEFINE_MODULES = function()
-  -- These toggles have the same schema as subToggles.entries
+  -- These settings have the same schema as the subsettings.entries
   C.BASE_SETTINGS = {
     {'UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, false, nil, L.TOOLTIP_MINIMAP_QUICK_ZOOM},
   }
@@ -184,10 +184,10 @@ C.DEFINE_MODULES = function()
       ['label'] = 'AD', -- Used in subframe names
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
-      ['subToggles'] = {
+      ['subsettings'] = {
         ['offsetX'] = 35,
         ['entries'] = {
-            -- Unlike the checkbox and dropdown subToggles, the button subToggles don't change their display based
+            -- Unlike the checkbox and dropdown subsettings, the button subsettings don't change their display based
             -- on the relevant variable's value. To escape that type of behaviour the entries that map to buttons
             -- should not have a string in the first index. Still want to keep the relevant variable name around
             -- though so the string is inside a table
@@ -219,7 +219,7 @@ C.DEFINE_MODULES = function()
       ['label'] = 'CR',
       ['title'] = 'Critical Reminders',
       ['description'] = L.CR,
-      ['subToggles'] = {
+      ['subsettings'] = {
         ['offsetX'] = 42,
         ['rowSize'] = 4,
         ['separator'] = {3, 19},
@@ -264,7 +264,8 @@ C.DEFINE_MODULES = function()
       ['label'] = 'PPF',
       ['title'] = 'Party Pet Frames',
       ['description'] = L.PPF,
-      ['consoleVariableName'] = 'showPartyPets', -- Modules that change console variables must be toggled outside of combat
+      -- Modules that change console variables must be toggled outside of combat
+      ['consoleVariableName'] = 'showPartyPets', -- This is the name of the cVar that will be modified when this module's state is modified
     },
     ['PingAnnouncer'] = {
       ['moduleKey'] = 'UIC_PA_IsEnabled',
@@ -273,7 +274,7 @@ C.DEFINE_MODULES = function()
       ['label'] = 'PA',
       ['title'] = 'Ping Announcer',
       ['description'] = L.PA,
-      ['subToggles'] = {
+      ['subsettings'] = {
         ['offsetX'] = 72,
         ['entries'] = {
           {'UIC_PA_Raid', false, RAID},
@@ -312,7 +313,7 @@ local generateProfileDefaults = function()
 
     profileDefaults[moduleKey] = defaultState
 
-    local subsettings = attributes['subToggles']
+    local subsettings = attributes['subsettings']
 
     if subsettings and subsettings.entries then
       for i = 1, #subsettings.entries do

@@ -21,28 +21,39 @@ local _, addonTable = ...
 
 local C = addonTable.C
 
-local calculatorFrame, inputFrame, multiplierFrame, resultFrame
+local calculatorFrame, equalsFrame, multiplierFrame, timesFrame, inputFrame, resultFrame
+
+local setColor = function(frame, isValid)
+  if isValid then
+    frame:SetTextColor(1, 1, 1, 1)
+  else
+    frame:SetTextColor(1, 0, 0, 1)
+  end
+end
 
 local updateResult = function()
-  local newResult = 0
-  local g = 0
-  local b = 0
+  local input = MoneyInputFrame_GetCopper(inputFrame)
+  local isValidInput = MoneyInputFrame_GetCopper(inputFrame) ~= 0
 
-  if MoneyInputFrame_GetCopper(inputFrame) ~= 0 and multiplierFrame:GetNumber() ~= 0 then
-    newResult = MoneyInputFrame_GetCopper(inputFrame) * multiplierFrame:GetNumber()
-    g = 1
-    b = 1
-  end
+  local multiplier = multiplierFrame:GetNumber()
+  local isValidMultiplier = multiplier > 0 and multiplier <= 200
 
-  calculatorFrame.timesFrame:SetTextColor(1, g, b, 1)
-  calculatorFrame.equalsFrame:SetTextColor(1, g, b, 1)
+  local showResult = isValidInput and isValidMultiplier
 
-  if newResult == 0 then
+  setColor(multiplierFrame, isValidMultiplier)
+  setColor(timesFrame, isValidInput)
+  setColor(equalsFrame, showResult)
+
+  if not showResult then
     resultFrame:Hide()
-  else
-    MoneyInputFrame_SetCopper(resultFrame, newResult)
-    resultFrame:Show()
+    return
   end
+
+  local newResult = MoneyInputFrame_GetCopper(inputFrame) * multiplierFrame:GetNumber()
+
+  MoneyInputFrame_SetCopper(resultFrame, newResult)
+
+  resultFrame:Show()
 end
 
 local hookFrameScripts = function()
@@ -82,44 +93,52 @@ local initializeFrames = function()
   calculatorFrame = CreateFrame('Frame', 'UIC_AHT_Mini_Calculator', _G['AuctionFrame'], 'BackdropTemplate')
   calculatorFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
   calculatorFrame:SetBackdropColor(0, 0, 0, 1)
-  calculatorFrame:SetSize(275, 50)
+  calculatorFrame:SetSize(265, 50)
 
-  inputFrame = CreateFrame('Frame', 'UIC_AHT_Mini_Calculator_Input', calculatorFrame, 'MoneyInputFrameTemplate')
-  inputFrame:SetPoint('LEFT', calculatorFrame, 'LEFT', 10, 0)
-  inputFrame:SetPoint('TOP', calculatorFrame, 'TOP', 0, -6)
-  inputFrame:SetScale(0.9)
-
-  calculatorFrame.timesFrame = calculatorFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
-  calculatorFrame.timesFrame:SetPoint('LEFT', inputFrame, 'RIGHT', 0, 0)
-  calculatorFrame.timesFrame:SetPoint('TOP', calculatorFrame, 'TOP', 0, -7)
-  calculatorFrame.timesFrame:SetTextColor(1, 1, 1, 1)
-  calculatorFrame.timesFrame:SetScale(1.2)
-  calculatorFrame.timesFrame:SetText('X')
+  -- Start from right to left as we will need to alter the size of the gold related frames to accommodate larger amounts
+  equalsFrame = calculatorFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal')
+  equalsFrame:SetPoint('RIGHT', calculatorFrame, 'RIGHT', -6, 0)
+  equalsFrame:SetPoint('TOP', calculatorFrame, 'TOP', 0, -4)
+  equalsFrame:SetTextColor(1, 1, 1, 1)
+  equalsFrame:SetScale(1.5)
+  equalsFrame:SetText('=')
 
   multiplierFrame = CreateFrame('EditBox', 'UIC_AHT_Mini_Calculator_Multiplier', calculatorFrame, 'InputBoxTemplate')
   multiplierFrame:SetScale(0.9)
-  multiplierFrame:SetWidth(50)
-  multiplierFrame:SetPoint('LEFT', calculatorFrame.timesFrame, 'RIGHT', 15, 0)
-  multiplierFrame:SetPoint('TOP', calculatorFrame, 'TOP', 0, 0)
+  multiplierFrame:SetSize(35, 14)
+  multiplierFrame:SetPoint('RIGHT', equalsFrame, 'LEFT', -6, 0)
+  multiplierFrame:SetPoint('TOP', equalsFrame, 'TOP', 0, -2)
   multiplierFrame:SetAutoFocus(false)
   multiplierFrame:SetNumeric(true);
   multiplierFrame:SetMaxLetters(3)
 
-  calculatorFrame.equalsFrame = calculatorFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal')
-  calculatorFrame.equalsFrame:SetPoint('LEFT', multiplierFrame, 'RIGHT', 8, 0)
-  calculatorFrame.equalsFrame:SetTextColor(1, 1, 1, 1)
-  calculatorFrame.equalsFrame:SetScale(1.5)
-  calculatorFrame.equalsFrame:SetText('=')
+  timesFrame = calculatorFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
+  timesFrame:SetPoint('RIGHT', multiplierFrame, 'LEFT', -8, 0)
+  timesFrame:SetPoint('TOP', calculatorFrame, 'TOP', 0, -7)
+  timesFrame:SetTextColor(1, 1, 1, 1)
+  timesFrame:SetScale(1.2)
+  timesFrame:SetText('X')
 
-  local resultFrameName = 'UIC_AHT_Mini_Calculator_Result'
-  resultFrame = CreateFrame('Frame', resultFrameName, calculatorFrame, 'MoneyInputFrameTemplate')
-  resultFrame:SetPoint('LEFT', calculatorFrame, 'LEFT', 10, 0)
+  inputFrame = CreateFrame('Frame', 'UIC_AHT_Mini_Calculator_Input', calculatorFrame, 'MoneyInputFrameTemplate')
+  inputFrame:SetPoint('RIGHT', timesFrame, 'LEFT', -15, 0)
+  inputFrame:SetPoint('TOP', calculatorFrame, 'TOP', 0, -6)
+  inputFrame:SetScale(0.9)
+
+  local x, y = inputFrame.gold:GetSize()
+  inputFrame.gold:SetSize(x + 15, y)
+
+  resultFrame = CreateFrame('Frame', 'UIC_AHT_Mini_Calculator_Result', calculatorFrame, 'MoneyInputFrameTemplate')
+  resultFrame:SetPoint('RIGHT', inputFrame, 'RIGHT', 0, 0)
   resultFrame:SetPoint('TOP', inputFrame, 'BOTTOM', 0, -6)
   resultFrame:SetScale(0.9)
 
-  _G[resultFrameName..'Gold']:SetEnabled(false)
-  _G[resultFrameName..'Silver']:SetEnabled(false)
-  _G[resultFrameName..'Copper']:SetEnabled(false)
+  x, y = resultFrame.gold:GetSize()
+  resultFrame.gold:SetSize(x + 15, y)
+  resultFrame.gold:SetMaxLetters(13)
+
+  resultFrame.gold:SetEnabled(false)
+  resultFrame.silver:SetEnabled(false)
+  resultFrame.copper:SetEnabled(false)
 
   calculatorFrame:Hide()
 

@@ -37,9 +37,9 @@ local initialize = function()
     local module = addonTable[moduleName]
     module:Initialize()
 
-    local savedVariableEntry = attributes['savedVariableEntry']
+    local moduleKey = attributes['moduleKey']
 
-    if UIChanges_Profile[savedVariableEntry] then
+    if UIChanges_Profile[moduleKey] then
       module:Enable()
     end
   end

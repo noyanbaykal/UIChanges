@@ -21,6 +21,9 @@ local _, addonTable = ...
 
 local locale = {}
 
+-- Localization files should set a reference to themselves in the addonTable with their locale code as the key
+addonTable.enUS = locale
+
 locale.TXT_NOT_CLASSIC = 'UI Changes supports classic only!'
 locale.NEEDS_RELOAD_1 = 'This takes effect after a UI reload!'
 locale.FIRST_TIME = 'UI Changes encountered new variables with this character! Please check out the Interface Options/AddOns/UIChanges page to see the available options.'
@@ -97,6 +100,3 @@ locale.WEST = 'West'
 locale.NORTH = 'North'
 locale.SOUTH = 'South'
 -- ~PingAnnouncer
-
--- Localization files should set a reference to themselves in the addonTable with their locale code as the key
-addonTable.enUS = locale

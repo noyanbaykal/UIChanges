@@ -380,8 +380,8 @@ local createBaseOptions = function()
 
   local subLeftAnchor = anchorFrame
 
-  for i = 1, #C.BASE_TOGGLES do
-    subLeftAnchor = createSubToggleEntry(C.BASE_TOGGLES[i], i, anchorFrame:GetName(), offsetX, subLeftAnchor, subFrames, changeKey)
+  for i = 1, #C.BASE_SETTINGS do
+    subLeftAnchor = createSubToggleEntry(C.BASE_SETTINGS[i], i, anchorFrame:GetName(), offsetX, subLeftAnchor, subFrames, changeKey)
   end
 
   -- This is rather simple since we only have 1 entry here so far
@@ -390,16 +390,31 @@ local createBaseOptions = function()
   lastFrameLeft = firstCheckBox
 end
 
-local populateOptions = function(parentFrame)
+local setupOptionsPanel = function()
+  local optionsPanel = CreateFrame('Frame', 'UIC_Options', _G['InterfaceOptionsFramePanelContainer'].NineSlice)
+  optionsPanel.name = 'UIChanges'
+  optionsPanel:Hide()
+
+  optionsPanel:SetScript('OnShow', function()
+    for cvar, frames in pairs(cvarMap) do -- read the current values and set the options
+      local isSet = UIChanges_Profile[cvar]
+      frames['option']:SetValue(isSet)
+
+      if frames['subFrames'] then -- Enable/Disable subframes
+        subFramesSetEnable(frames['subFrames'], isSet)
+      end
+    end
+  end)
+
   local outerPanelWidth = _G['InterfaceOptionsFramePanelContainer']:GetWidth() - 20
 
   -- Header text
-  local headerText = parentFrame:CreateFontString(nil, 'ARTWORK', 'GameFontNormalLarge')
+  local headerText = optionsPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormalLarge')
   headerText:SetText('UIChanges')
-  headerText:SetPoint('TOPLEFT', parentFrame, 12, -16)
+  headerText:SetPoint('TOPLEFT', optionsPanel, 12, -16)
 
   -- Informational text
-  local infoText = parentFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
+  local infoText = optionsPanel:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
   infoText:SetWidth(outerPanelWidth)
   infoText:SetJustifyH('LEFT')
   infoText:SetSpacing(2)
@@ -407,7 +422,7 @@ local populateOptions = function(parentFrame)
   infoText:SetPoint('TOPLEFT', headerText, 7, -24)
 
   -- All the options will be within a scrollFrame
-  local scrollFrame = CreateFrame('ScrollFrame', 'UIC_Options_ScrollFrame', parentFrame, 'UIPanelScrollFrameTemplate')
+  local scrollFrame = CreateFrame('ScrollFrame', 'UIC_Options_ScrollFrame', optionsPanel, 'UIPanelScrollFrameTemplate')
   scrollChild = CreateFrame('Frame', 'UIC_Options_ScrollFrameChild', scrollFrame) -- This frame will be the one scrolling
 
   scrollFrame:SetPoint('TOPLEFT', infoText, 'BOTTOMLEFT', 0, -20)
@@ -426,10 +441,20 @@ local populateOptions = function(parentFrame)
   lastFrameTop = scrollChild
   lastFrameLeft = scrollChild
 
+  return optionsPanel
+end
+
+local UIC_Options = {}
+
+UIC_Options.Initialize = function()
+  cvarMap = {}
+
+  local optionsPanel = setupOptionsPanel()
+
   createBaseOptions()
 
   for moduleName, attributes in pairs(C.MODULES) do
-    local changeKey = attributes['savedVariableEntry']
+    local changeKey = attributes['moduleKey']
     local label = attributes['label']
     local title = attributes['title']
     local description = attributes['description']
@@ -438,29 +463,6 @@ local populateOptions = function(parentFrame)
 
     createModuleOptions(moduleName, changeKey, label, title, description, subToggles, consoleVariableName)
   end
-end
-
-local UIC_Options = {}
-
-UIC_Options.Initialize = function()
-  cvarMap = {}
-
-  local optionsPanel = CreateFrame('Frame', 'UIC_Options', _G['InterfaceOptionsFramePanelContainer'].NineSlice)
-  optionsPanel.name = 'UIChanges'
-  optionsPanel:Hide()
-
-  optionsPanel:SetScript('OnShow', function()
-    for cvar, frames in pairs(cvarMap) do -- read the current values and set the options
-      local isSet = UIChanges_Profile[cvar]
-      frames['option']:SetValue(isSet)
-
-      if frames['subFrames'] then -- Enable/Disable subframes
-        subFramesSetEnable(frames['subFrames'], isSet)
-      end
-    end
-  end)
-
-  populateOptions(optionsPanel)
 
   InterfaceOptions_AddCategory(optionsPanel)
 end

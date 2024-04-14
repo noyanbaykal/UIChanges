@@ -19,22 +19,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 local _, addonTable = ...
 
-local L
-local constants = {}
+addonTable.C = {}
 
-constants.REGISTER_EVENTS = function(frame, eventsTable)
+local L
+local C = addonTable.C
+
+C.REGISTER_EVENTS = function(frame, eventsTable)
   for event, _ in pairs(eventsTable) do
     frame:RegisterEvent(event)
   end
 end
 
-constants.UNREGISTER_EVENTS = function(frame, eventsTable)
+C.UNREGISTER_EVENTS = function(frame, eventsTable)
   for event, _ in pairs(eventsTable) do
     frame:UnregisterEvent(event)
   end
 end
 
-constants.BACKDROP_INFO = function(edgeSize, insetSize)
+C.BACKDROP_INFO = function(edgeSize, insetSize)
   return {
     bgFile = 'Interface/Tooltips/UI-Tooltip-Background',
     edgeFile = 'Interface/Tooltips/UI-Tooltip-Border',
@@ -43,7 +45,7 @@ constants.BACKDROP_INFO = function(edgeSize, insetSize)
   }
 end
 
-constants.RoundToPixelCount = function(count)
+C.RoundToPixelCount = function(count)
   if count == 0 then
     return count
   elseif count > 0 and count < 1 then
@@ -141,7 +143,7 @@ local initializeLocalization = function()
 
   L = addonTable.L -- Set the localization table for this file
 
-  constants.ENUM_ANCHOR_OPTIONS = {
+  C.ENUM_ANCHOR_OPTIONS = {
     {OFF,                    nil},
     {L.ANCHOR_TOPLEFT,       'TOPLEFT'},
     {L.ANCHOR_TOP,           'TOP'},
@@ -154,29 +156,29 @@ local initializeLocalization = function()
   }
 end
 
-constants.AD_RESET_DISPLAY_LOCATION = function()
+C.AD_RESET_DISPLAY_LOCATION = function()
   local adMainFrame = _G['UIC_AbsorbDisplay']
   if adMainFrame and adMainFrame.ResetDisplayLocation then
     adMainFrame:ResetDisplayLocation()
   end
 end
 
-constants.CR_RESET_ERROR_FRAME_LOCATION = function()
+C.CR_RESET_ERROR_FRAME_LOCATION = function()
   local crMainFrame = _G['UIC_CriticalReminders']
   if crMainFrame and crMainFrame.ResetErrorFrameLocation then
     crMainFrame:ResetErrorFrameLocation()
   end
 end
 
-constants.DEFINE_MODULES = function()
+C.DEFINE_MODULES = function()
   -- These toggles have the same schema as subToggles.entries
-  constants.BASE_TOGGLES = {
+  C.BASE_SETTINGS = {
     {'UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, false, nil, L.TOOLTIP_MINIMAP_QUICK_ZOOM},
   }
 
-  constants.MODULES = {
+  C.MODULES = {
     ['AbsorbDisplay'] = { -- The key corresponds to the class that is exported in the module file
-      ['savedVariableEntry'] = 'UIC_AD_IsEnabled', -- Name of the corresponding entry in the profile
+      ['moduleKey'] = 'UIC_AD_IsEnabled', -- Name of the corresponding entry in UIChanges_Profile
       ['isEnabledByDefault'] = true,
       ['label'] = 'AD', -- Used in subframe names
       ['title'] = 'Absorb Display',
@@ -189,26 +191,26 @@ constants.DEFINE_MODULES = function()
             -- should not have a string in the first index. Still want to keep the relevant variable name around
             -- though so the string is inside a table
             -- The second value is the default value
-            {{'UIC_AD_FrameInfo'}, {}, RESET_POSITION, false, {'button', constants.AD_RESET_DISPLAY_LOCATION}},
+            {{'UIC_AD_FrameInfo'}, {}, RESET_POSITION, false, {'button', C.AD_RESET_DISPLAY_LOCATION}},
         },
       },
     },
     ['AHTools'] = {
-      ['savedVariableEntry'] = 'UIC_AHT_IsEnabled',
+      ['moduleKey'] = 'UIC_AHT_IsEnabled',
       ['isEnabledByDefault'] = true,
       ['label'] = 'AHT',
       ['title'] = 'Auction House Tools',
       ['description'] = L.AHT,
     },
     ['BagUtilities'] = {
-      ['savedVariableEntry'] = 'UIC_BU_IsEnabled',
+      ['moduleKey'] = 'UIC_BU_IsEnabled',
       ['isEnabledByDefault'] = true,
       ['label'] = 'BU',
       ['title'] = 'Bag Utilities ('..L.CLASSIC_ERA_ONLY..')',
       ['description'] = L.BU,
     },
     ['CriticalReminders'] = {
-      ['savedVariableEntry'] = 'UIC_CR_IsEnabled',
+      ['moduleKey'] = 'UIC_CR_IsEnabled',
       ['isEnabledByDefault'] = true,
       ['label'] = 'CR',
       ['title'] = 'Critical Reminders',
@@ -239,19 +241,19 @@ constants.DEFINE_MODULES = function()
           {'UIC_CR_InteractionRange', false, L.INTERACTION_RANGE},
           {'UIC_CR_InteractionRange_Sound', false, L.INTERACTION_RANGE_SOUND, false, nil, L.INTERACTION_RANGE_SOUND_TOOLTIP},
           {'UIC_CR_ErrorFrameAnchor', 1, L.ERROR_FRAME_ANCHOR_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
-          {{'UIC_CR_ErrorFrameInfo'}, {}, RESET_POSITION, false, {'button', constants.CR_RESET_ERROR_FRAME_LOCATION}},
+          {{'UIC_CR_ErrorFrameInfo'}, {}, RESET_POSITION, false, {'button', C.CR_RESET_ERROR_FRAME_LOCATION}},
         },
       },
     },
     ['DruidManaBar'] = {
-      ['savedVariableEntry'] = 'UIC_DMB_IsEnabled',
+      ['moduleKey'] = 'UIC_DMB_IsEnabled',
       ['isEnabledByDefault'] = true,
       ['label'] = 'DMB',
       ['title'] = 'Druid Mana Bar ('..L.CLASSIC_ERA_ONLY..')',
       ['description'] = L.DMB,
     },
     ['PartyPetFrames'] = {
-      ['savedVariableEntry'] = 'UIC_PPF_IsEnabled',
+      ['moduleKey'] = 'UIC_PPF_IsEnabled',
       ['isEnabledByDefault'] = GetCVar('showPartyPets') == 1,
       ['label'] = 'PPF',
       ['title'] = 'Party Pet Frames',
@@ -259,7 +261,7 @@ constants.DEFINE_MODULES = function()
       ['consoleVariableName'] = 'showPartyPets', -- Modules that change console variables must be toggled outside of combat
     },
     ['PingAnnouncer'] = {
-      ['savedVariableEntry'] = 'UIC_PA_IsEnabled',
+      ['moduleKey'] = 'UIC_PA_IsEnabled',
       ['isEnabledByDefault'] = true,
       ['label'] = 'PA',
       ['title'] = 'Ping Announcer',
@@ -277,44 +279,45 @@ constants.DEFINE_MODULES = function()
   }
 end
 
--- Traverses the BASE_TOGGLES and MODULES tables to dynamically gather the names and default values
+-- Traverses the BASE_SETTINGS and MODULES tables to dynamically gather the names and default values
 -- of all the entries that will be stored in the UIChanges_Profile savedVariablePerCharacter.
-local generateSavedVariableEntryDefaults = function()
-  local entryDefaults = {}
+local generateProfileDefaults = function()
+  local profileDefaults = {}
 
-  for i = 1, #constants.BASE_TOGGLES do
-    local baseToggle = constants.BASE_TOGGLES[i]
+  local addSubsetting = function(subsetting)
+    local key = subsetting[1]
+    local defaultValue = subsetting[2]
 
-    entryDefaults[baseToggle[1]] = baseToggle[2]
+    if type(key) == 'table' then
+      key = key[1]
+    end
+
+    profileDefaults[key] = defaultValue
   end
 
-  for moduleName, attributes in pairs(constants.MODULES) do
-    local savedVariableEntry = attributes['savedVariableEntry']
+  for i = 1, #C.BASE_SETTINGS do
+    addSubsetting(C.BASE_SETTINGS[i])
+  end
+
+  for moduleName, attributes in pairs(C.MODULES) do
+    local moduleKey = attributes['moduleKey']
     local defaultState = attributes['isEnabledByDefault']
-    local subToggles = attributes['subToggles']
 
-    entryDefaults[savedVariableEntry] = defaultState
+    profileDefaults[moduleKey] = defaultState
 
-    if subToggles and subToggles.entries then
-      local subtoggleEntries = subToggles.entries
+    local subsettings = attributes['subToggles']
 
-      for i = 1, #subtoggleEntries do
-        local entry = subtoggleEntries[i]
-
-        local entryName = entry[1]
-        if type(entryName) == 'table' then
-          entryName = entryName[1]
-        end
-
-        entryDefaults[entryName] = entry[2]
+    if subsettings and subsettings.entries then
+      for i = 1, #subsettings.entries do
+        addSubsetting(subsettings.entries[i])
       end
     end
   end
 
-  return entryDefaults
+  return profileDefaults
 end
 
-constants.INITIALIZE_PROFILE = function()
+C.INITIALIZE_PROFILE = function()
   local hasUnexpectedChanges = false
 
   if not UIChanges_Profile then -- Either first time using UIChanges or upgrading from version < 1.2.0
@@ -325,36 +328,36 @@ constants.INITIALIZE_PROFILE = function()
 
   -- Store all the keys from the profile in case there are any no-longer-used ones
   local keysToBeDeleted = {}
-  for variableName, _ in pairs(UIChanges_Profile) do
-    keysToBeDeleted[variableName] = true
+  for settingName, _ in pairs(UIChanges_Profile) do
+    keysToBeDeleted[settingName] = true
   end
 
-  local savedVariableEntryDefaults = generateSavedVariableEntryDefaults()
+  local profileDefaults = generateProfileDefaults()
 
   -- Initialize variables if they haven't been initialized already
-  for name, defaultValue in pairs(savedVariableEntryDefaults) do
-    keysToBeDeleted[name] = nil -- Remove this from the set of keys to be deleted
+  for settingName, defaultValue in pairs(profileDefaults) do
+    keysToBeDeleted[settingName] = nil -- Remove this from the set of keys to be deleted
 
-    if UIChanges_Profile[name] == nil then
+    if UIChanges_Profile[settingName] == nil then
       hasUnexpectedChanges = true
 
       -- If the user is upgrading from version < 1.2.0, they have the old, individual savedVariables.
       -- The old savedVariables will be wiped out the next time the client saves the savedVariables.
-      -- There is a one time chance of reading those variables and converting them into the new format
+      -- This is the one time chance of reading those variables and converting them into the new format
       -- so we won't reset the user's preferences.
-      local previousVersionValue = _G[name]
+      local previousVersionValue = _G[settingName]
     
       if previousVersionValue and type(previousVersionValue) == type(defaultValue) then
-        UIChanges_Profile[name] = previousVersionValue
+        UIChanges_Profile[settingName] = previousVersionValue
       else
-        UIChanges_Profile[name] = defaultValue
+        UIChanges_Profile[settingName] = defaultValue
       end
     end
   end
 
   -- Remove any no-longer-used variables
-  for variableName, _ in pairs(keysToBeDeleted) do
-    UIChanges_Profile[variableName] = nil
+  for settingName, _ in pairs(keysToBeDeleted) do
+    UIChanges_Profile[settingName] = nil
   end
 
   if hasUnexpectedChanges then
@@ -363,5 +366,3 @@ constants.INITIALIZE_PROFILE = function()
 end
 
 initializeLocalization()
-
-addonTable.C = constants

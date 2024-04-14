@@ -366,6 +366,28 @@ local createModuleOptions = function(moduleName, changeKey, label, title, descri
   end
 end
 
+-- The modules table does not have an inherent ordering so we need an intermediate array to preserve the ordering
+local traverseModulesInOrder = function()
+  local orderedModules = {}
+
+  for moduleName, attributes in pairs(C.MODULES) do
+    modules[attributes['optionsPanelIndex']] = moduleName
+  end
+
+  for _, moduleName in ipairs(orderedModules) do
+    local attributes = C.MODULES[moduleName]
+
+    local changeKey = attributes['moduleKey']
+    local label = attributes['label']
+    local title = attributes['title']
+    local description = attributes['description']
+    local subToggles = attributes['subToggles']
+    local consoleVariableName = attributes['consoleVariableName']
+
+    createModuleOptions(moduleName, changeKey, label, title, description, subToggles, consoleVariableName)
+  end
+end
+
 -- These options lack the module association of subToggles but are otherwise very similar to them.
 local createBaseOptions = function()
   local anchorFrame = CreateFrame('Frame', 'UIC_BT', scrollChild)
@@ -453,16 +475,7 @@ UIC_Options.Initialize = function()
 
   createBaseOptions()
 
-  for moduleName, attributes in pairs(C.MODULES) do
-    local changeKey = attributes['moduleKey']
-    local label = attributes['label']
-    local title = attributes['title']
-    local description = attributes['description']
-    local subToggles = attributes['subToggles']
-    local consoleVariableName = attributes['consoleVariableName']
-
-    createModuleOptions(moduleName, changeKey, label, title, description, subToggles, consoleVariableName)
-  end
+  traverseModulesInOrder()
 
   InterfaceOptions_AddCategory(optionsPanel)
 end

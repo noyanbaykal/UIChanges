@@ -630,6 +630,7 @@ local resetDisplayLocation = function()
   UIChanges_Profile['UIC_AD_FrameInfo'] = {}
 
   shieldFrame:SetUserPlaced(false)
+  shieldFrame:ClearAllPoints()
   shieldFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, BASE_OFFSET_Y)
 end
 

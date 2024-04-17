@@ -24,6 +24,8 @@ addonTable.C = {}
 local L
 local C = addonTable.C
 
+C.DUMMY_FUNCTION = function() end -- Will re-use this single function when we need a dummy function.
+
 C.REGISTER_EVENTS = function(frame, eventsTable)
   for event, _ in pairs(eventsTable) do
     frame:RegisterEvent(event)
@@ -206,12 +208,16 @@ C.DEFINE_MODULES = function()
     return entries
   end
 
-  -- These settings have the same schema as the subsettings.entries
-  C.BASE_SETTINGS = {
-    buildCheckboxEntry('UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, L.TOOLTIP_MINIMAP_QUICK_ZOOM),
-  }
-
   C.MODULES = {
+    {
+      ['label'] = 'BM', -- This is the base module to store base settings. It is unlike the rest of the modules.
+      ['subsettings'] = {
+        ['offsetX'] = 25,
+        ['entries'] = {
+          buildCheckboxEntry('UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, L.TOOLTIP_MINIMAP_QUICK_ZOOM),
+        },
+      },
+    },
     {
       ['moduleName'] = 'AbsorbDisplay', -- The key corresponds to the class that is exported in the module file
       ['moduleKey'] = 'UIC_AD_IsEnabled', -- Name of the corresponding entry in UIChanges_Profile
@@ -220,14 +226,14 @@ C.DEFINE_MODULES = function()
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
       ['subsettings'] = {
-        ['offsetX'] = 35,
+        ['offsetX'] = 35, -- The horizontal space between entries are hardcoded here
         ['entries'] = {
           {
             ['entryKey'] = 'UIC_AD_FrameInfo', -- Matches the entry in UIChanges_Profile
             ['entryType'] = 'button', -- Unlike other subsetting types, buttons do not display the value of the relevant
             ['defaultValue'] = {}, --  entry in UIChanges_Profile. The button is just a way to reset the value.
             ['subTitle'] = RESET_POSITION,
-            ['updateCallback'] = function() addonTable.AbsorbDisplay:ResetErrorFrameLocation() end,
+            ['updateCallback'] = function() addonTable.AbsorbDisplay:ResetDisplayLocation() end,
           },
         },
       },
@@ -332,68 +338,77 @@ C.DEFINE_MODULES = function()
     },
   }
 
-  -- Setup attributes that will be used in the options panel
-  for _, moduleEntry in ipairs(C.MODULES) do
-    local className = moduleEntry['moduleName']
+  local setupSubsetting = function(subsettingEntry, parentName, offsetX)
+    -- Add the subsetting to the settings and defaults tables
+    local entryKey = subsettingEntry['entryKey']
+    local defaultValue = subsettingEntry['defaultValue']
+    local subTitle = subsettingEntry['subTitle']
 
-    -- Module states will be altered upon changes in the options page
-    moduleEntry['updateCallback'] = function(newValue)
-      local module = addonTable[className]
-      
-      if newValue then
-        module:Enable()
-      else
-        module:Disable()
-      end
-    end
+    C.SETTINGS_TABLE[entryKey] = subsettingEntry
+    C.PROFILE_DEFAULTS[entryKey] = defaultValue
 
-    -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
-    if moduleEntry['subsettings'] then
-      local subsettingEntries = moduleEntry['subsettings']['entries']
-
-      local dependents = {}
-
-      for _, subsettingEntry in ipairs(subsettingEntries) do
-        dependents[#dependents + 1] = subsettingEntry['entryKey']
-      end
-
-      moduleEntry['dependents'] = dependents
-    end
-  end
-end
-
--- Traverses the BASE_SETTINGS and MODULES tables to dynamically gather the names and default values
--- of all the entries that will be stored in the UIChanges_Profile savedVariablePerCharacter.
-local generateProfileDefaults = function()
-  local profileDefaults = {}
-
-  local addSubsetting = function(subsetting)
-    local entryKey = subsetting['entryKey']
-    local defaultValue = subsetting['defaultValue']
-
-    profileDefaults[entryKey] = defaultValue
+    -- Set these here for easy lookup in Options
+    subsettingEntry['subLabel'] = ('UIC_Subsetting_'..parentName..'_'..subTitle):gsub('%s+', '_') -- Remove spaces
+    subsettingEntry['offsetX'] = offsetX
   end
 
-  for i = 1, #C.BASE_SETTINGS do
-    addSubsetting(C.BASE_SETTINGS[i])
-  end
+  local setupModuleToggle = function(moduleEntry)
+    local className = moduleEntry['moduleName'] -- The base module doesn't have this attribute
 
-  for _, entry in ipairs(C.MODULES) do
-    local moduleKey = entry['moduleKey']
-    local defaultState = entry['isEnabledByDefault']
+    if className then
+      -- Add the module toggle to the settings and defaults tables
+      local moduleKey = moduleEntry['moduleKey']
+      local defaultState = moduleEntry['isEnabledByDefault']
 
-    profileDefaults[moduleKey] = defaultState
+      C.SETTINGS_TABLE[moduleKey] = moduleEntry
+      C.PROFILE_DEFAULTS[moduleKey] = defaultState
 
-    local subsettings = entry['subsettings']
-
-    if subsettings and subsettings.entries then
-      for i = 1, #subsettings.entries do
-        addSubsetting(subsettings.entries[i])
+      -- Module states will be altered when their option frames' are clicked on
+      moduleEntry['updateCallback'] = function(newValue)
+        local module = addonTable[className]
+        
+        if newValue then
+          module:Enable()
+        else
+          module:Disable()
+        end
       end
     end
   end
 
-  return profileDefaults
+  -- Setup attributes that will be used in the options panel and the profile defaults
+  local setupDataTables = function()
+    C.SETTINGS_TABLE = {}
+    C.PROFILE_DEFAULTS = {}
+
+    for _, moduleEntry in ipairs(C.MODULES) do
+      setupModuleToggle(moduleEntry)
+
+      if moduleEntry['subsettings'] then
+        local subsettingEntries = moduleEntry['subsettings']['entries']
+        local offsetX = moduleEntry['subsettings']['offsetX'] or 0
+        local parentName = moduleEntry['label']
+
+        moduleEntry['subsettings']['subFrames'] = {} -- Initialize this table here which will be populated in Options
+  
+        local dependents = {} -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
+  
+        for i, subsettingEntry in ipairs(subsettingEntries) do
+          local offsetX = i == 1 and 0 or offsetX -- The leftmost element is different.
+
+          setupSubsetting(subsettingEntry, parentName, offsetX)
+
+          dependents[#dependents + 1] = subsettingEntry['entryKey']
+        end
+  
+        if moduleEntry['moduleName'] then -- Only for modules that can be toggled
+          moduleEntry['dependents'] = dependents
+        end
+      end
+    end
+  end
+
+  setupDataTables()
 end
 
 C.INITIALIZE_PROFILE = function()
@@ -411,10 +426,8 @@ C.INITIALIZE_PROFILE = function()
     keysToBeDeleted[settingName] = true
   end
 
-  local profileDefaults = generateProfileDefaults()
-
   -- Initialize variables if they haven't been initialized already
-  for settingName, defaultValue in pairs(profileDefaults) do
+  for settingName, defaultValue in pairs(C.PROFILE_DEFAULTS) do
     keysToBeDeleted[settingName] = nil -- Remove this from the set of keys to be deleted
 
     if UIChanges_Profile[settingName] == nil then

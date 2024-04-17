@@ -38,13 +38,15 @@ local initialize = function()
     local moduleKey = moduleEntry['moduleKey']
 
     local module = addonTable[moduleName]
-    module:Initialize()
+    if module then
+      module:Initialize()
+    end
 
     if UIChanges_Profile[moduleKey] then
       module:Enable()
     end
   end
-
+  
   addonTable.UIC_Options.Initialize()
 end
 

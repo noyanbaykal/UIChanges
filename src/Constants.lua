@@ -142,7 +142,9 @@ local initializeLocalization = function()
   end
 
   L = addonTable.L -- Set the localization table for this file
+end
 
+C.DEFINE_MODULES = function()
   C.ENUM_ANCHOR_OPTIONS = {
     {OFF,                    nil},
     {L.ANCHOR_TOPLEFT,       'TOPLEFT'},
@@ -154,137 +156,210 @@ local initializeLocalization = function()
     {L.ANCHOR_BOTTOMLEFT,    'BOTTOMLEFT'},
     {L.ANCHOR_LEFT,          'LEFT'}
   }
-end
 
-C.AD_RESET_DISPLAY_LOCATION = function()
-  local adMainFrame = _G['UIC_AbsorbDisplay']
-  if adMainFrame and adMainFrame.ResetDisplayLocation then
-    adMainFrame:ResetDisplayLocation()
+  local buildCheckboxEntry = function(entryName, defaultValue, subTitle, tooltipText)
+    local entry = {}
+  
+    entry['entryKey'] = entryName
+    entry['entryType'] = 'checkbox'
+    entry['defaultValue'] = defaultValue
+    entry['subTitle'] = subTitle
+
+    if tooltipText then
+      entry['tooltipText'] = tooltipText
+    end
+  
+    return entry
   end
-end
 
-C.CR_RESET_ERROR_FRAME_LOCATION = function()
-  local crMainFrame = _G['UIC_CriticalReminders']
-  if crMainFrame and crMainFrame.ResetErrorFrameLocation then
-    crMainFrame:ResetErrorFrameLocation()
+  -- Each warning entry comes with a relevant sound entry
+  local CR_BuildWarningEntries = function(entryName, defaultValue, subTitleVariableName, soundEntryDefaultValue)
+    local warningEntrySubtitle = L[subTitleVariableName]
+
+    local soundEntryName = entryName .. '_Sound'
+    local soundEntrySubtitle = L[subTitleVariableName .. '_SOUND']
+    local soundEntryTooltip = L[subTitleVariableName .. '_SOUND' .. '_TOOLTIP']
+
+    local warningEntry = buildCheckboxEntry(entryName, defaultValue, warningEntrySubtitle)
+    local soundEntry = buildCheckboxEntry(soundEntryName, soundEntryDefaultValue, soundEntrySubtitle, soundEntryTooltip)
+
+    -- We want the sound entry checkbox to be inactive if the warning entry is disabled.
+    warningEntry['dependents'] = {soundEntryName}
+
+    return warningEntry, soundEntry
   end
-end
 
-C.DEFINE_MODULES = function()
+  local CR_SubsettingBuilder = function(checkboxEntries, otherEntries)
+    local entries = {}
+
+    for i, checkboxEntry in ipairs(checkboxEntries) do
+      local warningEntry, soundEntry = CR_BuildWarningEntries(unpack(checkboxEntry))
+
+      entries[#entries + 1] = warningEntry
+      entries[#entries + 1] = soundEntry
+    end
+
+    for _, otherEntry in ipairs(otherEntries) do
+      entries[#entries + 1] = otherEntry
+    end
+
+    return entries
+  end
+
   -- These settings have the same schema as the subsettings.entries
   C.BASE_SETTINGS = {
-    {'UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, false, nil, L.TOOLTIP_MINIMAP_QUICK_ZOOM},
+    buildCheckboxEntry('UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, L.TOOLTIP_MINIMAP_QUICK_ZOOM),
   }
 
   C.MODULES = {
-    ['AbsorbDisplay'] = { -- The key corresponds to the class that is exported in the module file
+    {
+      ['moduleName'] = 'AbsorbDisplay', -- The key corresponds to the class that is exported in the module file
       ['moduleKey'] = 'UIC_AD_IsEnabled', -- Name of the corresponding entry in UIChanges_Profile
       ['isEnabledByDefault'] = true,
-      ['optionsPanelIndex'] = 1,
       ['label'] = 'AD', -- Used in subframe names
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
       ['subsettings'] = {
         ['offsetX'] = 35,
         ['entries'] = {
-            -- Unlike the checkbox and dropdown subsettings, the button subsettings don't change their display based
-            -- on the relevant variable's value. To escape that type of behaviour the entries that map to buttons
-            -- should not have a string in the first index. Still want to keep the relevant variable name around
-            -- though so the string is inside a table
-            -- The second value is the default value
-            {{'UIC_AD_FrameInfo'}, {}, RESET_POSITION, false, {'button', C.AD_RESET_DISPLAY_LOCATION}},
+          {
+            ['entryKey'] = 'UIC_AD_FrameInfo', -- Matches the entry in UIChanges_Profile
+            ['entryType'] = 'button', -- Unlike other subsetting types, buttons do not display the value of the relevant
+            ['defaultValue'] = {}, --  entry in UIChanges_Profile. The button is just a way to reset the value.
+            ['subTitle'] = RESET_POSITION,
+            ['updateCallback'] = function() addonTable.AbsorbDisplay:ResetErrorFrameLocation() end,
+          },
         },
       },
     },
-    ['AHTools'] = {
+    {
+      ['moduleName'] = 'AHTools',
       ['moduleKey'] = 'UIC_AHT_IsEnabled',
       ['isEnabledByDefault'] = true,
-      ['optionsPanelIndex'] = 2,
       ['label'] = 'AHT',
       ['title'] = 'Auction House Tools',
       ['description'] = L.AHT,
     },
-    ['BagUtilities'] = {
+    {
+      ['moduleName'] = 'BagUtilities',
       ['moduleKey'] = 'UIC_BU_IsEnabled',
       ['isEnabledByDefault'] = true,
-      ['optionsPanelIndex'] = 3,
       ['label'] = 'BU',
       ['title'] = 'Bag Utilities ('..L.CLASSIC_ERA_ONLY..')',
       ['description'] = L.BU,
     },
-    ['CriticalReminders'] = {
+    {
+      ['moduleName'] = 'CriticalReminders',
       ['moduleKey'] = 'UIC_CR_IsEnabled',
       ['isEnabledByDefault'] = true,
-      ['optionsPanelIndex'] = 4,
       ['label'] = 'CR',
       ['title'] = 'Critical Reminders',
       ['description'] = L.CR,
       ['subsettings'] = {
         ['offsetX'] = 42,
         ['rowSize'] = 4,
-        ['separator'] = {3, 19},
-        ['entries'] = {
-          {'UIC_CR_BreathWarning', true, L.BREATH_WARNING},
-          {'UIC_CR_BreathWarning_Sound', true, L.BREATH_WARNING_SOUND, false, nil, L.BREATH_WARNING_SOUND_TOOLTIP},
-          {'UIC_CR_CombatWarning', true, L.COMBAT_WARNING},
-          {'UIC_CR_CombatWarning_Sound', false, L.COMBAT_WARNING_SOUND, false, nil, L.COMBAT_WARNING_SOUND_TOOLTIP},
-          {'UIC_CR_GatheringFailure', true, L.GATHERING_FAILURE},
-          {'UIC_CR_GatheringFailure_Sound', false, L.GATHERING_FAILURE_SOUND, false, nil, L.GATHERING_FAILURE_SOUND_TOOLTIP},
-          {'UIC_CR_CombatLos', true, L.COMBAT_LOS},
-          {'UIC_CR_CombatLos_Sound', false, L.COMBAT_LOS_SOUND, false, nil, L.COMBAT_LOS_SOUND_TOOLTIP},
-          {'UIC_CR_CombatDirection', false, L.COMBAT_DIRECTION},
-          {'UIC_CR_CombatDirection_Sound', false, L.COMBAT_DIRECTION_SOUND, false, nil, L.COMBAT_DIRECTION_SOUND_TOOLTIP},
-          {'UIC_CR_CombatRange', false, L.COMBAT_RANGE},
-          {'UIC_CR_CombatRange_Sound', false, L.COMBAT_RANGE_SOUND, false, nil, L.COMBAT_RANGE_SOUND_TOOLTIP},
-          {'UIC_CR_CombatInterrupted', false, L.COMBAT_INTERRUPTED},
-          {'UIC_CR_CombatInterrupted_Sound', false, L.COMBAT_INTERRUPTED_SOUND, false, nil, L.COMBAT_INTERRUPTED_SOUND_TOOLTIP},
-          {'UIC_CR_CombatCooldown', false, L.COMBAT_COOLDOWN},
-          {'UIC_CR_CombatCooldown_Sound', false, L.COMBAT_COOLDOWN_SOUND, false, nil, L.COMBAT_COOLDOWN_SOUND_TOOLTIP},
-          {'UIC_CR_CombatNoResource', false, L.COMBAT_NO_RESOURCE},
-          {'UIC_CR_CombatNoResource_Sound', false, L.COMBAT_NO_RESOURCE_SOUND, false, nil, L.COMBAT_NO_RESOURCE_SOUND_TOOLTIP},
-          {'UIC_CR_InteractionRange', false, L.INTERACTION_RANGE},
-          {'UIC_CR_InteractionRange_Sound', false, L.INTERACTION_RANGE_SOUND, false, nil, L.INTERACTION_RANGE_SOUND_TOOLTIP},
-          {'UIC_CR_ErrorFrameAnchor', 1, L.ERROR_FRAME_ANCHOR_DROPDOWN, true, {'dropdown', 'ENUM_ANCHOR_OPTIONS'}},
-          {{'UIC_CR_ErrorFrameInfo'}, {}, RESET_POSITION, false, {'button', C.CR_RESET_ERROR_FRAME_LOCATION}},
+        ['separator'] = { -- To draw a straight line in the middle of all the subsetting checkboxes
+          ['topFrame'] = 3, -- These are hardcoded indices for the frames the line will be drawn relative to
+          ['bottomFrame'] = 19, -- The numbers are derived from the entries defined below
         },
+        ['entries'] = CR_SubsettingBuilder(
+          { -- CheckboxEntries
+            {'UIC_CR_BreathWarning',      true,   'BREATH_WARNING',     true},
+            {'UIC_CR_CombatWarning',      true,   'COMBAT_WARNING',     false},
+            {'UIC_CR_GatheringFailure',   true,   'GATHERING_FAILURE',  false},
+            {'UIC_CR_CombatLos',          true,   'COMBAT_LOS',         false},
+            {'UIC_CR_CombatDirection',    false,  'COMBAT_DIRECTION',   false},
+            {'UIC_CR_CombatRange',        false,  'COMBAT_RANGE',       false},
+            {'UIC_CR_CombatInterrupted',  false,  'COMBAT_INTERRUPTED', false},
+            {'UIC_CR_CombatCooldown',     false,  'COMBAT_COOLDOWN',    false},
+            {'UIC_CR_CombatNoResource',   false,  'COMBAT_NO_RESOURCE', false},
+            {'UIC_CR_InteractionRange',   false,  'INTERACTION_RANGE',  false},
+          },
+          { -- OtherEntries
+            {
+              ['entryKey'] = 'UIC_CR_ErrorFrameAnchor',
+              ['entryType'] = 'dropdown',
+              ['defaultValue'] = 1,
+              ['subTitle'] = L.ERROR_FRAME_ANCHOR_DROPDOWN,
+              ['dropdownEnum'] = C.ENUM_ANCHOR_OPTIONS, -- The dropdown options will be populated from this enum
+              ['updateCallback'] = function() addonTable.CriticalReminders:Update() end,
+            },
+            {
+              ['entryKey'] = 'UIC_CR_ErrorFrameInfo',
+              ['entryType'] = 'button',
+              ['defaultValue'] = {},
+              ['subTitle'] = RESET_POSITION,
+              ['updateCallback'] = function() addonTable.CriticalReminders:ResetErrorFrameLocation() end,
+            },
+          }
+        ),
       },
     },
-    ['DruidManaBar'] = {
+    {
+      ['moduleName'] = 'DruidManaBar',
       ['moduleKey'] = 'UIC_DMB_IsEnabled',
       ['isEnabledByDefault'] = true,
-      ['optionsPanelIndex'] = 5,
       ['label'] = 'DMB',
       ['title'] = 'Druid Mana Bar ('..L.CLASSIC_ERA_ONLY..')',
       ['description'] = L.DMB,
     },
-    ['PartyPetFrames'] = {
+    {
+      ['moduleName'] = 'PartyPetFrames',
       ['moduleKey'] = 'UIC_PPF_IsEnabled',
-      ['isEnabledByDefault'] = GetCVar('showPartyPets') == 1,
-      ['optionsPanelIndex'] = 6,
+      ['isEnabledByDefault'] = GetCVar('showPartyPets') == 1, -- We can check this by the time DEFINE_MODULES() is called
       ['label'] = 'PPF',
       ['title'] = 'Party Pet Frames',
       ['description'] = L.PPF,
       -- Modules that change console variables must be toggled outside of combat
       ['consoleVariableName'] = 'showPartyPets', -- This is the name of the cVar that will be modified when this module's state is modified
     },
-    ['PingAnnouncer'] = {
+    {
+      ['moduleName'] = 'PingAnnouncer',
       ['moduleKey'] = 'UIC_PA_IsEnabled',
       ['isEnabledByDefault'] = true,
-      ['optionsPanelIndex'] = 7,
       ['label'] = 'PA',
       ['title'] = 'Ping Announcer',
       ['description'] = L.PA,
       ['subsettings'] = {
         ['offsetX'] = 72,
         ['entries'] = {
-          {'UIC_PA_Raid', false, RAID},
-          {'UIC_PA_Arena', false, ARENA},
-          {'UIC_PA_Battleground', false, BATTLEGROUND},
-          {'UIC_PA_Party', true, PARTY},
+          buildCheckboxEntry('UIC_PA_Raid', false, RAID),
+          buildCheckboxEntry('UIC_PA_Arena', false, ARENA),
+          buildCheckboxEntry('UIC_PA_Battleground', false, BATTLEGROUND),
+          buildCheckboxEntry('UIC_PA_Party', true, PARTY),
         }
       },
     },
   }
+
+  -- Setup attributes that will be used in the options panel
+  for _, moduleEntry in ipairs(C.MODULES) do
+    local className = moduleEntry['moduleName']
+
+    -- Module states will be altered upon changes in the options page
+    moduleEntry['updateCallback'] = function(newValue)
+      local module = addonTable[className]
+      
+      if newValue then
+        module:Enable()
+      else
+        module:Disable()
+      end
+    end
+
+    -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
+    if moduleEntry['subsettings'] then
+      local subsettingEntries = moduleEntry['subsettings']['entries']
+
+      local dependents = {}
+
+      for _, subsettingEntry in ipairs(subsettingEntries) do
+        dependents[#dependents + 1] = subsettingEntry['entryKey']
+      end
+
+      moduleEntry['dependents'] = dependents
+    end
+  end
 end
 
 -- Traverses the BASE_SETTINGS and MODULES tables to dynamically gather the names and default values
@@ -293,27 +368,23 @@ local generateProfileDefaults = function()
   local profileDefaults = {}
 
   local addSubsetting = function(subsetting)
-    local key = subsetting[1]
-    local defaultValue = subsetting[2]
+    local entryKey = subsetting['entryKey']
+    local defaultValue = subsetting['defaultValue']
 
-    if type(key) == 'table' then
-      key = key[1]
-    end
-
-    profileDefaults[key] = defaultValue
+    profileDefaults[entryKey] = defaultValue
   end
 
   for i = 1, #C.BASE_SETTINGS do
     addSubsetting(C.BASE_SETTINGS[i])
   end
 
-  for moduleName, attributes in pairs(C.MODULES) do
-    local moduleKey = attributes['moduleKey']
-    local defaultState = attributes['isEnabledByDefault']
+  for _, entry in ipairs(C.MODULES) do
+    local moduleKey = entry['moduleKey']
+    local defaultState = entry['isEnabledByDefault']
 
     profileDefaults[moduleKey] = defaultState
 
-    local subsettings = attributes['subsettings']
+    local subsettings = entry['subsettings']
 
     if subsettings and subsettings.entries then
       for i = 1, #subsettings.entries do

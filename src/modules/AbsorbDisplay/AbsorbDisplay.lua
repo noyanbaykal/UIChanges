@@ -730,7 +730,6 @@ end
 
 local initializeFrames = function()
   mainFrame = CreateFrame('Frame', 'UIC_AbsorbDisplay', UIParent)
-  mainFrame.ResetDisplayLocation = resetDisplayLocation
   mainFrame:Hide()
 
   initializeShieldFrame()
@@ -827,6 +826,10 @@ AbsorbDisplay.Disable = function()
 
   resetShields()
   updateDisplay()
+end
+
+AbsorbDisplay.ResetDisplayLocation = function()
+  resetDisplayLocation()
 end
 
 addonTable.AbsorbDisplay = AbsorbDisplay

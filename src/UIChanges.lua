@@ -33,11 +33,12 @@ local initialize = function()
   C.DEFINE_MODULES()
   C.INITIALIZE_PROFILE()
 
-  for moduleName, attributes in pairs(C.MODULES) do
+  for _, moduleEntry in ipairs(C.MODULES) do
+    local moduleName = moduleEntry['moduleName']
+    local moduleKey = moduleEntry['moduleKey']
+
     local module = addonTable[moduleName]
     module:Initialize()
-
-    local moduleKey = attributes['moduleKey']
 
     if UIChanges_Profile[moduleKey] then
       module:Enable()

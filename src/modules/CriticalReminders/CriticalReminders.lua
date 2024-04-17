@@ -394,7 +394,6 @@ local CriticalReminders = {}
 
 CriticalReminders.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_CriticalReminders', UIParent)
-  mainFrame.ResetErrorFrameLocation = resetErrorFrameLocation
   mainFrame:Hide()
 
   initializeErrorFrame()
@@ -417,6 +416,10 @@ end
 
 CriticalReminders.Update = function()
   anchorErrorFrame()
+end
+
+CriticalReminders.ResetErrorFrameLocation = function()
+  resetErrorFrameLocation()
 end
 
 addonTable.CriticalReminders = CriticalReminders

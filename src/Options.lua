@@ -32,12 +32,15 @@ disabledFontColor[1], disabledFontColor[2], disabledFontColor[3], disabledFontCo
 
 local whiteFontColor = {1, 1, 1, gameFontColor[4]}
 
-local scrollChild, cvarMap, lastFrameTop, lastFrameLeft
+local settingsTable, scrollChild, lastFrameTop, lastFrameLeft
 
-local subFramesSetEnable = function(subFrames, isSet)
-  if subFrames then
-    for i = 1, #subFrames do
-      subFrames[i]:SetEnabled(isSet)
+local subFramesSetEnable = function(dependents, isSet)
+  -- Supporting subFrames only for boolean checkboxes for now
+  if dependents and type(isSet) == 'boolean' then
+    for _, key in ipairs(dependents) do
+      local frame = settingsTable[key]['frame']
+
+      frame:SetEnabled(isSet)
 
       local r, g, b, a
 
@@ -47,13 +50,15 @@ local subFramesSetEnable = function(subFrames, isSet)
         r, g, b, a = disabledFontColor[1], disabledFontColor[2], disabledFontColor[3], disabledFontColor[4]
       end
 
-      subFrames[i].Text:SetTextColor(r, g, b, a)
+      frame.Text:SetTextColor(r, g, b, a)
     end
   end
 end
 
-local applyChange = function(savedVariableName, newValue)
-  local consoleVariable = cvarMap[savedVariableName] ~= nil and cvarMap[savedVariableName]['consoleVariableName'] or nil
+local applyChange = function(key, newValue)
+  local entry = settingsTable[key]
+
+  local consoleVariable = entry['consoleVariableName']
 
   if consoleVariable then
     local success = false
@@ -70,43 +75,29 @@ local applyChange = function(savedVariableName, newValue)
     end
   end
 
-  UIChanges_Profile[savedVariableName] = newValue
+  UIChanges_Profile[key] = newValue
 
-  if cvarMap[savedVariableName] ~= nil then
-    if cvarMap[savedVariableName]['module'] then
-      local module = cvarMap[savedVariableName]['module']
-
-      if newValue then
-        module:Enable()
-      else
-        module:Disable()
-      end
-    elseif cvarMap[savedVariableName]['mainModule'] ~= nil then
-      local module = cvarMap[savedVariableName]['mainModule']
-
-      module:Update(savedVariableName, newValue)
-    end
+  if entry['updateCallback'] then
+    entry['updateCallback']()
   end
+
+  subFramesSetEnable(entry['dependents'], newValue) -- Enable/Disable subframes
 end
 
-local createCheckBox = function(frameName, title, changeKey, tooltipText)
+local createCheckBox = function(frameName, text, key, tooltipText)
   local checkbox = CreateFrame('CheckButton', frameName, scrollChild, 'InterfaceOptionsCheckButtonTemplate')
-  checkbox.Text:SetText(title)
+  checkbox.Text:SetText(text)
   checkbox.Text:SetTextColor(gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4])
-  checkbox:SetChecked(UIChanges_Profile[changeKey])
+  checkbox:SetChecked(UIChanges_Profile[key])
   checkbox:SetScript('OnClick', function(self, button, down)
     local newValue = self:GetChecked()
 
-    applyChange(changeKey, newValue)
+    applyChange(key, newValue)
 
     if newValue then
       PlaySound(856) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
     else
       PlaySound(857) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF
-    end
-
-    if cvarMap[changeKey] and cvarMap[changeKey]['subFrames'] then -- if this is not a subsetting variable
-      subFramesSetEnable(cvarMap[changeKey]['subFrames'], newValue) -- Enable/disable subcomponents, if any
     end
   end)
 
@@ -121,7 +112,9 @@ local createCheckBox = function(frameName, title, changeKey, tooltipText)
   return checkbox
 end
 
-local createDropDown = function(frameName, title, changeKey, enumTable)
+local createDropDown = function(frameName, text, key)
+  local enumTable = settingsTable[key]['dropdownEnum']
+
   local dropdown = LibDD:Create_UIDropDownMenu(frameName, scrollChild)
   local dropdownLabel = dropdown:CreateFontString(frameName..'Label', 'OVERLAY', 'GameFontNormalSmall')
   dropdownLabel:SetPoint('TOPLEFT', 20, 10)
@@ -130,13 +123,13 @@ local createDropDown = function(frameName, title, changeKey, enumTable)
   LibDD:UIDropDownMenu_Initialize(dropdown, function(self, level, _)
     local info = LibDD:UIDropDownMenu_CreateInfo()
 
-    local selectedIndex = UIChanges_Profile[changeKey]
+    local selectedIndex = UIChanges_Profile[key]
 
     for i, enum in ipairs(enumTable) do
       local label = enum[1]
 
       info.text = label
-      info.arg1 = changeKey
+      info.arg1 = key
       info.arg2 = i
 
       if i == selectedIndex then
@@ -156,7 +149,7 @@ local createDropDown = function(frameName, title, changeKey, enumTable)
     end
   end)
 
-  dropdownLabel:SetText(title)
+  dropdownLabel:SetText(text)
 
   dropdown['SetValue'] = function(self, newValue)
     local newLabel = enumTable[newValue][1]
@@ -174,45 +167,46 @@ local createDropDown = function(frameName, title, changeKey, enumTable)
   return dropdown
 end
 
-local createButton = function(frameName, title, onChange)
+local createButton = function(frameName, text, key)
   local button = CreateFrame('Button', frameName, scrollChild, 'UIPanelButtonTemplate')
-  button.Text:SetText('|cFFFFD100'..title)
+  button.Text:SetText('|cFFFFD100'..text)
   button:SetWidth(160)
   button:SetScript('OnClick', function()
     PlaySound(856) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
-    onChange()
+    settingsTable[key]['updateCallback']() -- Unlike other widgets, buttons don't call applyChange
   end)
+
+  -- Nor do they need a SetValue function but they will have a dummy function assigned to keep things consistent
+  button.SetValue = function() end
 
   return button
 end
 
-local createSubOptionFrame = function(
-  subLeftAnchor, offsetX, localLastFrameTop, subChangeKey, subTitle, controlData, subLabel, tooltipText, overrideOffsetY
-)
-  local subOption, nextSubLeftAnchor
+local createSubsettingFrame = function(entry, parentName, offsetX, subLeftAnchor, overrideOffsetY)
+  local key = entry['entryKey']
+  local entryType = entry['entryType']
+  local subTitle = entry['subTitle']
+  local tooltipText = entry['tooltipText']
+
+  local frame, nextSubLeftAnchor
   local subOffsetX = 0
   local subOffsetY = 0
 
-  subLabel = subLabel:gsub('%s+', '_')
+  local subLabel = parentName..'_'..subTitle
+  subLabel = subLabel:gsub('%s+', '_') -- Remove any trailing whitespaces just in case
 
-  if controlData ~= nil then
-    local controlType = controlData[1]
-    local typeValue = controlData[2]
-
-    if controlType == 'dropdown' then
-      local enum = C[typeValue]
-      subOption = createDropDown(subLabel, subTitle, subChangeKey, enum)
-      nextSubLeftAnchor = _G[subOption:GetName()..'Right']
-      subOffsetX = -18
-      subOffsetY = -18
-    elseif controlType == 'button' then
-      subOption = createButton(subLabel, subTitle, typeValue)
-      nextSubLeftAnchor = subOption
-      subOffsetY = -12
-    end
+  if entryType == 'dropdown' then
+    frame = createDropDown(subLabel, subTitle, key)
+    nextSubLeftAnchor = _G[frame:GetName()..'Right']
+    subOffsetX = -18
+    subOffsetY = -18
+  elseif entryType == 'button' then
+    frame = createButton(subLabel, subTitle, key)
+    nextSubLeftAnchor = frame
+    subOffsetY = -12
   else
-    subOption = createCheckBox(subLabel, subTitle, subChangeKey, tooltipText)
-    nextSubLeftAnchor = subOption.Text
+    frame = createCheckBox(subLabel, subTitle, key, tooltipText)
+    nextSubLeftAnchor = frame.Text
     subOffsetY = overrideOffsetY and overrideOffsetY or -10
   end
 
@@ -220,44 +214,25 @@ local createSubOptionFrame = function(
   -- Alternatively, the separateSubsettingsIntoRows method could become a more generic way of dealing
   -- with mixed element cases.
 
-  subOption:SetPoint('LEFT', subLeftAnchor, 'RIGHT', offsetX + subOffsetX, 0)
-  subOption:SetPoint('TOP', localLastFrameTop, 'BOTTOM', 0, subOffsetY)
+  frame:SetPoint('LEFT', subLeftAnchor, 'RIGHT', offsetX + subOffsetX, 0)
+  frame:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, subOffsetY)
 
-  return subOption, nextSubLeftAnchor
+  settingsTable[key]['frame'] = frame
+
+  return frame, nextSubLeftAnchor
 end
 
-local createSubsettingEntry = function(subsettingEntry, i, parentName, offsetX, subLeftAnchor, subFrames, changeKey)
-  local subChangeKey = subsettingEntry[1]
-  local subTitle = subsettingEntry[3]
-  local changeNeedsRestart = subsettingEntry[4] == true
-  local controlData = subsettingEntry[5]
-  local tooltipText = subsettingEntry[6]
-
-  local subLabel = parentName..'_'..subTitle
+local createSubsetting = function(entry, i, parentName, offsetX, subLeftAnchor, subFrames)
   local currentOffsetX = i == 1 and 0 or offsetX
 
   local overrideOffsetY = nil
-  if (parentName == 'UIC_BT') then
+  if (parentName == 'UIC_BO') then -- Hardcoded override for baseOptions
     overrideOffsetY = 0
   end
 
-  local subOption, nextSubLeftAnchor = createSubOptionFrame(subLeftAnchor, currentOffsetX, lastFrameTop,
-    subChangeKey, subTitle, controlData, subLabel, tooltipText, overrideOffsetY)
-
-  if subFrames ~= nil then
-    subFrames[#subFrames + 1] = subOption
-  end
-
-  if subChangeKey and type(subChangeKey) == 'string' then
-    cvarMap[subChangeKey] = {}
-    cvarMap[subChangeKey]['option'] = subOption
-
-    -- A subsetting with this index set means that upon modification, we need the module to update
-    -- so we need to separately store the module reference
-    if changeNeedsRestart then
-      cvarMap[subChangeKey]['mainModule'] = cvarMap[changeKey]['module']
-    end
-  end
+  local frame, nextSubLeftAnchor = createSubsettingFrame(entry, parentName, currentOffsetX, subLeftAnchor, overrideOffsetY)
+  
+  subFrames[#subFrames + 1] = frame
 
   return nextSubLeftAnchor
 end
@@ -266,9 +241,13 @@ local drawSeparator = function(subFrames, separatorInfo)
   if separatorInfo == nil then
     return
   end
+  
+  local topFrame = subFrames[separatorInfo['topFrame']]
+  local bottomFrame = subFrames[separatorInfo['bottomFrame']]
 
-  local topFrame = subFrames[separatorInfo[1]]
-  local bottomFrame = subFrames[separatorInfo[2]]
+  if not topFrame or not bottomFrame then
+    return
+  end
 
   local line = scrollChild:CreateLine()
   line:SetColorTexture(0.8, 0.8, 0.8)
@@ -281,14 +260,14 @@ end
 -- If we need to support more cases, this function would need to be changed into a generic function
 -- which would separate elements into rows and then for each row, account for element types to correctly
 -- adjust Y offsets.
-local separateSubsettingsIntoRows = function(rowSize, subsettingEntries, subFrames)
+local separateSubsettingsIntoRows = function(rowSize, entries, subFrames)
   if rowSize == nil then
     return
   end
 
   local i = rowSize + 1
 
-  while i <= #subsettingEntries do
+  while i <= #entries do
     local prevRowStart = subFrames[i - rowSize]
     local rowStart = subFrames[i]
 
@@ -296,21 +275,17 @@ local separateSubsettingsIntoRows = function(rowSize, subsettingEntries, subFram
     local offsetY = -4
     local rowOffsetY = -4
 
-    if subsettingEntries[i][5] ~= nil then
-      local controlType = subsettingEntries[i][5][1]
-
-      if controlType == 'dropdown' then
-        offsetX = -15
-        offsetY = -16
-        rowOffsetY = -19
-      end
+    if entries[i]['entryType'] == 'dropdown' then
+      offsetX = -15
+      offsetY = -16
+      rowOffsetY = -19
     end
 
     rowStart:SetPoint('LEFT', prevRowStart, 'LEFT', offsetX, 0)
     rowStart:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, offsetY)
 
     local j = i + 1
-    while j < i + rowSize and j <= #subsettingEntries do
+    while j < i + rowSize and j <= #entries do
       subFrames[j]:SetPoint('LEFT', subFrames[j - rowSize], 'LEFT', 0, 0)
       subFrames[j]:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, rowOffsetY)
       j = j + 1
@@ -320,15 +295,43 @@ local separateSubsettingsIntoRows = function(rowSize, subsettingEntries, subFram
   end
 end
 
-local createModuleOptions = function(moduleName, changeKey, label, title, description, subsettings, consoleVariableName)
-  local checkbox = createCheckBox('UIC_Options_CB_'..label, title, changeKey)
+local createSubsettingOptions = function(subsettings)
+  if subsettings and subsettings['entries'] then
+    local entries = subsettings['entries']
+    local offsetX = subsettings['offsetX']
+    local rowSize = subsettings['rowSize']
+    local separator = subsettings['separator']
+
+    local subLeftAnchor = checkbox -- At this point this is referring to the module option checkbox
+
+    local subFrames = {} -- Need to keep track of siblings for the layout
+
+    for i = 1, #entries do
+      subLeftAnchor = createSubsetting(entries[i], i, checkbox:GetName(), offsetX, subLeftAnchor, subFrames)
+    end
+
+    separateSubsettingsIntoRows(rowSize, entries, subFrames)
+
+    drawSeparator(subFrames, separator)
+
+    local subsettingFrameName = entries[#entries]['subTitle']:gsub('%s+', '_') -- Remove any trailing whitespaces just in case
+    local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subsettingFrameName
+    lastFrameTop = _G[lastAddedSubCheckboxName]
+  end
+end
+
+local createModuleOptions = function(moduleEntry)
+  local key = moduleEntry['moduleKey']
+  local label = moduleEntry['label']
+  local title = moduleEntry['title']
+  local description = moduleEntry['description']
+  local subsettings = moduleEntry['subsettings']
+
+  local checkbox = createCheckBox('UIC_Options_CB_'..label, title, key)
   checkbox:SetPoint('LEFT', lastFrameLeft, 'LEFT', 0, 0)
   checkbox:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, -16)
 
-  cvarMap[changeKey] = {}
-  cvarMap[changeKey]['module'] = addonTable[moduleName]
-  cvarMap[changeKey]['option'] = checkbox
-  cvarMap[changeKey]['consoleVariableName'] = consoleVariableName
+  settingsTable[key]['frame'] = checkbox
 
   -- Module description
   local extraTextOffsetY = -16
@@ -344,70 +347,28 @@ local createModuleOptions = function(moduleName, changeKey, label, title, descri
   end
 
   -- Module subsettings
-  if subsettings then
-    cvarMap[changeKey]['subFrames'] = {}
-
-    local subsettingEntries = subsettings['entries']
-    local offsetX = subsettings['offsetX']
-    local subFrames = cvarMap[changeKey]['subFrames']
-    local subLeftAnchor = checkbox
-
-    for i = 1, #subsettingEntries do
-      subLeftAnchor = createSubsettingEntry(subsettingEntries[i], i, checkbox:GetName(), offsetX, subLeftAnchor, subFrames, changeKey)
-    end
-
-    separateSubsettingsIntoRows(subsettings['rowSize'], subsettingEntries, subFrames)
-
-    drawSeparator(subFrames, subsettings['separator'])
-
-    local subsettingFrameName = subsettingEntries[#subsettingEntries][3]:gsub('%s+', '_')
-    local lastAddedSubCheckboxName = checkbox:GetName()..'_'..subsettingFrameName
-    lastFrameTop = _G[lastAddedSubCheckboxName]
-  end
-end
-
--- The modules table does not have an inherent ordering so we need an intermediate array to preserve the ordering
-local traverseModulesInOrder = function()
-  local orderedModules = {}
-
-  for moduleName, attributes in pairs(C.MODULES) do
-    orderedModules[attributes['optionsPanelIndex']] = moduleName
-  end
-
-  for _, moduleName in ipairs(orderedModules) do
-    local attributes = C.MODULES[moduleName]
-
-    local changeKey = attributes['moduleKey']
-    local label = attributes['label']
-    local title = attributes['title']
-    local description = attributes['description']
-    local subsettings = attributes['subsettings']
-    local consoleVariableName = attributes['consoleVariableName']
-
-    createModuleOptions(moduleName, changeKey, label, title, description, subsettings, consoleVariableName)
-  end
+  createSubsettingOptions(subsettings)
 end
 
 -- These options lack the module association of subsettings but are otherwise very similar to them.
 local createBaseOptions = function()
-  local anchorFrame = CreateFrame('Frame', 'UIC_BT', scrollChild)
+  local anchorFrame = CreateFrame('Frame', 'UIC_BO', scrollChild)
   anchorFrame:SetPoint('LEFT', lastFrameLeft, 'LEFT', 0, 0)
   anchorFrame:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, 0)
   anchorFrame:SetWidth(1)
   anchorFrame:SetHeight(1)
 
   local offsetX = 25
-  local subFrames = nil
-  local changeKey = nil
 
   local subLeftAnchor = anchorFrame
 
+  local subFrames = {} -- Need to keep track of siblings for the layout
+
   for i = 1, #C.BASE_SETTINGS do
-    subLeftAnchor = createSubsettingEntry(C.BASE_SETTINGS[i], i, anchorFrame:GetName(), offsetX, subLeftAnchor, subFrames, changeKey)
+    subLeftAnchor = createSubsetting(C.BASE_SETTINGS[i], i, anchorFrame:GetName(), offsetX, subLeftAnchor, subFrames)
   end
 
-  -- This is rather simple since we only have 1 entry here so far
-  local firstCheckBox = cvarMap['UIC_Toggle_Quick_Zoom']['option']
+  local firstCheckBox = settingsTable[C.BASE_SETTINGS[1]['entryKey']]['frame']
   lastFrameTop = firstCheckBox
   lastFrameLeft = firstCheckBox
 end
@@ -418,13 +379,12 @@ local setupOptionsPanel = function()
   optionsPanel:Hide()
 
   optionsPanel:SetScript('OnShow', function()
-    for cvar, frames in pairs(cvarMap) do -- read the current values and set the options
-      local isSet = UIChanges_Profile[cvar]
-      frames['option']:SetValue(isSet)
+    for key, entry in pairs(settingsTable) do -- Read the current values and set the options
+      local currentValue = UIChanges_Profile[key]
 
-      if frames['subFrames'] then -- Enable/Disable subframes
-        subFramesSetEnable(frames['subFrames'], isSet)
-      end
+      entry['frame']:SetValue(currentValue)
+
+      subFramesSetEnable(entry['dependents'], currentValue) -- Enable/Disable subframes
     end
   end)
 
@@ -460,22 +420,52 @@ local setupOptionsPanel = function()
   scrollBar.texture:SetAllPoints()
   scrollBar.texture:SetColorTexture(0, 0, 0, 0.35)
 
+  lastFrameLeft = scrollChild -- Starting with the most topLeft anchoring point
   lastFrameTop = scrollChild
-  lastFrameLeft = scrollChild
 
   return optionsPanel
+end
+
+local buildSettingsTable = function()
+  local table = {}
+
+  for i = 1, #C.BASE_SETTINGS do
+    local key = C.BASE_SETTINGS[i]['entryKey']
+
+    table[key] = C.BASE_SETTINGS[i]
+  end
+
+  for _, moduleEntry in ipairs(C.MODULES) do
+    local key = moduleEntry['moduleKey']
+
+    table[key] = moduleEntry
+
+    if moduleEntry['subsettings'] and moduleEntry['subsettings']['entries'] then
+      local subsettings = moduleEntry['subsettings']['entries']
+
+      for i = 1, #subsettings do
+        local subKey = subsettings[i]['entryKey']
+    
+        table[subKey] = subsettings[i]
+      end
+    end
+  end
+
+  return table
 end
 
 local UIC_Options = {}
 
 UIC_Options.Initialize = function()
-  cvarMap = {}
+  settingsTable = buildSettingsTable()
 
   local optionsPanel = setupOptionsPanel()
 
   createBaseOptions()
 
-  traverseModulesInOrder()
+  for _, moduleEntry in ipairs(C.MODULES) do
+    createModuleOptions(moduleEntry)
+  end
 
   InterfaceOptions_AddCategory(optionsPanel)
 end

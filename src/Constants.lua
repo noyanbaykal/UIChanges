@@ -175,18 +175,18 @@ C.DEFINE_MODULES = function()
   end
 
   -- Each warning entry comes with a relevant sound entry
-  local CR_BuildWarningEntries = function(entryName, defaultValue, subTitleVariableName, soundEntryDefaultValue)
+  local CR_BuildWarningEntries = function(entryKey, defaultValue, subTitleVariableName, soundEntryDefaultValue)
     local warningEntrySubtitle = L[subTitleVariableName]
 
-    local soundEntryName = entryName .. '_Sound'
+    local soundEntryKey = entryKey .. '_Sound'
     local soundEntrySubtitle = L[subTitleVariableName .. '_SOUND']
     local soundEntryTooltip = L[subTitleVariableName .. '_SOUND' .. '_TOOLTIP']
 
-    local warningEntry = buildCheckboxEntry(entryName, defaultValue, warningEntrySubtitle)
-    local soundEntry = buildCheckboxEntry(soundEntryName, soundEntryDefaultValue, soundEntrySubtitle, soundEntryTooltip)
+    local warningEntry = buildCheckboxEntry(entryKey, defaultValue, warningEntrySubtitle)
+    local soundEntry = buildCheckboxEntry(soundEntryKey, soundEntryDefaultValue, soundEntrySubtitle, soundEntryTooltip)
 
     -- We want the sound entry checkbox to be inactive if the warning entry is disabled.
-    warningEntry['dependents'] = {soundEntryName}
+    warningEntry['dependents'] = {soundEntryKey}
 
     return warningEntry, soundEntry
   end
@@ -221,11 +221,11 @@ C.DEFINE_MODULES = function()
     {
       ['moduleName'] = 'AbsorbDisplay', -- The key corresponds to the class that is exported in the module file
       ['moduleKey'] = 'UIC_AD_IsEnabled', -- Name of the corresponding entry in UIChanges_Profile
-      ['isEnabledByDefault'] = true,
+      ['defaultValue'] = true, -- Is enabled by default
       ['label'] = 'AD', -- Used in subframe names
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
-      ['subsettings'] = {
+      ['subsettings'] = { -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
         ['offsetX'] = 35, -- The horizontal space between entries are hardcoded here
         ['entries'] = {
           {
@@ -241,7 +241,7 @@ C.DEFINE_MODULES = function()
     {
       ['moduleName'] = 'AHTools',
       ['moduleKey'] = 'UIC_AHT_IsEnabled',
-      ['isEnabledByDefault'] = true,
+      ['defaultValue'] = true,
       ['label'] = 'AHT',
       ['title'] = 'Auction House Tools',
       ['description'] = L.AHT,
@@ -249,7 +249,7 @@ C.DEFINE_MODULES = function()
     {
       ['moduleName'] = 'BagUtilities',
       ['moduleKey'] = 'UIC_BU_IsEnabled',
-      ['isEnabledByDefault'] = true,
+      ['defaultValue'] = true,
       ['label'] = 'BU',
       ['title'] = 'Bag Utilities ('..L.CLASSIC_ERA_ONLY..')',
       ['description'] = L.BU,
@@ -257,7 +257,7 @@ C.DEFINE_MODULES = function()
     {
       ['moduleName'] = 'CriticalReminders',
       ['moduleKey'] = 'UIC_CR_IsEnabled',
-      ['isEnabledByDefault'] = true,
+      ['defaultValue'] = true,
       ['label'] = 'CR',
       ['title'] = 'Critical Reminders',
       ['description'] = L.CR,
@@ -285,10 +285,11 @@ C.DEFINE_MODULES = function()
             {
               ['entryKey'] = 'UIC_CR_ErrorFrameAnchor',
               ['entryType'] = 'dropdown',
-              ['defaultValue'] = 1,
+              ['defaultValue'] = 1, -- 1 is off
               ['subTitle'] = L.ERROR_FRAME_ANCHOR_DROPDOWN,
               ['dropdownEnum'] = C.ENUM_ANCHOR_OPTIONS, -- The dropdown options will be populated from this enum
               ['updateCallback'] = function() addonTable.CriticalReminders:Update() end,
+              ['dependents'] = {'UIC_CR_ErrorFrameInfo'}, -- The reset button should be disabled if this setting is active
             },
             {
               ['entryKey'] = 'UIC_CR_ErrorFrameInfo',
@@ -304,7 +305,7 @@ C.DEFINE_MODULES = function()
     {
       ['moduleName'] = 'DruidManaBar',
       ['moduleKey'] = 'UIC_DMB_IsEnabled',
-      ['isEnabledByDefault'] = true,
+      ['defaultValue'] = true,
       ['label'] = 'DMB',
       ['title'] = 'Druid Mana Bar ('..L.CLASSIC_ERA_ONLY..')',
       ['description'] = L.DMB,
@@ -312,7 +313,7 @@ C.DEFINE_MODULES = function()
     {
       ['moduleName'] = 'PartyPetFrames',
       ['moduleKey'] = 'UIC_PPF_IsEnabled',
-      ['isEnabledByDefault'] = GetCVar('showPartyPets') == 1, -- We can check this by the time DEFINE_MODULES() is called
+      ['defaultValue'] = GetCVar('showPartyPets') == 1, -- We can run this by the time DEFINE_MODULES() is called
       ['label'] = 'PPF',
       ['title'] = 'Party Pet Frames',
       ['description'] = L.PPF,
@@ -322,7 +323,7 @@ C.DEFINE_MODULES = function()
     {
       ['moduleName'] = 'PingAnnouncer',
       ['moduleKey'] = 'UIC_PA_IsEnabled',
-      ['isEnabledByDefault'] = true,
+      ['defaultValue'] = true,
       ['label'] = 'PA',
       ['title'] = 'Ping Announcer',
       ['description'] = L.PA,
@@ -345,7 +346,6 @@ C.DEFINE_MODULES = function()
     local subTitle = subsettingEntry['subTitle']
 
     C.SETTINGS_TABLE[entryKey] = subsettingEntry
-    C.PROFILE_DEFAULTS[entryKey] = defaultValue
 
     -- Set these here for easy lookup in Options
     subsettingEntry['subLabel'] = ('UIC_Subsetting_'..parentName..'_'..subTitle):gsub('%s+', '_') -- Remove spaces
@@ -358,10 +358,8 @@ C.DEFINE_MODULES = function()
     if className then
       -- Add the module toggle to the settings and defaults tables
       local moduleKey = moduleEntry['moduleKey']
-      local defaultState = moduleEntry['isEnabledByDefault']
 
       C.SETTINGS_TABLE[moduleKey] = moduleEntry
-      C.PROFILE_DEFAULTS[moduleKey] = defaultState
 
       -- Module states will be altered when their option frames' are clicked on
       moduleEntry['updateCallback'] = function(newValue)
@@ -378,8 +376,7 @@ C.DEFINE_MODULES = function()
 
   -- Setup attributes that will be used in the options panel and the profile defaults
   local setupDataTables = function()
-    C.SETTINGS_TABLE = {}
-    C.PROFILE_DEFAULTS = {}
+    C.SETTINGS_TABLE = {} -- This is for key lookups into the Modules table but beware of unordered traversal!
 
     for _, moduleEntry in ipairs(C.MODULES) do
       setupModuleToggle(moduleEntry)
@@ -388,21 +385,11 @@ C.DEFINE_MODULES = function()
         local subsettingEntries = moduleEntry['subsettings']['entries']
         local offsetX = moduleEntry['subsettings']['offsetX'] or 0
         local parentName = moduleEntry['label']
-
-        moduleEntry['subsettings']['subFrames'] = {} -- Initialize this table here which will be populated in Options
-  
-        local dependents = {} -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
   
         for i, subsettingEntry in ipairs(subsettingEntries) do
           local offsetX = i == 1 and 0 or offsetX -- The leftmost element is different.
 
           setupSubsetting(subsettingEntry, parentName, offsetX)
-
-          dependents[#dependents + 1] = subsettingEntry['entryKey']
-        end
-  
-        if moduleEntry['moduleName'] then -- Only for modules that can be toggled
-          moduleEntry['dependents'] = dependents
         end
       end
     end
@@ -426,8 +413,10 @@ C.INITIALIZE_PROFILE = function()
     keysToBeDeleted[settingName] = true
   end
 
-  -- Initialize variables if they haven't been initialized already
-  for settingName, defaultValue in pairs(C.PROFILE_DEFAULTS) do
+  -- Initialize variables if they haven't been initialized already. Unordered traversal is okay here.
+  for settingName, entry in pairs(C.SETTINGS_TABLE) do
+    local defaultValue = entry['defaultValue']
+
     keysToBeDeleted[settingName] = nil -- Remove this from the set of keys to be deleted
 
     if UIChanges_Profile[settingName] == nil then

@@ -36,23 +36,65 @@ local settingsTable -- We'll be able to reference entries by their keys through 
 local scrollChild -- All frames that need to scroll have to be parented to this frame
 local lastFrameTop, lastFrameLeft -- We'll need references for anchoring all the frames
 
-local subFramesSetEnable = function(dependents, isSet)
-  -- Supporting subFrames only for boolean checkboxes for now
-  if dependents and type(isSet) == 'boolean' then
-    for _, key in ipairs(dependents) do
-      local frame = settingsTable[key]['frame']
+local setFrameState = function(frame, isSet)
+  frame:SetEnabled(isSet)
 
-      frame:SetEnabled(isSet)
+  local r, g, b, a
 
-      local r, g, b, a
+  if isSet then
+    r, g, b, a = whiteFontColor[1], whiteFontColor[2], whiteFontColor[3], whiteFontColor[4]
+  else
+    r, g, b, a = disabledFontColor[1], disabledFontColor[2], disabledFontColor[3], disabledFontColor[4]
+  end
 
-      if isSet then
-        r, g, b, a = whiteFontColor[1], whiteFontColor[2], whiteFontColor[3], whiteFontColor[4]
-      else
-        r, g, b, a = disabledFontColor[1], disabledFontColor[2], disabledFontColor[3], disabledFontColor[4]
+  frame.Text:SetTextColor(r, g, b, a)
+end
+
+-- To handle non-boolean subsetting values
+local isValueTruthy = function(value)
+  if type(value) == 'number' then
+    return value == 1 -- The first value of enums should correspond to off
+  end
+
+  return value
+end
+
+-- This supports module & subsetting entries.
+local subframesSetEnable = function(entry, value)
+  local isSet = isValueTruthy(value)
+
+  if entry.subsettings and entry.subsettings.entries then -- Subsetttings
+    local dependees = {}
+
+    for _, subEntry in ipairs(entry.subsettings.entries) do
+      local subKey = subEntry['entryKey']
+      local frame = settingsTable[subKey]['frame']
+
+      setFrameState(frame, isSet)
+
+      -- If a module is active but this subsetting is disabled, it's dependents should be disabled
+      local isSubsettingEnabled = isValueTruthy(UIChanges_Profile[subKey])
+
+      if isSet and not isSubsettingEnabled and subEntry['dependents'] then
+        dependees[#dependees + 1] = subEntry
       end
+    end
 
-      frame.Text:SetTextColor(r, g, b, a)
+    -- A second pass is needed for dependent subsettings whose dependees are not enabled
+    for _, subEntry in ipairs(dependees) do
+      for _, dependentKey in ipairs(subEntry['dependents']) do
+        local frame = settingsTable[dependentKey]['frame']
+
+        setFrameState(frame, false)
+      end
+    end
+  end
+
+  if entry.dependents then -- Dependents
+    for _, subKey in ipairs(entry.dependents) do
+      local frame = settingsTable[subKey]['frame']
+      
+      setFrameState(frame, isSet)
     end
   end
 end
@@ -83,7 +125,7 @@ local applyChange = function(key, newValue)
     entry['updateCallback'](newValue)
   end
 
-  subFramesSetEnable(entry['dependents'], newValue) -- Enable/Disable subframes
+  subframesSetEnable(entry, newValue) -- Enable/Disable subframes
 end
 
 local createCheckBox = function(frameName, text, key, tooltipText)
@@ -228,13 +270,13 @@ local createSubsettingFrame = function(entry)
   return frame, nextLeftAnchor
 end
 
-local drawSeparator = function(separatorInfo, subFrames)
+local drawSeparator = function(separatorInfo, subframes)
   if separatorInfo == nil then
     return
   end
   
-  local topFrame = subFrames[separatorInfo['topFrame']]
-  local bottomFrame = subFrames[separatorInfo['bottomFrame']]
+  local topFrame = subframes[separatorInfo['topFrame']]
+  local bottomFrame = subframes[separatorInfo['bottomFrame']]
 
   if not topFrame or not bottomFrame then
     return
@@ -251,7 +293,7 @@ end
 -- If we need to support more cases, this function would need to be changed into a generic function
 -- which would separate elements into rows and then for each row, account for element types to correctly
 -- adjust Y offsets.
-local separateSubsettingsIntoRows = function(rowSize, entries, subFrames)
+local separateSubsettingsIntoRows = function(rowSize, entries, subframes)
   if rowSize == nil then
     return
   end
@@ -259,8 +301,8 @@ local separateSubsettingsIntoRows = function(rowSize, entries, subFrames)
   local i = rowSize + 1
 
   while i <= #entries do
-    local prevRowStart = subFrames[i - rowSize]
-    local rowStart = subFrames[i]
+    local prevRowStart = subframes[i - rowSize]
+    local rowStart = subframes[i]
 
     local offsetX = 0
     local offsetY = -4
@@ -277,8 +319,8 @@ local separateSubsettingsIntoRows = function(rowSize, entries, subFrames)
 
     local j = i + 1
     while j < i + rowSize and j <= #entries do
-      subFrames[j]:SetPoint('LEFT', subFrames[j - rowSize], 'LEFT', 0, 0)
-      subFrames[j]:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, rowOffsetY)
+      subframes[j]:SetPoint('LEFT', subframes[j - rowSize], 'LEFT', 0, 0)
+      subframes[j]:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, rowOffsetY)
       j = j + 1
     end
 
@@ -291,21 +333,21 @@ local createSubsettingOptions = function(subsettings)
     local entries = subsettings['entries']
     local rowSize = subsettings['rowSize']
     local separator = subsettings['separator']
-    local subFrames = subsettings['subFrames']
 
     local initialLeftAnchor = lastFrameLeft
 
+    local subframes = {} -- Keep track of the frames for layout purposes
     local frame
 
     for i = 1, #entries do
       frame, lastFrameLeft = createSubsettingFrame(entries[i])
 
-      subFrames[#subFrames + 1] = frame
+      subframes[#subframes + 1] = frame
     end
 
-    separateSubsettingsIntoRows(rowSize, entries, subFrames)
+    separateSubsettingsIntoRows(rowSize, entries, subframes)
 
-    drawSeparator(separator, subFrames)
+    drawSeparator(separator, subframes)
 
     lastFrameLeft = initialLeftAnchor
     lastFrameTop = frame
@@ -367,12 +409,26 @@ local setupOptionsPanel = function()
   optionsPanel:Hide()
 
   optionsPanel:SetScript('OnShow', function()
-    for key, entry in pairs(settingsTable) do -- Read the current values and set the options
-      local currentValue = UIChanges_Profile[key]
+    for _, moduleEntry in ipairs(C.MODULES) do
+      local moduleKey = moduleEntry['moduleKey']
 
-      entry['frame']:SetValue(currentValue)
+      if moduleKey then
+        local isModuleEnabled = UIChanges_Profile[moduleKey]
 
-      subFramesSetEnable(entry['dependents'], currentValue) -- Enable/Disable subframes
+        moduleEntry['frame']:SetValue(isModuleEnabled)
+
+        -- This makes the subsettings display the correct information
+        if moduleEntry.subsettings and moduleEntry.subsettings.entries then
+          for _, subEntry in ipairs(moduleEntry['subsettings']['entries']) do
+            local subKey = subEntry['entryKey']
+            local currentValue = UIChanges_Profile[subKey]
+
+            subEntry['frame']:SetValue(currentValue)
+          end
+        end
+
+        subframesSetEnable(moduleEntry, isModuleEnabled) -- This sets whether the subsettings are accepting user input
+      end
     end
   end)
 

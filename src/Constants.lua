@@ -92,9 +92,9 @@ local buildCommonStrings = function (L)
   local buildCriticalRemindersVariables = function(L)
     for variableName, value in pairs(L.CR_SUBSETTING_STRINGS) do
       local shortName = ''
-      
-      for character in string.gmatch(value, '%u+') do -- Find all the uppercase letters
-        shortName = shortName .. character
+
+      for word in string.gmatch(value, "[^%s]+") do -- Tokenize on spaces
+        shortName = shortName .. string.sub(word, 1, 1) -- Get the first character
       end
 
       local soundText = shortName .. ' ' ..SOUND
@@ -212,7 +212,7 @@ C.DEFINE_MODULES = function()
     {
       ['label'] = 'BM', -- This is the base module to store base settings. It is unlike the rest of the modules.
       ['subsettings'] = {
-        ['offsetX'] = 25,
+        ['offsetX'] = 25, -- The horizontal space between entries is hardcoded here to easily specify the layout
         ['entries'] = {
           buildCheckboxEntry('UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, L.TOOLTIP_MINIMAP_QUICK_ZOOM),
         },
@@ -226,7 +226,7 @@ C.DEFINE_MODULES = function()
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
       ['subsettings'] = { -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
-        ['offsetX'] = 35, -- The horizontal space between entries are hardcoded here
+        ['offsetX'] = 35, 
         ['entries'] = {
           {
             ['entryKey'] = 'UIC_AD_FrameInfo', -- Matches the entry in UIChanges_Profile
@@ -374,7 +374,7 @@ C.DEFINE_MODULES = function()
     end
   end
 
-  -- Setup attributes that will be used in the options panel and the profile defaults
+  -- Setup the lookup table & the attributes that will be used in the options panel
   local setupDataTables = function()
     C.SETTINGS_TABLE = {} -- This is for key lookups into the Modules table but beware of unordered traversal!
 
@@ -387,9 +387,9 @@ C.DEFINE_MODULES = function()
         local parentName = moduleEntry['label']
   
         for i, subsettingEntry in ipairs(subsettingEntries) do
-          local offsetX = i == 1 and 0 or offsetX -- The leftmost element is different.
+          local currentOffsetX = i == 1 and 0 or offsetX -- The leftmost element needs no x offset.
 
-          setupSubsetting(subsettingEntry, parentName, offsetX)
+          setupSubsetting(subsettingEntry, parentName, currentOffsetX)
         end
       end
     end

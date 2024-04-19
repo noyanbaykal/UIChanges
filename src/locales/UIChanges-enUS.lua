@@ -54,7 +54,10 @@ locale.ABSORB_DISPLAY_2 = 'You can drag the display while holding CTRL.'
 -- ~AbsorbDisplay
 
 -- AHTools
-locale.AHT = {'Provides a simple stack price calculator and displays a warning sign for possible scams.', 'Also allows you to MiddleMouse click an item in your bags to initiate a search with the item\'s name.'}
+locale.AHT = {
+  'Provides a simple stack price calculator and displays a warning sign for possible scams.',
+  'Also allows you to MiddleMouse click an item in your bags to initiate a search with the item\'s name.'
+}
 -- ~AHTools
 
 -- BagUtilities
@@ -62,7 +65,11 @@ locale.BU = {'Opens clams after picking them up.'}
 -- ~BagUtilities
 
 -- CriticalReminders
-locale.CR = {'Makes the selected warnings more noticeable by displaying an error icon and optionally playing a sound.', 'When the anchor option is set to Off, the display can be dragged while holding CTRL or reset with the button.'}
+locale.CR = {
+  'Makes the selected warnings more noticeable by displaying an error icon and optionally playing a sound.',
+  'When the anchor option is set to Off, the display can be dragged while holding CTRL or reset with the button.'
+}
+
 locale.ERROR_FRAME_ANCHOR_DROPDOWN = 'Anchor to TargetFrame'
 
 locale.CR_SUBSETTING_STRINGS = {
@@ -89,7 +96,10 @@ locale.PPF_2 = 'This modifies a console variable! If you\'re going to remove the
 -- ~PartyPetFrames
 
 -- PingAnnouncer
-locale.PA = {'Sends a party message when you click on a minimap object to alert your party members.', 'Hold down CTRL when clicking to send the message to all raid or battleground members instead.'}
+locale.PA = {
+  'Sends a party message when you click on a minimap object to alert your party members.',
+  'Hold down CTRL when clicking to send the message to all raid or battleground members instead.'
+}
 
 locale.PINGED = 'Pinged'
 locale.NEARBY = 'in the immediate vicinity!'

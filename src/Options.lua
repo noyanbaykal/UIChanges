@@ -128,6 +128,7 @@ local applyChange = function(key, newValue)
   subframesSetEnable(entry, newValue) -- Enable/Disable subframes
 end
 
+-- The sound files refer to checkbox but the frame type is actually CheckButton
 local createCheckBox = function(frameName, text, key, tooltipText)
   local checkbox = CreateFrame('CheckButton', frameName, scrollChild, 'InterfaceOptionsCheckButtonTemplate')
   checkbox.Text:SetText(text)
@@ -222,13 +223,14 @@ end
 local createButton = function(frameName, text, key)
   local button = CreateFrame('Button', frameName, scrollChild, 'UIPanelButtonTemplate')
   button.Text:SetText('|cFFFFD100'..text)
-  button:SetWidth(160)
+  button.Text:SetTextScale(0.9)
+  button:SetWidth(135)
   button:SetScript('OnClick', function()
     PlaySound(856) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
     settingsTable[key]['updateCallback']() -- Unlike other widgets, buttons don't call applyChange
   end)
 
-  -- Nor do they need a SetValue function but they will have a dummy function assigned to keep things consistent
+  -- Buttons don't need a SetValue function but they will have a dummy function assigned to keep things consistent
   button.SetValue = C.DUMMY_FUNCTION
 
   return button
@@ -250,7 +252,7 @@ local createSubsettingFrame = function(entry)
   if entryType == 'dropdown' then
     frame = createDropDown(subLabel, subTitle, key)
     nextLeftAnchor = _G[frame:GetName()..'Right']
-    subOffsetX = -18
+    subOffsetX = -14
     subOffsetY = -18
   elseif entryType == 'button' then
     frame = createButton(subLabel, subTitle, key)
@@ -314,11 +316,13 @@ local separateSubsettingsIntoRows = function(rowSize, entries, subframes)
       rowOffsetY = -19
     end
 
+    rowStart:ClearAllPoints()
     rowStart:SetPoint('LEFT', prevRowStart, 'LEFT', offsetX, 0)
     rowStart:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, offsetY)
 
     local j = i + 1
     while j < i + rowSize and j <= #entries do
+      subframes[j]:ClearAllPoints()
       subframes[j]:SetPoint('LEFT', subframes[j - rowSize], 'LEFT', 0, 0)
       subframes[j]:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, rowOffsetY)
       j = j + 1
@@ -371,7 +375,9 @@ local createModuleOptions = function(moduleEntry)
   lastFrameLeft = moduleCheckbox
 
   -- Module description
+  local textWidth = scrollChild:GetWidth() - math.floor(moduleCheckbox:GetSize())
   local extraTextOffsetY = -16
+
   for i = 1, #description do
     local descriptionText = moduleCheckbox:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
     descriptionText:SetTextColor(1, 1, 1)
@@ -379,6 +385,7 @@ local createModuleOptions = function(moduleEntry)
     descriptionText:SetPoint('LEFT', moduleCheckbox.Text, 'LEFT', 0, 0)
     descriptionText:SetPoint('TOP', moduleCheckbox, 'BOTTOM', 0, (i - 1) * extraTextOffsetY)
     descriptionText:SetJustifyH('LEFT')
+    descriptionText:SetWidth(textWidth)
 
     lastFrameTop = descriptionText
   end
@@ -393,7 +400,7 @@ local createBaseOptions = function(moduleEntry)
 
   local anchorFrame = CreateFrame('Frame', 'UIC_'..label, scrollChild)
   anchorFrame:SetPoint('LEFT', lastFrameLeft, 'LEFT', 0, 0)
-  anchorFrame:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, 0)
+  anchorFrame:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, 10) -- There is already a gap above us, shorten it a bit
   anchorFrame:SetWidth(1)
   anchorFrame:SetHeight(1)
 
@@ -451,7 +458,7 @@ local setupOptionsPanel = function()
   local scrollFrame = CreateFrame('ScrollFrame', 'UIC_Options_ScrollFrame', optionsPanel, 'UIPanelScrollFrameTemplate')
   scrollChild = CreateFrame('Frame', 'UIC_Options_ScrollFrameChild', scrollFrame) -- This frame will be the one scrolling
 
-  scrollFrame:SetPoint('TOPLEFT', infoText, 'BOTTOMLEFT', 0, 0)
+  scrollFrame:SetPoint('TOPLEFT', infoText, 'BOTTOMLEFT', 0, -14) -- Y offset is needed so the scrolling elements won't touch the infoText
   scrollFrame:SetPoint('BOTTOMRIGHT', -27, 4)
   scrollFrame:SetScrollChild(scrollChild)
 

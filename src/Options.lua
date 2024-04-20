@@ -32,9 +32,11 @@ disabledFontColor[1], disabledFontColor[2], disabledFontColor[3], disabledFontCo
 
 local whiteFontColor = {1, 1, 1, gameFontColor[4]}
 
+local buttonWidth = 135
+
 local settingsTable -- We'll be able to reference entries by their keys through the settingsTable
 local scrollChild -- All frames that need to scroll have to be parented to this frame
-local lastFrameTop, lastFrameLeft -- We'll need references for anchoring all the frames
+local lastFrameTop -- A rolling reference to the frame that upcoming frames should be vertically anchored to
 
 local setFrameState = function(frame, isSet)
   frame:SetEnabled(isSet)
@@ -160,8 +162,8 @@ local createDropDown = function(frameName, text, key)
   local enumTable = settingsTable[key]['dropdownEnum']
 
   local dropdown = LibDD:Create_UIDropDownMenu(frameName, scrollChild)
-  local dropdownLabel = dropdown:CreateFontString(frameName..'Label', 'OVERLAY', 'GameFontNormalSmall')
-  dropdownLabel:SetPoint('TOPLEFT', 20, 10)
+  dropdown.label = dropdown:CreateFontString(frameName..'Label', 'OVERLAY', 'GameFontNormalSmall')
+  dropdown.label:SetPoint('TOPLEFT', 20, 10)
 
   -- This is called each time the downArrow button is clicked
   LibDD:UIDropDownMenu_Initialize(dropdown, function(self, level, _)
@@ -193,7 +195,7 @@ local createDropDown = function(frameName, text, key)
     end
   end)
 
-  dropdownLabel:SetText(text)
+  dropdown.label:SetText(text)
 
   -- Define functions for parity with the default frame types
   dropdown['SetValue'] = function(self, newValue)
@@ -224,7 +226,7 @@ local createButton = function(frameName, text, key)
   local button = CreateFrame('Button', frameName, scrollChild, 'UIPanelButtonTemplate')
   button.Text:SetText('|cFFFFD100'..text)
   button.Text:SetTextScale(0.9)
-  button:SetWidth(135)
+  button:SetWidth(buttonWidth)
   button:SetScript('OnClick', function()
     PlaySound(856) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
     settingsTable[key]['updateCallback']() -- Unlike other widgets, buttons don't call applyChange
@@ -236,49 +238,13 @@ local createButton = function(frameName, text, key)
   return button
 end
 
-local createSubsettingFrame = function(entry)
-  local key = entry['entryKey']
-  local entryType = entry['entryType']
-  local subTitle = entry['subTitle']
-  local tooltipText = entry['tooltipText']
-  local subLabel = entry['subLabel']
-  local offsetX = entry['offsetX']
-
-  local frame, nextLeftAnchor
-
-  local subOffsetX = 0
-  local subOffsetY = 0
-
-  if entryType == 'dropdown' then
-    frame = createDropDown(subLabel, subTitle, key)
-    nextLeftAnchor = _G[frame:GetName()..'Right']
-    subOffsetX = -14
-    subOffsetY = -18
-  elseif entryType == 'button' then
-    frame = createButton(subLabel, subTitle, key)
-    nextLeftAnchor = frame
-    subOffsetY = -12
-  else
-    frame = createCheckBox(subLabel, subTitle, key, tooltipText)
-    nextLeftAnchor = frame.Text
-    subOffsetY = -10
-  end
-
-  frame:SetPoint('LEFT', lastFrameLeft, 'RIGHT', offsetX + subOffsetX, 0)
-  frame:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, subOffsetY)
-
-  settingsTable[key]['frame'] = frame
-
-  return frame, nextLeftAnchor
-end
-
-local drawSeparator = function(separatorInfo, subframes)
+local drawSeparator = function(entries, separatorInfo)
   if separatorInfo == nil then
     return
   end
-  
-  local topFrame = subframes[separatorInfo['topFrame']]
-  local bottomFrame = subframes[separatorInfo['bottomFrame']]
+
+  local topFrame = entries[separatorInfo['topFrame']]['frame']
+  local bottomFrame = entries[separatorInfo['bottomFrame']]['frame']
 
   if not topFrame or not bottomFrame then
     return
@@ -287,74 +253,205 @@ local drawSeparator = function(separatorInfo, subframes)
   local line = scrollChild:CreateLine()
   line:SetColorTexture(0.8, 0.8, 0.8)
   line:SetThickness(1.5)
-  line:SetStartPoint("TOPLEFT", topFrame, -4, -4)
-  line:SetEndPoint("BOTTOMLEFT", bottomFrame, -4, 4)
+  line:SetStartPoint('TOPLEFT', topFrame, -12, -4)
+  line:SetEndPoint('BOTTOMLEFT', bottomFrame, -12, 4)
 end
 
--- Currently this handles aligning after a checkbox or a dropdown as the rowStart as a special case.
--- If we need to support more cases, this function would need to be changed into a generic function
--- which would separate elements into rows and then for each row, account for element types to correctly
--- adjust Y offsets.
-local separateSubsettingsIntoRows = function(rowSize, entries, subframes)
-  if rowSize == nil then
-    return
+local determineOffsetY = function(frame, columnIndex, leftAnchorFrame)
+  if columnIndex <= 1 or leftAnchorFrame == nil or frame.entryType == 'dropdown' then
+    return 0
   end
 
-  local i = rowSize + 1
+  -- The leftAnchorFrame could be a dropdown or another type of frame that is left anchored to one
+  return leftAnchorFrame.adjustmentY or 0
+end
+
+local determineOffsetX = function(frame, columnIndex, groupOffsetX)
+  local offsetX = 0
+
+  if columnIndex == 1 then
+    if frame.entryType == 'dropdown' then
+      offsetX = frame.subOffsetX
+    end
+  else
+    offsetX = groupOffsetX + frame.subOffsetX
+  end
+
+  return offsetX
+end
+
+local findWidestFrameInColumn = function(entries, initialLeftAnchor, rowSize, columnIndex)
+  if columnIndex < 1 then
+    return initialLeftAnchor
+  end
+
+  local i = columnIndex
+  local maxWidth = 0
+  local widestFrame = nil
 
   while i <= #entries do
-    local prevRowStart = subframes[i - rowSize]
-    local rowStart = subframes[i]
+    local frame = entries[i]['frame']
 
-    local offsetX = 0
-    local offsetY = -4
-    local rowOffsetY = -4
+    -- Getting the width of a dropdown is not straightforward but the button are sized to roughly
+    -- match the dropdowns so we'll use the hardcoded button width for buttons and dropdowns
+    local width = buttonWidth
 
-    if entries[i]['entryType'] == 'dropdown' then
-      offsetX = -15
-      offsetY = -16
-      rowOffsetY = -19
+    if frame.entryType == 'checkbox' then
+      width = frame:GetSize() + frame.Text:GetStringWidth()
     end
 
-    rowStart:ClearAllPoints()
-    rowStart:SetPoint('LEFT', prevRowStart, 'LEFT', offsetX, 0)
-    rowStart:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, offsetY)
-
-    local j = i + 1
-    while j < i + rowSize and j <= #entries do
-      subframes[j]:ClearAllPoints()
-      subframes[j]:SetPoint('LEFT', subframes[j - rowSize], 'LEFT', 0, 0)
-      subframes[j]:SetPoint('TOP', prevRowStart, 'BOTTOM', 0, rowOffsetY)
-      j = j + 1
+    if width > maxWidth then
+      maxWidth = width
+      widestFrame = frame
     end
 
     i = i + rowSize
   end
+
+  return widestFrame.nextLeftAnchor
 end
 
-local createSubsettingOptions = function(subsettings)
-  if subsettings and subsettings['entries'] then
-    local entries = subsettings['entries']
-    local rowSize = subsettings['rowSize']
-    local separator = subsettings['separator']
+-- Set the horizontal anchors per column
+local anchorSubsettingsToLeft = function(entries, initialLeftAnchor, rowSize, groupOffsetX)
+  local entryIndex
 
-    local initialLeftAnchor = lastFrameLeft
+  for columnIndex = 1, rowSize do
+    local leftAnchor = findWidestFrameInColumn(entries, initialLeftAnchor, rowSize, columnIndex - 1)
+    entryIndex = columnIndex
 
-    local subframes = {} -- Keep track of the frames for layout purposes
-    local frame
+    while entryIndex <= #entries do
+      local frame = entries[entryIndex]['frame']
+      local previousFrame = entryIndex > 1 and entries[entryIndex - 1].frame or nil
+      
+      local offsetX = determineOffsetX(frame, columnIndex, groupOffsetX)
+      local offsetY = determineOffsetY(frame, columnIndex, previousFrame)
 
-    for i = 1, #entries do
-      frame, lastFrameLeft = createSubsettingFrame(entries[i])
+      frame:SetPoint('LEFT', leftAnchor, 'RIGHT', currentOffsetX, 0)
+      if offsetY ~= 0 then
+        frame:AdjustPointsOffset(0, offsetY)
+        frame.adjustmentY = offsetY -- Need to propagate the Y adjustment
+      end
 
-      subframes[#subframes + 1] = frame
+      entryIndex = entryIndex + rowSize
+    end
+  end
+end
+
+local findTallestFrameInRow = function(entries, rowSize, rowIndex)
+  if rowIndex < 1 then
+    return lastFrameTop
+  end
+
+  local entryIndex = 1 + ((rowIndex - 1) * rowSize)
+  local maxHeight = 0
+  local tallestFrame = nil
+
+  for j = 1, rowSize do
+    if entryIndex > #entries then
+      break
     end
 
-    separateSubsettingsIntoRows(rowSize, entries, subframes)
+    local frame = entries[entryIndex]['frame']
 
-    drawSeparator(separator, subframes)
+    local _, height = frame:GetSize()
 
-    lastFrameLeft = initialLeftAnchor
-    lastFrameTop = frame
+    -- Getting the height of a dropdown is not straightforward so we'll go off of the label
+    -- height + the value used in LibUIDropDown + apporoximation of the padding
+    if frame.entryType == 'dropdown' then
+      height = frame.label:GetStringHeight() + 22
+    end
+
+    if height > maxHeight then
+      maxHeight = height
+      tallestFrame = frame
+    end
+
+    entryIndex = entryIndex + 1
+  end
+
+  return tallestFrame
+end
+
+-- Set the vertical anchors per row
+local anchorSubsettingsToTop = function(entries, rowSize)
+  local rowCount = math.ceil(#entries / rowSize)
+  local entryIndex = 1
+
+  for rowIndex = 1, rowCount do
+    local topAnchor = findTallestFrameInRow(entries, rowSize, rowIndex - 1)
+
+    for j = 1, rowSize do
+      if entryIndex > #entries then
+        return
+      end
+
+      local frame = entries[entryIndex]['frame']
+
+      frame:SetPoint('TOP', topAnchor, 'BOTTOM', 0, frame.subOffsetY)
+
+      entryIndex = entryIndex + 1
+    end
+  end
+end
+
+local createSubsettingFrame = function(entry)
+  local key = entry['entryKey']
+  local entryType = entry['entryType']
+  local subTitle = entry['subTitle']
+  local tooltipText = entry['tooltipText']
+  local subLabel = entry['subLabel']
+
+  local frame
+
+  -- Each entry type needs different offsets for fine tuning and each entry type has a different part that
+  -- should be used as a left anchor by nearby frames
+  if entryType == 'dropdown' then
+    frame = createDropDown(subLabel, subTitle, key)
+    frame.nextLeftAnchor = _G[frame:GetName()..'Right']
+    frame.subOffsetX = -14
+    frame.subOffsetY = -18
+
+    -- Dropdowns have a different height than other elements. This attribute will flag that any non-dropdown
+    -- elements anchoring to this one from the right need to adjust their Y offset.
+    local labelHeight = math.floor(frame.label:GetStringHeight())
+    frame.adjustmentY = (-1 * labelHeight) + 1
+  elseif entryType == 'button' then
+    frame = createButton(subLabel, subTitle, key)
+    frame.nextLeftAnchor = frame
+    frame.subOffsetX = 1
+    frame.subOffsetY = -12
+  else
+    frame = createCheckBox(subLabel, subTitle, key, tooltipText)
+    frame.nextLeftAnchor = frame.Text
+    frame.subOffsetX = 0
+    frame.subOffsetY = -10
+  end
+
+  frame.entryType = entryType
+
+  settingsTable[key]['frame'] = frame
+end
+
+-- Different entry types have different sizes but we would like to have a consistent grid of elements.
+-- To achieve this goal we first initialize all frames without anchoring them and then anchor all frames
+-- per row and column. The module definitons have the fine tuning parameters.
+local createSubsettingOptions = function(initialLeftAnchor, subsettings)
+  if subsettings and subsettings['entries'] then
+    local entries = subsettings['entries']
+    local offsetX = subsettings['offsetX'] or 20
+    local rowSize = subsettings['rowSize'] or math.min(4, #entries)
+    local separator = subsettings['separator']
+
+    for i = 1, #entries do
+      createSubsettingFrame(entries[i])
+    end
+
+    anchorSubsettingsToTop(entries, rowSize)
+    anchorSubsettingsToLeft(entries, initialLeftAnchor, rowSize, offsetX)
+
+    drawSeparator(entries, separator)
+
+    lastFrameTop = entries[#entries]['frame']
   end
 end
 
@@ -365,14 +462,16 @@ local createModuleOptions = function(moduleEntry)
   local description = moduleEntry['description']
   local subsettings = moduleEntry['subsettings']
 
+  -- If the base options are missing and this will be the first entry
+  local isFirstEntry = lastFrameTop:GetName() and lastFrameTop:GetName():match('ScrollFrame') ~= nil
+  local offsetY = isFirstEntry and 0 or -12
+
   local moduleCheckbox = createCheckBox('UIC_Options_CB_'..label, title, key)
-  moduleCheckbox:SetPoint('LEFT', lastFrameLeft, 'LEFT', 0, 0)
-  moduleCheckbox:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, -10)
+  moduleCheckbox:SetPoint('LEFT', scrollChild, 'LEFT', 0, 0)
+  moduleCheckbox:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, offsetY)
   moduleCheckbox.Text:SetTextColor(gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4])
 
   settingsTable[key]['frame'] = moduleCheckbox
-
-  lastFrameLeft = moduleCheckbox
 
   -- Module description
   local textWidth = scrollChild:GetWidth() - math.floor(moduleCheckbox:GetSize())
@@ -390,7 +489,7 @@ local createModuleOptions = function(moduleEntry)
     lastFrameTop = descriptionText
   end
 
-  createSubsettingOptions(subsettings)
+  createSubsettingOptions(moduleCheckbox, subsettings)
 end
 
 -- These base module cannot be toggled and only has subsettings.
@@ -399,15 +498,14 @@ local createBaseOptions = function(moduleEntry)
   local subsettings = moduleEntry['subsettings']
 
   local anchorFrame = CreateFrame('Frame', 'UIC_'..label, scrollChild)
-  anchorFrame:SetPoint('LEFT', lastFrameLeft, 'LEFT', 0, 0)
+  anchorFrame:SetPoint('LEFT', scrollChild, 'LEFT', 0, 0)
   anchorFrame:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, 10) -- There is already a gap above us, shorten it a bit
   anchorFrame:SetWidth(1)
   anchorFrame:SetHeight(1)
 
-  lastFrameLeft = anchorFrame
   lastFrameTop = anchorFrame
 
-  createSubsettingOptions(subsettings)
+  createSubsettingOptions(anchorFrame, subsettings)
 end
 
 local setupOptionsPanel = function()
@@ -471,7 +569,6 @@ local setupOptionsPanel = function()
   scrollBar.texture:SetAllPoints()
   scrollBar.texture:SetColorTexture(0, 0, 0, 0.35)
 
-  lastFrameLeft = scrollChild -- Starting with the most topLeft anchoring point
   lastFrameTop = scrollChild
 
   return optionsPanel

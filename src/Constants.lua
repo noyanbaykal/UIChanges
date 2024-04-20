@@ -93,7 +93,7 @@ local buildCommonStrings = function (L)
     for variableName, value in pairs(L.CR_SUBSETTING_STRINGS) do
       local shortName = ''
 
-      for word in string.gmatch(value, "[^%s]+") do -- Tokenize on spaces
+      for word in string.gmatch(value, '[^%s]+') do -- Tokenize on spaces
         shortName = shortName .. string.sub(word, 1, 1) -- Get the first character
       end
 
@@ -213,6 +213,7 @@ C.DEFINE_MODULES = function()
       ['label'] = 'BM', -- This is the base module to store base settings. It is unlike the rest of the modules.
       ['subsettings'] = {
         ['offsetX'] = 25, -- The horizontal space between entries is hardcoded here to easily specify the layout
+        -- It is possible to have a 'rowSize' attribute here as an override to the default
         ['entries'] = {
           buildCheckboxEntry('UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, L.TOOLTIP_MINIMAP_QUICK_ZOOM),
         },
@@ -226,7 +227,7 @@ C.DEFINE_MODULES = function()
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
       ['subsettings'] = { -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
-        ['offsetX'] = 35, 
+        ['offsetX'] = 35,
         ['entries'] = {
           {
             ['entryKey'] = 'UIC_AD_FrameInfo', -- Matches the entry in UIChanges_Profile
@@ -262,8 +263,7 @@ C.DEFINE_MODULES = function()
       ['title'] = 'Critical Reminders',
       ['description'] = L.CR,
       ['subsettings'] = {
-        ['offsetX'] = 42,
-        ['rowSize'] = 4,
+        ['offsetX'] = 20,
         ['separator'] = { -- To draw a straight line in the middle of all the subsetting checkboxes
           ['topFrame'] = 3, -- These are hardcoded indices for the frames the line will be drawn relative to
           ['bottomFrame'] = 19, -- The numbers are derived from the entries defined below
@@ -339,7 +339,7 @@ C.DEFINE_MODULES = function()
     },
   }
 
-  local setupSubsetting = function(subsettingEntry, parentName, offsetX)
+  local setupSubsetting = function(subsettingEntry, parentName)
     -- Add the subsetting to the settings and defaults tables
     local entryKey = subsettingEntry['entryKey']
     local defaultValue = subsettingEntry['defaultValue']
@@ -349,7 +349,6 @@ C.DEFINE_MODULES = function()
 
     -- Set these here for easy lookup in Options
     subsettingEntry['subLabel'] = ('UIC_Subsetting_'..parentName..'_'..subTitle):gsub('%s+', '_') -- Remove spaces
-    subsettingEntry['offsetX'] = offsetX
   end
 
   local setupModuleToggle = function(moduleEntry)
@@ -383,13 +382,10 @@ C.DEFINE_MODULES = function()
 
       if moduleEntry['subsettings'] then
         local subsettingEntries = moduleEntry['subsettings']['entries']
-        local offsetX = moduleEntry['subsettings']['offsetX'] or 0
         local parentName = moduleEntry['label']
   
         for i, subsettingEntry in ipairs(subsettingEntries) do
-          local currentOffsetX = i == 1 and 0 or offsetX -- The leftmost element needs no x offset.
-
-          setupSubsetting(subsettingEntry, parentName, currentOffsetX)
+          setupSubsetting(subsettingEntry, parentName)
         end
       end
     end

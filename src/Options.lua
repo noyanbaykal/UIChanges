@@ -32,7 +32,7 @@ disabledFontColor[1], disabledFontColor[2], disabledFontColor[3], disabledFontCo
 
 local whiteFontColor = {1, 1, 1, gameFontColor[4]}
 
-local buttonWidth = 135
+local BUTTON_WIDTH = 135
 
 local settingsTable -- We'll be able to reference entries by their keys through the settingsTable
 local scrollChild -- All frames that need to scroll have to be parented to this frame
@@ -226,7 +226,7 @@ local createButton = function(frameName, text, key)
   local button = CreateFrame('Button', frameName, scrollChild, 'UIPanelButtonTemplate')
   button.Text:SetText('|cFFFFD100'..text)
   button.Text:SetTextScale(0.9)
-  button:SetWidth(buttonWidth)
+  button:SetWidth(BUTTON_WIDTH)
   button:SetScript('OnClick', function()
     PlaySound(856) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
     settingsTable[key]['updateCallback']() -- Unlike other widgets, buttons don't call applyChange
@@ -294,7 +294,7 @@ local findWidestFrameInColumn = function(entries, initialLeftAnchor, rowSize, co
 
     -- Getting the width of a dropdown is not straightforward but the button are sized to roughly
     -- match the dropdowns so we'll use the hardcoded button width for buttons and dropdowns
-    local width = buttonWidth
+    local width = BUTTON_WIDTH
 
     if frame.entryType == 'checkbox' then
       width = frame:GetSize() + frame.Text:GetStringWidth()
@@ -425,6 +425,14 @@ local createSubsettingFrame = function(entry)
     frame.nextLeftAnchor = frame.Text
     frame.subOffsetX = 0
     frame.subOffsetY = -10
+
+    -- Subsetting checkboxes should not become wider than buttons or dropdowns
+    local maxTextWidth = BUTTON_WIDTH - (frame:GetWidth() + 6)
+    
+    frame.Text:SetWidth(maxTextWidth)
+    frame.Text:SetNonSpaceWrap(true)
+    frame.Text:SetWordWrap(true)
+    frame.Text:SetMaxLines(3)
   end
 
   frame.entryType = entryType

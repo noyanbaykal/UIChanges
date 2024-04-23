@@ -55,7 +55,7 @@ end
 -- To handle non-boolean subsetting values
 local isValueTruthy = function(value)
   if type(value) == 'number' then
-    return value == 1 -- The first value of enums should correspond to off
+    return value == 1 -- The first value of enums should correspond to off or the default value
   end
 
   return value
@@ -158,12 +158,15 @@ local createCheckBox = function(frameName, text, key, tooltipText)
   return checkbox
 end
 
-local createDropDown = function(frameName, text, key)
+local createDropDown = function(frameName, text, key, tooltipText)
   local enumTable = settingsTable[key]['dropdownEnum']
 
   local dropdown = LibDD:Create_UIDropDownMenu(frameName, scrollChild)
+
+  -- The dropdown doesn't have a title so we'll add one ourselves.
   dropdown.label = dropdown:CreateFontString(frameName..'Label', 'OVERLAY', 'GameFontNormalSmall')
   dropdown.label:SetPoint('TOPLEFT', 20, 10)
+  dropdown.label:SetText(text)
 
   -- This is called each time the downArrow button is clicked
   LibDD:UIDropDownMenu_Initialize(dropdown, function(self, level, _)
@@ -195,8 +198,6 @@ local createDropDown = function(frameName, text, key)
     end
   end)
 
-  dropdown.label:SetText(text)
-
   -- Define functions for parity with the default frame types
   dropdown['SetValue'] = function(self, newValue)
     local newLabel = enumTable[newValue][1]
@@ -219,10 +220,35 @@ local createDropDown = function(frameName, text, key)
     return UIDropDownMenu_IsEnabled()
   end
 
+  -- The frame structure of the LibUIDropDownMenu is rather complicated due to how the element is composed
+  -- of 3 pieces and the outer pieces have larger-than-visible sizes to make the side textures fit.
+  -- The situation creates an offset when trying to set the width of the dropdown and makes the size
+  -- related queries return unexpected results.
+  -- We'll do some setup here to have the dropdowns be the same width as the buttons and override the GetSize
+  -- function of the dropdown frame so it returns values matching what is visible.
+  local dropdownSizeOffset = math.ceil(BUTTON_WIDTH * 0.133) -- Magic number to account for the offset
+
+  LibDD:UIDropDownMenu_SetWidth(dropdown, BUTTON_WIDTH - dropdownSizeOffset)
+  
+  dropdown.DefaultGetSize = dropdown.GetSize -- We'll hold on to the original function
+
+  dropdown['GetSize'] = function(self)
+    local middleWidth = math.ceil(dropdown.Middle:GetWidth())
+    -- Roughly a third of the side frames' width is occupied by the visible textures, so we use another magic number.
+    local sideWidth = math.ceil((dropdown.Left:GetWidth() + dropdown.Right:GetWidth()) / 3)
+
+    local visibleWidth = middleWidth + sideWidth
+
+    local _, height = dropdown:DefaultGetSize()
+    local visibleHeight = math.ceil(height + dropdown.label:GetStringHeight())
+
+    return visibleWidth, visibleHeight
+  end
+
   return dropdown
 end
 
-local createButton = function(frameName, text, key)
+local createButton = function(frameName, text, key, tooltipText)
   local button = CreateFrame('Button', frameName, scrollChild, 'UIPanelButtonTemplate')
   button.Text:SetText('|cFFFFD100'..text)
   button.Text:SetTextScale(0.9)
@@ -307,8 +333,8 @@ local findWidestFrameInColumn = function(entries, initialLeftAnchor, rowSize, co
 
     i = i + rowSize
   end
-
-  return widestFrame.nextLeftAnchor
+  
+  return widestFrame
 end
 
 -- Set the horizontal anchors per column
@@ -316,13 +342,17 @@ local anchorSubsettingsToLeft = function(entries, initialLeftAnchor, rowSize, gr
   local entryIndex
 
   for columnIndex = 1, rowSize do
-    local leftAnchor = findWidestFrameInColumn(entries, initialLeftAnchor, rowSize, columnIndex - 1)
+    local leftAnchorFrame = findWidestFrameInColumn(entries, initialLeftAnchor, rowSize, columnIndex - 1)
+
     entryIndex = columnIndex
 
     while entryIndex <= #entries do
       local frame = entries[entryIndex]['frame']
       local previousFrame = entryIndex > 1 and entries[entryIndex - 1].frame or nil
-      
+      -- Need to watch for this reference when left anchoring to our own subsetting frames. Don't change the
+      -- reference for other frames though.
+      local leftAnchor = leftAnchorFrame.nextLeftAnchor or leftAnchorFrame
+
       local offsetX = determineOffsetX(frame, columnIndex, groupOffsetX)
       local offsetY = determineOffsetY(frame, columnIndex, previousFrame)
 
@@ -406,9 +436,9 @@ local createSubsettingFrame = function(entry)
   -- Each entry type needs different offsets for fine tuning and each entry type has a different part that
   -- should be used as a left anchor by nearby frames
   if entryType == 'dropdown' then
-    frame = createDropDown(subLabel, subTitle, key)
+    frame = createDropDown(subLabel, subTitle, key, tooltipText)
     frame.nextLeftAnchor = _G[frame:GetName()..'Right']
-    frame.subOffsetX = -14
+    frame.subOffsetX = -16
     frame.subOffsetY = -18
 
     -- Dropdowns have a different height than other elements. This attribute will flag that any non-dropdown
@@ -416,7 +446,7 @@ local createSubsettingFrame = function(entry)
     local labelHeight = math.floor(frame.label:GetStringHeight())
     frame.adjustmentY = (-1 * labelHeight) + 1
   elseif entryType == 'button' then
-    frame = createButton(subLabel, subTitle, key)
+    frame = createButton(subLabel, subTitle, key, tooltipText)
     frame.nextLeftAnchor = frame
     frame.subOffsetX = 1
     frame.subOffsetY = -12

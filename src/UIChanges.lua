@@ -22,13 +22,6 @@ local _, addonTable = ...
 local L = addonTable.L
 local C = addonTable.C
 
-local onMinimapZoomChange = function(level)
-  Minimap:SetZoom(level)
-
-  -- Call the minimap update function to update the button states
-  Minimap_OnEvent(_G['MiniMap'], 'MINIMAP_UPDATE_ZOOM')
-end
-
 local initialize = function()
   C.DEFINE_MODULES()
   C.INITIALIZE_PROFILE()
@@ -62,15 +55,18 @@ mainFrame:Hide()
 
 mainFrame:RegisterEvent('PLAYER_LOGIN')
 
-if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-  mainFrame:RegisterEvent('PLAYER_ENTERING_WORLD')
-end
-
 mainFrame:SetScript('OnEvent', function(self, event, ...)
   if event == 'PLAYER_LOGIN' then
     initialize()
   end
 end)
+
+local onMinimapZoomChange = function(level)
+  Minimap:SetZoom(level)
+
+  -- Call the minimap update function to update the button states
+  Minimap_OnEvent(_G['MiniMap'], 'MINIMAP_UPDATE_ZOOM')
+end
 
 _G['MinimapZoomOut']:HookScript('OnClick', function()
   if UIChanges_Profile['UIC_Toggle_Quick_Zoom'] and IsShiftKeyDown() then

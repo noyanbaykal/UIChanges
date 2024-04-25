@@ -38,9 +38,12 @@ C.UNREGISTER_EVENTS = function(frame, eventsTable)
   end
 end
 
-C.BACKDROP_INFO = function(edgeSize, insetSize)
+C.BACKDROP_INFO = function(edgeSize, insetSize, isTotalDarkBackground)
+  local bgFile = isTotalDarkBackground and 'Interface/CharacterFrame/UI-Party-Background'
+    or 'Interface/Tooltips/UI-Tooltip-Background'
+
   return {
-    bgFile = 'Interface/Tooltips/UI-Tooltip-Background',
+    bgFile = bgFile,
     edgeFile = 'Interface/Tooltips/UI-Tooltip-Border',
     edgeSize = edgeSize, 
     insets = { left = insetSize, right = insetSize, top = insetSize, bottom = insetSize }
@@ -67,9 +70,6 @@ local buildCommonStrings = function (L)
 
   L.NEEDS_RELOAD = colorOrange .. L.NEEDS_RELOAD_1 .. colorEscape
   L.OPTIONS_INFO = colorRed .. L.OPTIONS_INFO_1 .. colorEscape
-
-  L.MINIMAP_QUICK_ZOOM = colorWhite .. L.MINIMAP_QUICK_ZOOM_1 .. colorEscape
-  L.TOOLTIP_MINIMAP_QUICK_ZOOM = L.MINIMAP_QUICK_ZOOM_1 .. '\n' .. colorWhite .. L.MINIMAP_QUICK_ZOOM_2 .. colorEscape
 
   L.PPF = {L.PPF_1, colorRed .. L.PPF_2 ..colorEscape}
 
@@ -101,7 +101,7 @@ local buildCommonStrings = function (L)
       
       L[variableName] = value
       L[variableName .. '_SOUND'] = soundText
-      L[variableName .. '_SOUND_TOOLTIP'] = soundText .. '\n' .. colorWhite .. L.PLAY_SOUND .. ' ' .. value .. colorEscape
+      L[variableName .. '_SOUND_TOOLTIP'] = L.PLAY_SOUND .. ' ' .. value .. colorEscape
     end
   end
 
@@ -166,10 +166,8 @@ C.DEFINE_MODULES = function()
     entry['entryType'] = 'checkbox'
     entry['defaultValue'] = defaultValue
     entry['subTitle'] = subTitle
+    entry['tooltipText'] = tooltipText
 
-    if tooltipText then
-      entry['tooltipText'] = tooltipText
-    end
   
     return entry
   end

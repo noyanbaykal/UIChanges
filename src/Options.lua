@@ -37,6 +37,9 @@ local BUTTON_WIDTH = 135
 local settingsTable -- We'll be able to reference entries by their keys through the settingsTable
 local scrollChild -- All frames that need to scroll have to be parented to this frame
 local lastFrameTop -- A rolling reference to the frame that upcoming frames should be vertically anchored to
+local tooltipFrame -- A shared frame to show tooltips for buttons and dropdowns
+
+local showTooltipFrame, hideTooltipFrame -- Forward declaring so the related definitions can stay together in code
 
 local setFrameState = function(frame, isSet)
   frame:SetEnabled(isSet)
@@ -131,9 +134,8 @@ local applyChange = function(key, newValue)
 end
 
 -- The sound files refer to checkbox but the frame type is actually CheckButton
-local createCheckBox = function(frameName, text, key, tooltipText)
+local createCheckBox = function(frameName, text, key, tooltipText, isSubsetting)
   local checkbox = CreateFrame('CheckButton', frameName, scrollChild, 'InterfaceOptionsCheckButtonTemplate')
-  checkbox.Text:SetText(text)
   checkbox:SetChecked(UIChanges_Profile[key])
   checkbox:SetScript('OnClick', function(self, button, down)
     local newValue = self:GetChecked()
@@ -151,20 +153,87 @@ local createCheckBox = function(frameName, text, key, tooltipText)
     checkbox:SetChecked(newValue)
   end
 
+  -- Subsetting checkboxes should not become wider than buttons or dropdowns
+  local maxTextWidth = BUTTON_WIDTH - checkbox:GetWidth()
+
+  checkbox.Text:SetText(text)
+
+  if isSubsetting then
+    checkbox.Text:SetWidth(maxTextWidth)
+    checkbox.Text:SetNonSpaceWrap(true)
+    checkbox.Text:SetWordWrap(true)
+    checkbox.Text:SetMaxLines(2)
+
+    -- Not using the built-in tooltipText attribute because that gets truncated too if the text
+    -- is too long and doesn't support this case here
+    if checkbox.Text:IsTruncated() and not tooltipText then
+      tooltipText = ''
+    end
+  end
+
   if tooltipText then
-    checkbox.tooltipText = tooltipText
+    checkbox:HookScript('OnEnter', function(self)
+      showTooltipFrame(self.Text, self.Text, -5, text, tooltipText)
+    end)
+    
+    checkbox:HookScript('OnLeave', function(self)
+      hideTooltipFrame()
+    end)
   end
 
   return checkbox
 end
 
-local createDropDown = function(frameName, text, key, tooltipText)
+local createDropdown = function(frameName, text, key, tooltipText)
   local enumTable = settingsTable[key]['dropdownEnum']
 
   local dropdown = LibDD:Create_UIDropDownMenu(frameName, scrollChild)
 
-
   LibDD:UIDropDownMenu_SetText(dropdown, text)
+
+  -- The frame structure of the LibUIDropDownMenu is rather complicated due to how the element is composed
+  -- of 3 pieces and the outer pieces have larger-than-visible sizes to make the side textures fit.
+  -- The situation creates an offset when trying to set the width of the dropdown and makes the size
+  -- related queries return unexpected results.
+  -- We'll do some setup here to have the dropdowns be the same width as the buttons and override the GetSize
+  -- function of the dropdown frame so it returns values matching what is visible.
+  local dropdownSizeOffset = math.ceil(BUTTON_WIDTH * 0.133) -- Magic number to account for the offset
+
+  -- Once this SetWidth function is called, dropdown.Middle:GetWidth() starts returning correct values
+  LibDD:UIDropDownMenu_SetWidth(dropdown, BUTTON_WIDTH - dropdownSizeOffset)
+
+  -- Have to fix the text frame size as well to get Text:IsTruncated() working
+  local realTextFrameWidth = dropdown.Middle:GetWidth() - dropdown.Button:GetWidth() - 1
+  dropdown.Text:SetWidth(realTextFrameWidth)
+  
+  dropdown.DefaultGetSize = dropdown.GetSize -- We'll hold on to the original function
+
+  dropdown['GetSize'] = function(self)
+    local middleWidth = math.ceil(dropdown.Middle:GetWidth())
+    -- Roughly a third of the side frames' width is occupied by the visible textures, so we use another magic number.
+    local sideWidth = math.ceil((dropdown.Left:GetWidth() + dropdown.Right:GetWidth()) / 3)
+
+    local visibleWidth = middleWidth + sideWidth
+
+    local _, height = dropdown:DefaultGetSize()
+
+    return visibleWidth, height
+  end
+
+  -- Add tooltip support
+  if dropdown.Text:IsTruncated() and not tooltipText then
+    tooltipText = ''
+  end
+
+  if tooltipText then
+    dropdown.Text:HookScript('OnEnter', function(self)
+      showTooltipFrame(dropdown.Text, dropdown.Button, 0, text, tooltipText)
+    end)
+    
+    dropdown.Text:HookScript('OnLeave', function(self)
+      hideTooltipFrame()
+    end)
+  end
 
   -- This is called each time the downArrow button is clicked
   LibDD:UIDropDownMenu_Initialize(dropdown, function(self, level, _)
@@ -214,31 +283,6 @@ local createDropDown = function(frameName, text, key, tooltipText)
     return UIDropDownMenu_IsEnabled()
   end
 
-  -- The frame structure of the LibUIDropDownMenu is rather complicated due to how the element is composed
-  -- of 3 pieces and the outer pieces have larger-than-visible sizes to make the side textures fit.
-  -- The situation creates an offset when trying to set the width of the dropdown and makes the size
-  -- related queries return unexpected results.
-  -- We'll do some setup here to have the dropdowns be the same width as the buttons and override the GetSize
-  -- function of the dropdown frame so it returns values matching what is visible.
-  local dropdownSizeOffset = math.ceil(BUTTON_WIDTH * 0.133) -- Magic number to account for the offset
-
-  -- Once this SetWidth function is called, dropdown.Middle:GetWidth() starts returning correct values
-  LibDD:UIDropDownMenu_SetWidth(dropdown, BUTTON_WIDTH - dropdownSizeOffset)
-  
-  dropdown.DefaultGetSize = dropdown.GetSize -- We'll hold on to the original function
-
-  dropdown['GetSize'] = function(self)
-    local middleWidth = math.ceil(dropdown.Middle:GetWidth())
-    -- Roughly a third of the side frames' width is occupied by the visible textures, so we use another magic number.
-    local sideWidth = math.ceil((dropdown.Left:GetWidth() + dropdown.Right:GetWidth()) / 3)
-
-    local visibleWidth = middleWidth + sideWidth
-
-    local _, height = dropdown:DefaultGetSize()
-
-    return visibleWidth, height
-  end
-
   return dropdown
 end
 
@@ -246,20 +290,35 @@ local createButton = function(frameName, text, key, tooltipText)
   local yellowText = '|cFFFFD100'..text
 
   local button = CreateFrame('Button', frameName, scrollChild, 'UIPanelButtonTemplate')
-  button.Text:SetText(yellowText)
-  button.Text:SetTextScale(0.9)
   button:SetWidth(BUTTON_WIDTH)
   button:SetScript('OnClick', function()
     PlaySound(856) -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
     settingsTable[key]['updateCallback']() -- Unlike other widgets, buttons don't call applyChange
   end)
 
+  button.Text:SetText(yellowText)
+  button.Text:SetTextScale(0.9)
+  button.Text:SetWidth(BUTTON_WIDTH - 10)
+
+  if button.Text:IsTruncated() and not tooltipText then
+    tooltipText = ''
+  end
+
+  -- Have the text be white when hovered over and add tooltip support
   button:HookScript('OnEnter', function(self)
     self:SetText(text)
+
+    if tooltipText then
+      showTooltipFrame(self, self, math.ceil(self:GetWidth() / 8), text, tooltipText)
+    end
   end)
 
   button:HookScript('OnLeave', function(self)
     self:SetText(yellowText)
+
+    if tooltipText then
+      hideTooltipFrame()
+    end
   end)
 
   -- Buttons don't need a SetValue function but they will have a dummy function assigned to keep things consistent
@@ -280,7 +339,7 @@ local createSubsettingFrame = function(entry)
   -- We want each entry type to occupy the same amount of space so each entry type needs different offsets for
   -- fine tuning and each entry type may have a different part that should be used as an anchor by nearby frames.
   if entryType == 'dropdown' then
-    frame = createDropDown(subLabel, subTitle, key, tooltipText)
+    frame = createDropdown(subLabel, subTitle, key, tooltipText)
     frame.nextLeftAnchor = _G[frame:GetName()..'Button']
     frame.nextTopAnchor = frame.Button
     -- Another magic number to account for the side textures but with the dropshadow on the left
@@ -293,23 +352,11 @@ local createSubsettingFrame = function(entry)
     frame.subOffsetX = 1
     frame.subOffsetY = -4
   else
-    frame = createCheckBox(subLabel, subTitle, key, tooltipText)
+    frame = createCheckBox(subLabel, subTitle, key, tooltipText, true)
     frame.nextLeftAnchor = frame.Text
     frame.nextTopAnchor = frame
     frame.subOffsetX = -1
     frame.subOffsetY = -1
-
-    -- Subsetting checkboxes should not become wider than buttons or dropdowns
-    local maxTextWidth = BUTTON_WIDTH - frame:GetWidth()
-    
-    frame.Text:SetWidth(maxTextWidth)
-    frame.Text:SetNonSpaceWrap(true)
-    frame.Text:SetWordWrap(true)
-    frame.Text:SetMaxLines(2)
-
-    if frame.Text:IsTruncated() and not tooltipText then
-      frame.tooltipText = subTitle
-    end
   end
 
   frame.entryType = entryType
@@ -436,6 +483,70 @@ local createBaseOptions = function(moduleEntry)
   createSubsettingOptions(anchorFrame, subsettings)
 end
 
+-- Forward declared local variable
+hideTooltipFrame = function()
+  tooltipFrame:Hide()
+end
+
+-- Forward declared local variable
+showTooltipFrame = function(leftAnchor, topAnchor, offsetX, title, text)
+  tooltipFrame:SetPoint('LEFT', leftAnchor, 'LEFT', offsetX, 0);
+  tooltipFrame:SetPoint('BOTTOM', topAnchor, 'TOP', 0, 0);
+
+  tooltipFrame.Title:SetText(title)
+  tooltipFrame.Text:SetText(text)
+
+  -- Set the width and make sure we are not out of bounds
+  local widthAvailable = math.floor(addonTable.SCREEN_WIDTH - tooltipFrame:GetBoundsRect())
+  local maxFrameWidth = math.min(widthAvailable, 450) -- In case we have less than the target width available
+
+  local stringWidth = math.ceil(math.max(tooltipFrame.Title:GetUnboundedStringWidth(), tooltipFrame.Text:GetUnboundedStringWidth()))
+  stringWidth = stringWidth + tooltipFrame.rightPadding -- Have to account for the right padding when considering short strings
+
+  local frameWidth = math.min(stringWidth, maxFrameWidth) -- Use the target width unless the text is shorter
+
+  tooltipFrame:SetWidth(frameWidth)
+  tooltipFrame.Title:SetWidth(frameWidth - tooltipFrame.rightPadding)
+  tooltipFrame.Text:SetWidth(frameWidth - tooltipFrame.rightPadding)
+
+  -- Now set the height
+  local stringHeight = math.ceil(tooltipFrame.Title:GetHeight() + tooltipFrame.Text:GetHeight())
+  local bottomPadding = text == '' and tooltipFrame.bottomPaddingTitle or tooltipFrame.bottomPaddingFull
+  tooltipFrame:SetHeight(stringHeight + bottomPadding)
+
+  tooltipFrame:Show()
+end
+
+local createTooltipFrame = function(parentFrame)
+  tooltipFrame = CreateFrame('Frame', 'UIC_Options_Tooltip', parentFrame, 'BackdropTemplate')
+  tooltipFrame:SetBackdrop(C.BACKDROP_INFO(18, 4, true))
+  tooltipFrame:Hide()
+
+  -- The default frame level clashes with the scrollbar frames which are sibling frames
+  tooltipFrame:SetFrameLevel(tooltipFrame:GetFrameLevel() + 5)
+
+  -- Using small offsets for fine tuning and need to account for them when showing the tooltip frame
+  local leftOffsetX = 8
+  tooltipFrame.rightPadding = 18
+
+  local topOffsetY = -8
+  local middleOffsetY = -6
+  tooltipFrame.bottomPaddingTitle = -1 * (topOffsetY + middleOffsetY) + 2
+  tooltipFrame.bottomPaddingFull = tooltipFrame.bottomPaddingTitle + 8
+
+  tooltipFrame.Title = tooltipFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal')
+  tooltipFrame.Title:SetPoint('TOPLEFT', tooltipFrame, leftOffsetX, topOffsetY)
+  tooltipFrame.Title:SetNonSpaceWrap(true)
+  tooltipFrame.Title:SetJustifyH('LEFT')
+  tooltipFrame.Title:SetSpacing(2)
+
+  tooltipFrame.Text = tooltipFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal')
+  tooltipFrame.Text:SetTextColor(whiteFontColor[1], whiteFontColor[2], whiteFontColor[3], whiteFontColor[4])
+  tooltipFrame.Text:SetPoint('TOPLEFT', tooltipFrame.Title, 'BOTTOMLEFT', 0, middleOffsetY)
+  tooltipFrame.Text:SetJustifyH('LEFT')
+  tooltipFrame.Text:SetSpacing(2)
+end
+
 local setupOptionsPanel = function()
   local optionsPanel = CreateFrame('Frame', 'UIC_Options', _G['InterfaceOptionsFramePanelContainer'].NineSlice)
   optionsPanel.name = 'UIChanges'
@@ -482,24 +593,41 @@ local setupOptionsPanel = function()
 
   -- All the options will be within a scrollFrame
   local scrollFrame = CreateFrame('ScrollFrame', 'UIC_Options_ScrollFrame', optionsPanel, 'UIPanelScrollFrameTemplate')
-  scrollChild = CreateFrame('Frame', 'UIC_Options_ScrollFrameChild', scrollFrame) -- This frame will be the one scrolling
-
   scrollFrame:SetPoint('TOPLEFT', infoText, 'BOTTOMLEFT', 0, -14) -- Y offset is needed so the scrolling elements won't touch the infoText
   scrollFrame:SetPoint('BOTTOMRIGHT', -27, 4)
-  scrollFrame:SetScrollChild(scrollChild)
 
-  scrollChild:SetWidth(outerPanelWidth)
-  scrollChild:SetHeight(1) -- Absolutely necessary
-
-  local scrollBar = _G['UIC_Options_ScrollFrameScrollBar']
+  local scrollBar = scrollFrame.ScrollBar
   scrollBar.texture = scrollBar:CreateTexture(scrollBar:GetName()..'_Texture', 'ARTWORK')
   scrollBar.texture:SetTexture('Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew')
   scrollBar.texture:SetAllPoints()
   scrollBar.texture:SetColorTexture(0, 0, 0, 0.35)
 
+  scrollChild = CreateFrame('Frame', 'UIC_Options_ScrollFrameChild', scrollFrame) -- This frame will be the one scrolling
+  scrollChild:SetWidth(outerPanelWidth)
+  scrollChild:SetHeight(1) -- Absolutely necessary
+
+  scrollFrame:SetScrollChild(scrollChild)
+  
   lastFrameTop = scrollChild
 
+  createTooltipFrame(scrollFrame)
+
   return optionsPanel
+end
+
+local storeScreenSize = function()
+  local screenWidth, screenHeight = GetPhysicalScreenSize()
+
+  addonTable.SCREEN_WIDTH = math.floor(screenWidth)
+  addonTable.SCREEN_HEIGHT = math.floor(screenHeight)
+end
+
+local EVENTS = {}
+EVENTS['DISPLAY_SIZE_CHANGED'] = function()
+  storeScreenSize()
+end
+EVENTS['UI_SCALE_CHANGED'] = function()
+  storeScreenSize()
 end
 
 local UIC_Options = {}
@@ -508,6 +636,15 @@ UIC_Options.Initialize = function()
   settingsTable = C.SETTINGS_TABLE
 
   local optionsPanel = setupOptionsPanel()
+
+  -- Need to keep track of the screen size to prevent the tooltipFrame from getting out of bounds
+  storeScreenSize()
+
+  optionsPanel:SetScript('OnEvent', function(self, event, ...)
+    EVENTS[event](...)
+  end)
+
+  C.REGISTER_EVENTS(optionsPanel, EVENTS)
 
   for _, moduleEntry in ipairs(C.MODULES) do
     if not moduleEntry['moduleKey'] then

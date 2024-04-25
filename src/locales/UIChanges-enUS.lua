@@ -44,8 +44,8 @@ locale.ANCHOR_BOTTOMLEFT = 'Bottom Left'
 locale.ANCHOR_LEFT = 'Left'
 
 -- Base Options
-locale.MINIMAP_QUICK_ZOOM_1 = 'Minimap quick zoom'
-locale.MINIMAP_QUICK_ZOOM_2 = 'Shift click the minimap + / - buttons for max zoom in / out.'
+locale.MINIMAP_QUICK_ZOOM = 'Minimap quick zoom'
+locale.TOOLTIP_MINIMAP_QUICK_ZOOM = 'Shift click the minimap + / - buttons for max zoom in / out.'
 -- ~Base Options
 
 -- AbsorbDisplay

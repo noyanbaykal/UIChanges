@@ -212,8 +212,7 @@ C.DEFINE_MODULES = function()
     {
       ['label'] = 'BM', -- This is the base module to store base settings. It is unlike the rest of the modules.
       ['subsettings'] = {
-        ['offsetX'] = 25, -- The horizontal space between entries is hardcoded here to easily specify the layout
-        -- It is possible to have a 'rowSize' attribute here as an override to the default
+        -- Having the offsetX, offsetY or rowSize attributes here will override the defaults to fine tune the layout per module.
         ['entries'] = {
           buildCheckboxEntry('UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, L.TOOLTIP_MINIMAP_QUICK_ZOOM),
         },
@@ -227,7 +226,6 @@ C.DEFINE_MODULES = function()
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
       ['subsettings'] = { -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
-        ['offsetX'] = 35,
         ['entries'] = {
           {
             ['entryKey'] = 'UIC_AD_FrameInfo', -- Matches the entry in UIChanges_Profile
@@ -263,7 +261,6 @@ C.DEFINE_MODULES = function()
       ['title'] = 'Critical Reminders',
       ['description'] = L.CR,
       ['subsettings'] = {
-        ['offsetX'] = 20,
         ['separator'] = { -- To draw a straight line in the middle of all the subsetting checkboxes
           ['topFrame'] = 3, -- These are hardcoded indices for the frames the line will be drawn relative to
           ['bottomFrame'] = 19, -- The numbers are derived from the entries defined below
@@ -317,7 +314,7 @@ C.DEFINE_MODULES = function()
       ['label'] = 'PPF',
       ['title'] = 'Party Pet Frames',
       ['description'] = L.PPF,
-      -- Modules that change console variables must be toggled outside of combat
+      -- If a module's state is tied to a console variable, that must be declared here. Such modules must be toggled outside of combat.
       ['consoleVariableName'] = 'showPartyPets', -- This is the name of the cVar that will be modified when this module's state is modified
     },
     {
@@ -328,7 +325,6 @@ C.DEFINE_MODULES = function()
       ['title'] = 'Ping Announcer',
       ['description'] = L.PA,
       ['subsettings'] = {
-        ['offsetX'] = 72,
         ['entries'] = {
           buildCheckboxEntry('UIC_PA_Raid', false, RAID),
           buildCheckboxEntry('UIC_PA_Arena', false, ARENA),

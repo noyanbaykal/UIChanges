@@ -26,6 +26,7 @@ src\libs\LibUIDropDownMenu.xml
 src\libs\LibUIDropDownMenu.lua
 src\locales\UIChanges-enUS.lua
 src\Constants.lua
+src\DropdownWrapper.lua
 src\Options.lua
 src\modules\AbsorbDisplay\AbsorbDisplay.lua
 src\modules\AHTools\AHTools.lua

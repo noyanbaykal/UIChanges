@@ -24,6 +24,9 @@ addonTable.C = {}
 local L
 local C = addonTable.C
 
+-- This is for key lookups into the Modules table but beware of unordered traversal!
+C.SETTINGS_TABLE = {} -- Will be populated during initialization
+
 C.DUMMY_FUNCTION = function() end -- Will re-use this single function when we need a dummy function.
 
 C.REGISTER_EVENTS = function(frame, eventsTable)
@@ -147,6 +150,7 @@ local initializeLocalization = function()
 end
 
 C.DEFINE_MODULES = function()
+  -- Anything that needs the localization table needs to wait until after the localization setup
   C.ENUM_ANCHOR_OPTIONS = {
     {OFF,                    nil},
     {L.ANCHOR_TOPLEFT,       'TOPLEFT'},
@@ -367,9 +371,7 @@ C.DEFINE_MODULES = function()
   end
 
   -- Setup the lookup table & the attributes that will be used in the options panel
-  local setupSettingsTable = function()
-    C.SETTINGS_TABLE = {} -- This is for key lookups into the Modules table but beware of unordered traversal!
-
+  local populateSettingsTable = function()
     for _, moduleEntry in ipairs(C.MODULES) do
       addModuleToggle(moduleEntry)
 
@@ -384,7 +386,7 @@ C.DEFINE_MODULES = function()
     end
   end
 
-  setupSettingsTable()
+  populateSettingsTable()
 end
 
 C.INITIALIZE_PROFILE = function()

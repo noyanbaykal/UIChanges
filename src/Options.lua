@@ -17,12 +17,12 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local LibDD = LibStub:GetLibrary('LibUIDropDownMenu-4.0')
-
 local _, addonTable = ...
 
 local L = addonTable.L
 local C = addonTable.C
+
+local settingsTable = C.SETTINGS_TABLE -- We'll be able to reference entries by their keys through the settingsTable
 
 local gameFontColor = {} -- Yellow. Module checkboxes will override checkbox text color.
 gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4] = _G['GameFontNormal']:GetTextColor()
@@ -34,12 +34,9 @@ local whiteFontColor = {1, 1, 1, gameFontColor[4]}
 
 local BUTTON_WIDTH = 135
 
-local settingsTable -- We'll be able to reference entries by their keys through the settingsTable
 local scrollChild -- All frames that need to scroll have to be parented to this frame
 local lastFrameTop -- A rolling reference to the frame that upcoming frames should be vertically anchored to
 local tooltipFrame -- A shared frame to show tooltips for buttons and dropdowns
-
-local showTooltipFrame, hideTooltipFrame -- Forward declaring so the related definitions can stay together in code
 
 local setFrameState = function(frame, isSet)
   frame:SetEnabled(isSet)
@@ -173,117 +170,15 @@ local createCheckBox = function(frameName, text, key, tooltipText, isSubsetting)
 
   if tooltipText then
     checkbox:HookScript('OnEnter', function(self)
-      showTooltipFrame(self.Text, self.Text, -5, text, tooltipText)
+      addonTable.ShowTooltipFrame(self.Text, self.Text, -5, text, tooltipText)
     end)
     
     checkbox:HookScript('OnLeave', function(self)
-      hideTooltipFrame()
+      addonTable.HideTooltipFrame()
     end)
   end
 
   return checkbox
-end
-
-local createDropdown = function(frameName, text, key, tooltipText)
-  local enumTable = settingsTable[key]['dropdownEnum']
-
-  local dropdown = LibDD:Create_UIDropDownMenu(frameName, scrollChild)
-
-  LibDD:UIDropDownMenu_SetText(dropdown, text)
-
-  -- The frame structure of the LibUIDropDownMenu is rather complicated due to how the element is composed
-  -- of 3 pieces and the outer pieces have larger-than-visible sizes to make the side textures fit.
-  -- The situation creates an offset when trying to set the width of the dropdown and makes the size
-  -- related queries return unexpected results.
-  -- We'll do some setup here to have the dropdowns be the same width as the buttons and override the GetSize
-  -- function of the dropdown frame so it returns values matching what is visible.
-  local dropdownSizeOffset = math.ceil(BUTTON_WIDTH * 0.133) -- Magic number to account for the offset
-
-  -- Once this SetWidth function is called, dropdown.Middle:GetWidth() starts returning correct values
-  LibDD:UIDropDownMenu_SetWidth(dropdown, BUTTON_WIDTH - dropdownSizeOffset)
-
-  -- Have to fix the text frame size as well to get Text:IsTruncated() working
-  local realTextFrameWidth = dropdown.Middle:GetWidth() - dropdown.Button:GetWidth() - 1
-  dropdown.Text:SetWidth(realTextFrameWidth)
-  
-  dropdown.DefaultGetSize = dropdown.GetSize -- We'll hold on to the original function
-
-  dropdown['GetSize'] = function(self)
-    local middleWidth = math.ceil(dropdown.Middle:GetWidth())
-    -- Roughly a third of the side frames' width is occupied by the visible textures, so we use another magic number.
-    local sideWidth = math.ceil((dropdown.Left:GetWidth() + dropdown.Right:GetWidth()) / 3)
-
-    local visibleWidth = middleWidth + sideWidth
-
-    local _, height = dropdown:DefaultGetSize()
-
-    return visibleWidth, height
-  end
-
-  -- Add tooltip support
-  if dropdown.Text:IsTruncated() and not tooltipText then
-    tooltipText = ''
-  end
-
-  if tooltipText then
-    dropdown.Text:HookScript('OnEnter', function(self)
-      showTooltipFrame(dropdown.Text, dropdown.Button, 0, text, tooltipText)
-    end)
-    
-    dropdown.Text:HookScript('OnLeave', function(self)
-      hideTooltipFrame()
-    end)
-  end
-
-  -- This is called each time the downArrow button is clicked
-  LibDD:UIDropDownMenu_Initialize(dropdown, function(self, level, _)
-    local info = LibDD:UIDropDownMenu_CreateInfo()
-
-    local selectedIndex = UIChanges_Profile[key]
-
-    for i, enum in ipairs(enumTable) do
-      local title = enum[1]
-
-      info.text = title
-      info.arg1 = key
-      info.arg2 = i
-
-      if i == selectedIndex then
-        info.checked = true
-      else
-        info.checked = false
-      end
-
-      info.func = function(self, arg1, arg2)
-        self.checked = true
-
-        applyChange(arg1, arg2)
-      end
-
-      LibDD:UIDropDownMenu_AddButton(info)
-    end
-  end)
-
-  -- Define functions for parity with the default frame types
-  dropdown['SetValue'] = function(self, newValue)  end
-
-  dropdown['SetEnabled'] = function(self, isSet)
-    if isSet then
-      LibDD:UIDropDownMenu_EnableDropDown(dropdown)
-    else
-      LibDD:UIDropDownMenu_DisableDropDown(dropdown)
-    end
-  end
-
-  dropdown['IsEnabled'] = function(self)
-    if not self.dropDown then
-      return false
-    end
-
-    return UIDropDownMenu_IsEnabled()
-  end
-
-  return dropdown
 end
 
 local createButton = function(frameName, text, key, tooltipText)
@@ -309,7 +204,7 @@ local createButton = function(frameName, text, key, tooltipText)
     self:SetText(text)
 
     if tooltipText then
-      showTooltipFrame(self, self, math.ceil(self:GetWidth() / 8), text, tooltipText)
+      addonTable.ShowTooltipFrame(self, self, math.ceil(self:GetWidth() / 8), text, tooltipText)
     end
   end)
 
@@ -317,7 +212,7 @@ local createButton = function(frameName, text, key, tooltipText)
     self:SetText(yellowText)
 
     if tooltipText then
-      hideTooltipFrame()
+      addonTable.HideTooltipFrame()
     end
   end)
 
@@ -339,12 +234,11 @@ local createSubsettingFrame = function(entry)
   -- We want each entry type to occupy the same amount of space so each entry type needs different offsets for
   -- fine tuning and each entry type may have a different part that should be used as an anchor by nearby frames.
   if entryType == 'dropdown' then
-    frame = createDropdown(frameName, title, key, tooltipText)
-    frame.nextLeftAnchor = _G[frame:GetName()..'Button']
+    frame = addonTable.CreateDropdown(scrollChild, frameName, title, key, tooltipText, BUTTON_WIDTH, applyChange)
+    frame.nextLeftAnchor = frame.Button
     frame.nextTopAnchor = frame.Button
-    -- Another magic number to account for the side textures but with the dropshadow on the left
-    frame.subOffsetX = -1 * math.ceil(frame.Left:GetWidth() * 0.625)
-    frame.subOffsetY = -1
+    frame.subOffsetX = 0
+    frame.subOffsetY = 1
   elseif entryType == 'button' then
     frame = createButton(frameName, title, key, tooltipText)
     frame.nextLeftAnchor = frame
@@ -483,13 +377,12 @@ local createBaseOptions = function(moduleEntry)
   createSubsettingOptions(anchorFrame, subsettings)
 end
 
--- Forward declared local variable
-hideTooltipFrame = function()
+-- Show & HideTooltipFrame functions will be in the addonTable
+addonTable.HideTooltipFrame = function()
   tooltipFrame:Hide()
 end
 
--- Forward declared local variable
-showTooltipFrame = function(leftAnchor, topAnchor, offsetX, title, text)
+addonTable.ShowTooltipFrame = function(leftAnchor, topAnchor, offsetX, title, text)
   tooltipFrame:SetPoint('LEFT', leftAnchor, 'LEFT', offsetX, 0);
   tooltipFrame:SetPoint('BOTTOM', topAnchor, 'TOP', 0, 0);
 
@@ -633,8 +526,6 @@ end
 local UIC_Options = {}
 
 UIC_Options.Initialize = function()
-  settingsTable = C.SETTINGS_TABLE
-
   local optionsPanel = setupOptionsPanel()
 
   -- Need to keep track of the screen size to prevent the tooltipFrame from getting out of bounds

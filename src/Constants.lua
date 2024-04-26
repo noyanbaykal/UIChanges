@@ -159,29 +159,28 @@ C.DEFINE_MODULES = function()
     {L.ANCHOR_LEFT,          'LEFT'}
   }
 
-  local buildCheckboxEntry = function(entryName, defaultValue, subTitle, tooltipText)
+  local buildCheckboxEntry = function(entryKey, defaultValue, title, tooltipText)
     local entry = {}
   
-    entry['entryKey'] = entryName
+    entry['entryKey'] = entryKey
     entry['entryType'] = 'checkbox'
     entry['defaultValue'] = defaultValue
-    entry['subTitle'] = subTitle
+    entry['title'] = title
     entry['tooltipText'] = tooltipText
-
   
     return entry
   end
 
   -- Each warning entry comes with a relevant sound entry
-  local CR_BuildWarningEntries = function(entryKey, defaultValue, subTitleVariableName, soundEntryDefaultValue)
-    local warningEntrySubtitle = L[subTitleVariableName]
+  local CR_BuildWarningEntries = function(entryKey, defaultValue, titleVariableName, soundEntryDefaultValue)
+    local warningEntryTitle = L[titleVariableName]
 
     local soundEntryKey = entryKey .. '_Sound'
-    local soundEntrySubtitle = L[subTitleVariableName .. '_SOUND']
-    local soundEntryTooltip = L[subTitleVariableName .. '_SOUND' .. '_TOOLTIP']
+    local soundEntryTitle = L[titleVariableName .. '_SOUND']
+    local soundEntryTooltip = L[titleVariableName .. '_SOUND' .. '_TOOLTIP']
 
-    local warningEntry = buildCheckboxEntry(entryKey, defaultValue, warningEntrySubtitle)
-    local soundEntry = buildCheckboxEntry(soundEntryKey, soundEntryDefaultValue, soundEntrySubtitle, soundEntryTooltip)
+    local warningEntry = buildCheckboxEntry(entryKey, defaultValue, warningEntryTitle)
+    local soundEntry = buildCheckboxEntry(soundEntryKey, soundEntryDefaultValue, soundEntryTitle, soundEntryTooltip)
 
     -- We want the sound entry checkbox to be inactive if the warning entry is disabled.
     warningEntry['dependents'] = {soundEntryKey}
@@ -208,7 +207,7 @@ C.DEFINE_MODULES = function()
 
   C.MODULES = {
     {
-      ['label'] = 'BM', -- This is the base module to store base settings. It is unlike the rest of the modules.
+      ['frameName'] = 'BM', -- This is the base module to store base settings. It is unlike the rest of the modules.
       ['subsettings'] = {
         -- Having the offsetX, offsetY or rowSize attributes here will override the defaults to fine tune the layout per module.
         ['entries'] = {
@@ -220,7 +219,7 @@ C.DEFINE_MODULES = function()
       ['moduleName'] = 'AbsorbDisplay', -- The key corresponds to the class that is exported in the module file
       ['moduleKey'] = 'UIC_AD_IsEnabled', -- Name of the corresponding entry in UIChanges_Profile
       ['defaultValue'] = true, -- Is enabled by default
-      ['label'] = 'AD', -- Used in subframe names
+      ['frameName'] = 'AD', -- Used in subframe names
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
       ['subsettings'] = { -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
@@ -229,7 +228,7 @@ C.DEFINE_MODULES = function()
             ['entryKey'] = 'UIC_AD_FrameInfo', -- Matches the entry in UIChanges_Profile
             ['entryType'] = 'button', -- Unlike other subsetting types, buttons do not display the value of the relevant
             ['defaultValue'] = {}, --  entry in UIChanges_Profile. The button is just a way to reset the value.
-            ['subTitle'] = RESET_POSITION,
+            ['title'] = RESET_POSITION,
             ['updateCallback'] = function() addonTable.AbsorbDisplay:ResetDisplayLocation() end,
           },
         },
@@ -239,7 +238,7 @@ C.DEFINE_MODULES = function()
       ['moduleName'] = 'AHTools',
       ['moduleKey'] = 'UIC_AHT_IsEnabled',
       ['defaultValue'] = true,
-      ['label'] = 'AHT',
+      ['frameName'] = 'AHT',
       ['title'] = 'Auction House Tools',
       ['description'] = L.AHT,
     },
@@ -247,7 +246,7 @@ C.DEFINE_MODULES = function()
       ['moduleName'] = 'BagUtilities',
       ['moduleKey'] = 'UIC_BU_IsEnabled',
       ['defaultValue'] = true,
-      ['label'] = 'BU',
+      ['frameName'] = 'BU',
       ['title'] = 'Bag Utilities ('..L.CLASSIC_ERA_ONLY..')',
       ['description'] = L.BU,
     },
@@ -255,7 +254,7 @@ C.DEFINE_MODULES = function()
       ['moduleName'] = 'CriticalReminders',
       ['moduleKey'] = 'UIC_CR_IsEnabled',
       ['defaultValue'] = true,
-      ['label'] = 'CR',
+      ['frameName'] = 'CR',
       ['title'] = 'Critical Reminders',
       ['description'] = L.CR,
       ['subsettings'] = {
@@ -281,7 +280,7 @@ C.DEFINE_MODULES = function()
               ['entryKey'] = 'UIC_CR_ErrorFrameAnchor',
               ['entryType'] = 'dropdown',
               ['defaultValue'] = 1, -- 1 is off
-              ['subTitle'] = L.ERROR_FRAME_ANCHOR_DROPDOWN,
+              ['title'] = L.ERROR_FRAME_ANCHOR_DROPDOWN,
               ['dropdownEnum'] = C.ENUM_ANCHOR_OPTIONS, -- The dropdown options will be populated from this enum
               ['updateCallback'] = function() addonTable.CriticalReminders:Update() end,
               ['dependents'] = {'UIC_CR_ErrorFrameInfo'}, -- The reset button should be disabled if this setting is active
@@ -290,7 +289,7 @@ C.DEFINE_MODULES = function()
               ['entryKey'] = 'UIC_CR_ErrorFrameInfo',
               ['entryType'] = 'button',
               ['defaultValue'] = {},
-              ['subTitle'] = RESET_POSITION,
+              ['title'] = RESET_POSITION,
               ['updateCallback'] = function() addonTable.CriticalReminders:ResetErrorFrameLocation() end,
             },
           }
@@ -301,7 +300,7 @@ C.DEFINE_MODULES = function()
       ['moduleName'] = 'DruidManaBar',
       ['moduleKey'] = 'UIC_DMB_IsEnabled',
       ['defaultValue'] = true,
-      ['label'] = 'DMB',
+      ['frameName'] = 'DMB',
       ['title'] = 'Druid Mana Bar ('..L.CLASSIC_ERA_ONLY..')',
       ['description'] = L.DMB,
     },
@@ -309,7 +308,7 @@ C.DEFINE_MODULES = function()
       ['moduleName'] = 'PartyPetFrames',
       ['moduleKey'] = 'UIC_PPF_IsEnabled',
       ['defaultValue'] = GetCVar('showPartyPets') == 1, -- We can run this by the time DEFINE_MODULES() is called
-      ['label'] = 'PPF',
+      ['frameName'] = 'PPF',
       ['title'] = 'Party Pet Frames',
       ['description'] = L.PPF,
       -- If a module's state is tied to a console variable, that must be declared here. Such modules must be toggled outside of combat.
@@ -319,7 +318,7 @@ C.DEFINE_MODULES = function()
       ['moduleName'] = 'PingAnnouncer',
       ['moduleKey'] = 'UIC_PA_IsEnabled',
       ['defaultValue'] = true,
-      ['label'] = 'PA',
+      ['frameName'] = 'PA',
       ['title'] = 'Ping Announcer',
       ['description'] = L.PA,
       ['subsettings'] = {
@@ -333,19 +332,19 @@ C.DEFINE_MODULES = function()
     },
   }
 
-  local setupSubsetting = function(subsettingEntry, parentName)
+  local addSubsetting = function(subsettingEntry, parentName)
     -- Add the subsetting to the settings and defaults tables
     local entryKey = subsettingEntry['entryKey']
     local defaultValue = subsettingEntry['defaultValue']
-    local subTitle = subsettingEntry['subTitle']
+    local title = subsettingEntry['title']
 
     C.SETTINGS_TABLE[entryKey] = subsettingEntry
 
     -- Set these here for easy lookup in Options
-    subsettingEntry['subLabel'] = ('UIC_Subsetting_'..parentName..'_'..subTitle):gsub('%s+', '_') -- Remove spaces
+    subsettingEntry['frameName'] = ('UIC_Subsetting_'..parentName..'_'..title):gsub('%s+', '_') -- Remove spaces
   end
 
-  local setupModuleToggle = function(moduleEntry)
+  local addModuleToggle = function(moduleEntry)
     local className = moduleEntry['moduleName'] -- The base module doesn't have this attribute
 
     if className then
@@ -368,24 +367,24 @@ C.DEFINE_MODULES = function()
   end
 
   -- Setup the lookup table & the attributes that will be used in the options panel
-  local setupDataTables = function()
+  local setupSettingsTable = function()
     C.SETTINGS_TABLE = {} -- This is for key lookups into the Modules table but beware of unordered traversal!
 
     for _, moduleEntry in ipairs(C.MODULES) do
-      setupModuleToggle(moduleEntry)
+      addModuleToggle(moduleEntry)
 
       if moduleEntry['subsettings'] then
         local subsettingEntries = moduleEntry['subsettings']['entries']
-        local parentName = moduleEntry['label']
+        local parentName = moduleEntry['frameName']
   
         for i, subsettingEntry in ipairs(subsettingEntries) do
-          setupSubsetting(subsettingEntry, parentName)
+          addSubsetting(subsettingEntry, parentName)
         end
       end
     end
   end
 
-  setupDataTables()
+  setupSettingsTable()
 end
 
 C.INITIALIZE_PROFILE = function()

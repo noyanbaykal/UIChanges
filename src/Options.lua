@@ -242,9 +242,9 @@ local createDropdown = function(frameName, text, key, tooltipText)
     local selectedIndex = UIChanges_Profile[key]
 
     for i, enum in ipairs(enumTable) do
-      local label = enum[1]
+      local title = enum[1]
 
-      info.text = label
+      info.text = title
       info.arg1 = key
       info.arg2 = i
 
@@ -330,29 +330,29 @@ end
 local createSubsettingFrame = function(entry)
   local key = entry['entryKey']
   local entryType = entry['entryType']
-  local subTitle = entry['subTitle']
+  local title = entry['title']
   local tooltipText = entry['tooltipText']
-  local subLabel = entry['subLabel']
+  local frameName = entry['frameName']
 
   local frame
 
   -- We want each entry type to occupy the same amount of space so each entry type needs different offsets for
   -- fine tuning and each entry type may have a different part that should be used as an anchor by nearby frames.
   if entryType == 'dropdown' then
-    frame = createDropdown(subLabel, subTitle, key, tooltipText)
+    frame = createDropdown(frameName, title, key, tooltipText)
     frame.nextLeftAnchor = _G[frame:GetName()..'Button']
     frame.nextTopAnchor = frame.Button
     -- Another magic number to account for the side textures but with the dropshadow on the left
     frame.subOffsetX = -1 * math.ceil(frame.Left:GetWidth() * 0.625)
     frame.subOffsetY = -1
   elseif entryType == 'button' then
-    frame = createButton(subLabel, subTitle, key, tooltipText)
+    frame = createButton(frameName, title, key, tooltipText)
     frame.nextLeftAnchor = frame
     frame.nextTopAnchor = frame
     frame.subOffsetX = 1
     frame.subOffsetY = -4
   else
-    frame = createCheckBox(subLabel, subTitle, key, tooltipText, true)
+    frame = createCheckBox(frameName, title, key, tooltipText, true)
     frame.nextLeftAnchor = frame.Text
     frame.nextTopAnchor = frame
     frame.subOffsetX = -1
@@ -432,7 +432,7 @@ end
 
 local createModuleOptions = function(moduleEntry)
   local key = moduleEntry['moduleKey']
-  local label = moduleEntry['label']
+  local frameName = moduleEntry['frameName']
   local title = moduleEntry['title']
   local description = moduleEntry['description']
   local subsettings = moduleEntry['subsettings']
@@ -441,7 +441,7 @@ local createModuleOptions = function(moduleEntry)
   local isFirstEntry = lastFrameTop:GetName() and lastFrameTop:GetName():match('ScrollFrame') ~= nil
   local offsetY = isFirstEntry and 0 or -12
 
-  local moduleCheckbox = createCheckBox('UIC_Options_CB_'..label, title, key)
+  local moduleCheckbox = createCheckBox('UIC_Options_CB_'..frameName, title, key)
   moduleCheckbox:SetPoint('LEFT', scrollChild, 'LEFT', 0, 0)
   moduleCheckbox:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, offsetY)
   moduleCheckbox.Text:SetTextColor(gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4])
@@ -469,10 +469,10 @@ end
 
 -- These base module cannot be toggled and only has subsettings.
 local createBaseOptions = function(moduleEntry)
-  local label = moduleEntry['label']
+  local frameName = moduleEntry['frameName']
   local subsettings = moduleEntry['subsettings']
 
-  local anchorFrame = CreateFrame('Frame', 'UIC_'..label, scrollChild)
+  local anchorFrame = CreateFrame('Frame', 'UIC_'..frameName, scrollChild)
   anchorFrame:SetPoint('LEFT', scrollChild, 'LEFT', 0, 0)
   anchorFrame:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, 10) -- There is already a gap above us, shorten it a bit
   anchorFrame:SetWidth(1)

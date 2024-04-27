@@ -169,7 +169,7 @@ EVENTS['PLAYER_REGEN_ENABLED'] = function()
 end
 
 -- Make sure we have finished with the itemInfos before disabling the module, to prevent breaking
--- the setup incase of the user rapidly toggling the addon
+-- the setup incase the user rapidly toggles the addon.
 local toggleGuard = function()
   if clamsCount == CLAMS_TOTAL then
     if toggleTimer and not toggleTimer:IsCancelled() then

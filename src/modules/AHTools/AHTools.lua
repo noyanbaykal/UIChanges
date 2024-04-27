@@ -21,7 +21,7 @@ local _, addonTable = ...
 
 local C = addonTable.C
 
--- Forward declaring modules
+-- Forward declaring components
 local mainFrame, buyoutWarning, calculator
 
 local AH_SEARCH_INTERVAL = 0.3 -- Seconds

@@ -362,9 +362,9 @@ local createModuleOptions = function(moduleEntry)
 end
 
 -- These base module cannot be toggled and only has subsettings.
-local createBaseOptions = function(moduleEntry)
-  local frameName = moduleEntry['frameName']
-  local subsettings = moduleEntry['subsettings']
+local createBaseOptions = function(baseModuleEntry)
+  local frameName = baseModuleEntry['frameName']
+  local subsettings = baseModuleEntry['subsettings']
 
   local anchorFrame = CreateFrame('Frame', 'UIC_'..frameName, scrollChild)
   anchorFrame:SetPoint('LEFT', scrollChild, 'LEFT', 0, 0)

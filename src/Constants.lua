@@ -86,6 +86,10 @@ local buildCommonStrings = function (L)
     end
   
     local nameSpellstone = GetSpellInfo(spellstoneId)
+
+    if not nameSpellstone then
+      return namePws..' & '..nameSacrifice..'.'
+    end
   
     return namePws..', '..nameSacrifice..' & '..nameSpellstone..'.'
   end

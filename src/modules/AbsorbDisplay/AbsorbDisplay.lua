@@ -101,8 +101,8 @@ local SHIELD_COLOR = {1, 1, 0.353, 1}
 
 local SHIELD_COLOR_EXPENDED = {1, 1, 0.353, 0.5}
 
--- We cannot get the real shield amount and therefore are unable to account for extra shielding
--- that comes from talents or spell power when the spellsource is another player. If we happen
+-- When the spellsource is another player we cannot get the real shield amount and therefore
+-- are unable to account for extra shielding that comes from talents or spell power .If we happen
 -- to have absorbs above the base amount, we'll display that fact instead of a numeric amount.
 local SHIELD_COLOR_RESIDUAL = {1, 0.386, 0.2, 1}
 
@@ -140,7 +140,7 @@ local mainFrame, shieldFrame, spellShieldFrame, playerName, playerClass, playerL
 local spellNameLookup, shields, backupTimer, cachedHighestKnown
 
 local adjustDataForExpansion = function()
-  if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+  if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
     DATA_PWS[10].amountMax = DATA_PWS[10].amount
     DATA_SACRIFICE[6].amountMax = 1931
 
@@ -161,7 +161,7 @@ local adjustDataForExpansion = function()
     SACRIFICE[27273] = nil
     SACRIFICE[47985] = nil
     SACRIFICE[47986] = nil
-  elseif WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
+  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
     MAX_LEVEL = 70
 
     DATA_PWS[12].amountMax = DATA_PWS[12].amount
@@ -179,10 +179,241 @@ local adjustDataForExpansion = function()
     SACRIFICE[47986] = nil
 
     spellpowerCoefficientPWS = 0.3
-  elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
+  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
     MAX_LEVEL = 80
 
     spellpowerCoefficientPWS = 0.8068
+  end
+end
+
+local adjustFunctionsForExpansion = function()
+
+end
+
+local calculatorPwsHelperEra = function(buffData)
+  local baseAmount
+
+  if cachedHighestKnown[1].rank == buffData.rank then
+    baseAmount = cachedHighestKnown[1].amount
+  else
+    baseAmount = buffData.maxAmount * talentModifierIPWS
+  end
+
+  local finalAmount = baseAmount + (spellpower * spellpowerCoefficientPWS)
+  return math.floor(finalAmount)
+end
+
+local calculatorPwsHelper = function(dataTable, buffData)
+  local amount
+
+  if playerLevel == MAX_LEVEL or buffData.rank == #dataTable or playerLevel >= dataTable[buffData.rank + 1].level then
+    amount = buffData.maxAmount
+  else
+    amount = buffData.amount
+  end
+
+  local coefficient = spellpowerCoefficientPWS + talentCoefficientBonusBT
+
+  local finalAmount = (amount + (spellpower * coefficient)) * talentModifierIPWS * setBonusModifierPWS
+  return math.floor(finalAmount)
+end
+
+local calculatorPws = function(sourceName, dataTable, buffData)
+  if sourceName ~= playerName or playerClass ~= 'PRIEST' then
+    if playerLevel == MAX_LEVEL then
+      return buffData.maxAmount
+    else
+      return buffData.amount
+    end
+  end
+
+  if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+    return calculatorPwsHelperEra(buffData)
+  else
+    return calculatorPwsHelper(dataTable, buffData)
+  end
+end
+
+local calculatorSacrifice = function(_, dataTable, buffData)
+  local amount
+
+  if playerLevel == MAX_LEVEL or (buffData.rank ~= #dataTable and playerLevel >= dataTable[buffData.rank + 1].level) then
+    amount = buffData.maxAmount
+  else
+    amount = buffData.amount
+  end
+
+  return math.floor(amount * talentModifierSacrifice)
+end
+
+-- Have to pick the right table based on localized spell name
+local initializeSpellLookup = function()
+  local namePws = GetSpellInfo(17)
+  local nameSacrifice = GetSpellInfo(7812)
+
+  spellNameLookup = {
+    [namePws] = {
+      index = 1,
+      data = DATA_PWS,
+      table = PWS,
+      calculateFinalAmount = calculatorPws,
+    },
+  }
+
+  if playerClass == 'WARLOCK' then
+    spellNameLookup[nameSacrifice] = {
+      index = 2,
+      data = DATA_SACRIFICE,
+      table = SACRIFICE,
+      calculateFinalAmount = calculatorSacrifice,
+    }
+
+    if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+      local nameSpellstone = GetSpellInfo(128)
+      local nameSpellstoneGreater = GetSpellInfo(17729)
+      local nameSpellstoneMajor = GetSpellInfo(17730)
+
+      local calculatorSpellstone = function(_, _, buffData)
+        return math.floor(buffData.amount * talentModifierSpellstone)
+      end
+
+      local spellstoneEntry = {
+        index = 3,
+        data = DATA_SPELLSTONE,
+        table = SPELLSTONE,
+        calculateFinalAmount = calculatorSpellstone,
+      }
+
+      spellNameLookup[nameSpellstone] = spellstoneEntry
+      spellNameLookup[nameSpellstoneGreater] = spellstoneEntry
+      spellNameLookup[nameSpellstoneMajor] = spellstoneEntry
+    end
+  end
+end
+
+-- https://warcraft.wiki.gg/wiki/ItemLink
+local getEquippedItemId = function(slot)
+  local itemLink = GetInventoryItemLink('player', slot)
+  if itemLink == nil then
+    return nil
+  end
+
+  local _, payloadStart = string.find(itemLink, 'Hitem:')
+  payloadStart = payloadStart + 1
+
+  local payloadEnd, _ = string.find(itemLink, ':', payloadStart)
+  payloadEnd = payloadEnd - 1
+
+  return string.sub(itemLink, payloadStart, payloadEnd)
+end
+
+local checkT10Bonus = function(equippedItems)
+  local neededPieceCount = 4
+
+  for _, setItems in pairs(PRIEST_T10_SETS) do
+    local count = 0
+
+    for i = 1, #setItems, 1 do
+      if equippedItems[i] == setItems[i] then
+        count = count + 1
+      end
+    end
+
+    if count >= neededPieceCount then
+      return true
+    end
+  end
+
+  return false
+end
+
+local checkItemBonuses = function()
+  -- TODO: bunu 1 kere ayarla ve C.DUMMY_FUNCTION kullan
+  if playerClass ~= 'PRIEST' then
+    return
+  end
+
+  if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
+    spellpower = GetSpellBonusDamage(2) or 0
+
+    local equippedItems = {
+      getEquippedItemId(7), -- legs
+      getEquippedItemId(5), -- chest
+      getEquippedItemId(3), -- shoulder
+      getEquippedItemId(10), -- hand
+      getEquippedItemId(1), -- head
+    }
+
+    local hasT10Bonus = checkT10Bonus(equippedItems)
+
+    if hasT10Bonus then
+      setBonusModifierPWS = 1.05
+    else
+      setBonusModifierPWS = 1
+    end
+  else
+    spellpower = GetSpellBonusHealing() or 0
+  end
+end
+
+-- Era coefficients: https://www.reddit.com/r/classicwow/comments/95abc8/list_of_spellcoefficients_1121/
+-- TBC coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient?oldid=1492745
+-- WOTLK coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient
+local checkTalents = function()
+  if playerClass == 'PRIEST' then
+    if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+      local _, _, _, _, rank = GetTalentInfo(1, 5)
+      talentModifierIPWS = 1 + (rank * 0.05)
+    elseif WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
+      local _, _, _, _, rank = GetTalentInfo(1, 5)
+      talentModifierIPWS = 1 + (rank * 0.05)
+    elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
+      local _, _, _, _, ipwsRank = GetTalentInfo(1, 9)
+      talentModifierIPWS = 1 + (ipwsRank * 0.05)
+
+      local _, _, _, _, btRank = GetTalentInfo(1, 27)
+      talentCoefficientBonusBT = btRank * 0.08
+    end
+  end
+
+  if playerClass == 'WARLOCK' then
+    if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC or WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
+      local _, _, _, _, rank = GetTalentInfo(2, 5)
+      talentModifierSacrifice = 1 + (rank * 0.1)
+    else
+      local _, _, _, _, rank = GetTalentInfo(2, 6)
+      talentModifierSacrifice = 1 + (rank * 0.1)
+    end
+
+    if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+      local _, _, _, _, rank = GetTalentInfo(2, 17)
+
+      talentModifierSpellstone = 1 + (rank * 0.15)
+    end
+  end
+end
+
+local cacheHighestKnownRanks = function()
+  if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+    return
+  end
+
+  cachedHighestKnown = {
+    {rank = 0, amount = 0},
+  }
+
+  for i = #DATA_PWS, 1, -1 do
+    local levelRequired = DATA_PWS[i].level
+    local spellId = DATA_PWS[i].spellId
+
+    if playerLevel >= levelRequired and IsSpellKnown(spellId) then
+      local text = GetSpellDescription(spellId)
+      local firstNumber = string.match(text, '%d+')
+
+      cachedHighestKnown[1].rank = i
+      cachedHighestKnown[1].amount = firstNumber or DATA_PWS[i].amount
+      break
+    end
   end
 end
 
@@ -400,232 +631,6 @@ local handleAbsorb = function(info)
   return true
 end
 
--- https://warcraft.wiki.gg/wiki/ItemLink
-local getEquippedItemId = function(slot)
-  local itemLink = GetInventoryItemLink('player', slot)
-  if itemLink == nil then
-    return nil
-  end
-
-  local _, payloadStart = string.find(itemLink, 'Hitem:')
-  payloadStart = payloadStart + 1
-
-  local payloadEnd, _ = string.find(itemLink, ':', payloadStart)
-  payloadEnd = payloadEnd - 1
-
-  return string.sub(itemLink, payloadStart, payloadEnd)
-end
-
-local checkT10Bonus = function(equippedItems)
-  local neededPieceCount = 4
-
-  for _, setItems in pairs(PRIEST_T10_SETS) do
-    local count = 0
-
-    for i = 1, #setItems, 1 do
-      if equippedItems[i] == setItems[i] then
-        count = count + 1
-      end
-    end
-
-    if count >= neededPieceCount then
-      return true
-    end
-  end
-
-  return false
-end
-
-local checkItemBonuses = function()
-  if playerClass ~= 'PRIEST' then
-    return
-  end
-
-  if WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
-    spellpower = GetSpellBonusDamage(2) or 0
-
-    local equippedItems = {
-      getEquippedItemId(7), -- legs
-      getEquippedItemId(5), -- chest
-      getEquippedItemId(3), -- shoulder
-      getEquippedItemId(10), -- hand
-      getEquippedItemId(1), -- head
-    }
-
-    local hasT10Bonus = checkT10Bonus(equippedItems)
-
-    if hasT10Bonus then
-      setBonusModifierPWS = 1.05
-    else
-      setBonusModifierPWS = 1
-    end
-  else
-    spellpower = GetSpellBonusHealing() or 0
-  end
-end
-
--- Era coefficients: https://www.reddit.com/r/classicwow/comments/95abc8/list_of_spellcoefficients_1121/
--- TBC coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient?oldid=1492745
--- WOTLK coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient
-local checkTalents = function()
-  if playerClass == 'PRIEST' then
-    if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-      local _, _, _, _, rank = GetTalentInfo(1, 5)
-      talentModifierIPWS = 1 + (rank * 0.05)
-    elseif WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
-      local _, _, _, _, rank = GetTalentInfo(1, 5)
-      talentModifierIPWS = 1 + (rank * 0.05)
-    elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
-      local _, _, _, _, ipwsRank = GetTalentInfo(1, 9)
-      talentModifierIPWS = 1 + (ipwsRank * 0.05)
-
-      local _, _, _, _, btRank = GetTalentInfo(1, 27)
-      talentCoefficientBonusBT = btRank * 0.08
-    end
-  end
-
-  if playerClass == 'WARLOCK' then
-    if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC or WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
-      local _, _, _, _, rank = GetTalentInfo(2, 5)
-      talentModifierSacrifice = 1 + (rank * 0.1)
-    else
-      local _, _, _, _, rank = GetTalentInfo(2, 6)
-      talentModifierSacrifice = 1 + (rank * 0.1)
-    end
-
-    if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-      local _, _, _, _, rank = GetTalentInfo(2, 17)
-
-      talentModifierSpellstone = 1 + (rank * 0.15)
-    end
-  end
-end
-
-local cacheHighestKnownRanks = function()
-  if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
-    return
-  end
-
-  cachedHighestKnown = {
-    {rank = 0, amount = 0}, -- dummy data that shouldn't be unnecessary but better to be safe
-  }
-
-  for i = #DATA_PWS, 1, -1 do
-    local levelRequired = DATA_PWS[i].level
-    local spellId = DATA_PWS[i].spellId
-
-    if playerLevel >= levelRequired and IsSpellKnown(spellId) then
-      local text = GetSpellDescription(spellId)
-      local firstNumber = string.match(text, '%d+')
-
-      cachedHighestKnown[1].rank = i
-      cachedHighestKnown[1].amount = firstNumber or DATA_PWS[i].amount
-      break
-    end
-  end
-end
-
-local calculatorPwsHelperEra = function(buffData)
-  local baseAmount
-
-  if cachedHighestKnown[1].rank == buffData.rank then
-    baseAmount = cachedHighestKnown[1].amount
-  else
-    baseAmount = buffData.maxAmount * talentModifierIPWS
-  end
-
-  local finalAmount = baseAmount + (spellpower * spellpowerCoefficientPWS)
-  return math.floor(finalAmount)
-end
-
-local calculatorPwsHelper = function(dataTable, buffData)
-  local amount
-
-  if playerLevel == MAX_LEVEL or buffData.rank == #dataTable or playerLevel >= dataTable[buffData.rank + 1].level then
-    amount = buffData.maxAmount
-  else
-    amount = buffData.amount
-  end
-
-  local coefficient = spellpowerCoefficientPWS + talentCoefficientBonusBT
-
-  local finalAmount = (amount + (spellpower * coefficient)) * talentModifierIPWS * setBonusModifierPWS
-  return math.floor(finalAmount)
-end
-
-local calculatorPws = function(sourceName, dataTable, buffData)
-  if sourceName ~= playerName or playerClass ~= 'PRIEST' then
-    if playerLevel == MAX_LEVEL then
-      return buffData.maxAmount
-    else
-      return buffData.amount
-    end
-  end
-
-  if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-    return calculatorPwsHelperEra(buffData)
-  else
-    return calculatorPwsHelper(dataTable, buffData)
-  end
-end
-
-local calculatorSacrifice = function(_, dataTable, buffData)
-  local amount
-
-  if playerLevel == MAX_LEVEL or (buffData.rank ~= #dataTable and playerLevel >= dataTable[buffData.rank + 1].level) then
-    amount = buffData.maxAmount
-  else
-    amount = buffData.amount
-  end
-
-  return math.floor(amount * talentModifierSacrifice)
-end
-
-local calculatorSpellstone = function(_, _, buffData)
-  return math.floor(buffData.amount * talentModifierSpellstone)
-end
-
--- Have to pick the right table based on localized spell name
-local initializeSpellLookup = function()
-  local namePws = GetSpellInfo(17)
-  local nameSacrifice = GetSpellInfo(7812)
-
-  spellNameLookup = {
-    [namePws] = {
-      index = 1,
-      data = DATA_PWS,
-      table = PWS,
-      calculateFinalAmount = calculatorPws,
-    },
-  }
-
-  if playerClass == 'WARLOCK' then
-    spellNameLookup[nameSacrifice] = {
-      index = 2,
-      data = DATA_SACRIFICE,
-      table = SACRIFICE,
-      calculateFinalAmount = calculatorSacrifice,
-    }
-
-    if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-      local nameSpellstone = GetSpellInfo(128)
-      local nameSpellstoneGreater = GetSpellInfo(17729)
-      local nameSpellstoneMajor = GetSpellInfo(17730)
-
-      local spellstoneEntry = {
-        index = 3,
-        data = DATA_SPELLSTONE,
-        table = SPELLSTONE,
-        calculateFinalAmount = calculatorSpellstone,
-      }
-
-      spellNameLookup[nameSpellstone] = spellstoneEntry
-      spellNameLookup[nameSpellstoneGreater] = spellstoneEntry
-      spellNameLookup[nameSpellstoneMajor] = spellstoneEntry
-    end
-  end
-end
-
 local resetDisplayLocation = function()
   UIChanges_Profile['UIC_AD_FrameInfo'] = {}
 
@@ -785,14 +790,15 @@ end
 local AbsorbDisplay = {}
 
 AbsorbDisplay.Initialize = function()
-  adjustDataForExpansion()
-  initializeFrames()
-
   playerName = UnitName('player')
   playerClass = select(2, UnitClass('player'))
   playerLevel = UnitLevel('player')
 
+  adjustDataForExpansion()
+  adjustFunctionsForExpansion()
   initializeSpellLookup()
+
+  initializeFrames()
 
   shields = {
     [1] = {

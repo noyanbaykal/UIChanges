@@ -450,27 +450,39 @@ local setupOptionsPanel = function()
   optionsPanel.name = 'UIChanges'
   optionsPanel:Hide()
 
+  local setSubsettingValues = function(moduleEntry)
+    if moduleEntry.subsettings and moduleEntry.subsettings.entries then
+      local subsettingEntries = moduleEntry['subsettings']['entries']
+
+      for _, entry in ipairs(subsettingEntries) do
+        local key = entry['entryKey']
+        local currentValue = UIChanges_Profile[key]
+  
+        entry['frame']:SetValue(currentValue)
+      end
+    end
+  end
+
   optionsPanel:SetScript('OnShow', function()
+    -- We traverse all profile values and have the frames match reality. This is necessary for cases where:
+    -- A module is disabled but it has subsettings that are enabled. These subsettings should not accept user input.
+    -- A dependent subsetting is enabled but it's dependee is not.
+    -- A variable got changed outside of the options page.
+
     for _, moduleEntry in ipairs(C.MODULES) do
       local moduleKey = moduleEntry['moduleKey']
 
+      setSubsettingValues(moduleEntry) -- This makes the subsettings display the correct information
+
+      local isModuleEnabled = true
+
       if moduleKey then
-        local isModuleEnabled = UIChanges_Profile[moduleKey]
+        isModuleEnabled = UIChanges_Profile[moduleKey]
 
         moduleEntry['frame']:SetValue(isModuleEnabled)
-
-        -- This makes the subsettings display the correct information
-        if moduleEntry.subsettings and moduleEntry.subsettings.entries then
-          for _, subEntry in ipairs(moduleEntry['subsettings']['entries']) do
-            local subKey = subEntry['entryKey']
-            local currentValue = UIChanges_Profile[subKey]
-
-            subEntry['frame']:SetValue(currentValue)
-          end
-        end
-
-        subframesSetEnable(moduleEntry, isModuleEnabled) -- This sets whether the subsettings are accepting user input
       end
+
+      subframesSetEnable(moduleEntry, isModuleEnabled) -- This sets whether the subsettings are accepting user input
     end
   end)
 

@@ -24,15 +24,13 @@ local locale = {}
 -- Localization files should set a reference to themselves in the addonTable with their locale code as the key
 addonTable.enUS = locale
 
-locale.TXT_NOT_CLASSIC = 'UI Changes supports classic only!'
-locale.NEEDS_RELOAD_1 = 'This takes effect after a UI reload!'
-locale.FIRST_TIME = 'UI Changes encountered new variables with this character! Please check out the Interface Options/AddOns/UIChanges page to see the available options.'
+locale.TXT_NOT_CLASSIC_1 = 'UI Changes supports classic only! You will have very limited functionality with the retail client!'
 locale.OPTIONS_INFO_1 = 'Settings that modify console variables have to be toggled when not in combat and require a UI reload afterwards to take effect. Then you need to log off for the game to save the changed console variable.'
+locale.FIRST_TIME = 'UI Changes encountered new variables with this character! Please check out the Interface Options/AddOns/UIChanges page to see the available options.'
 locale.CVAR_CHANGED = 'UI Changes: Console variable changed, please reload your UI!'
 locale.CANT_CHANGE_IN_COMBAT = 'UI Changes: Unable to change setting while in combat! Please check the options page again after combat.' 
-locale.CLASSIC_ERA = 'Classic Era'
-locale.CLASSIC_ERA_ONLY = locale.CLASSIC_ERA..' Only'
 locale.PLAY_SOUND = 'Play '..SOUND..' for'
+locale.INCOMPATIBLE_MODULES_TEXT = 'Modules not compatible with this version of the game and the current character:'
 
 locale.ANCHOR_TOPLEFT = 'Top Left'
 locale.ANCHOR_TOP = 'Top'

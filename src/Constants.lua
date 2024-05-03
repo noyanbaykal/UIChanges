@@ -24,8 +24,10 @@ addonTable.C = {}
 local L
 local C = addonTable.C
 
--- This is for key lookups into the Modules table but beware of unordered traversal!
-C.SETTINGS_TABLE = {} -- Will be populated during initialization
+-- These will be populated during initialization
+C.SETTINGS_TABLE = {} -- This is for key lookups into the Modules table but beware of unordered traversal!
+C.INCOMPATIBLE_MODULE_NAMES = {}
+C.MODULES = {}
 
 C.DUMMY_FUNCTION = function() end -- Will re-use this single function when we need a dummy function.
 
@@ -71,7 +73,17 @@ local buildCommonStrings = function (L)
   local colorOrange = '|cFFFF8000'
   local colorEscape = '|r'
 
-  L.NEEDS_RELOAD = colorOrange .. L.NEEDS_RELOAD_1 .. colorEscape
+  L.GET_INCOMPATIBLE_MODULES_TEXT = function()
+    if #C.INCOMPATIBLE_MODULE_NAMES < 1 then
+      return nil
+    end
+
+    local list = colorOrange .. L.INCOMPATIBLE_MODULES_TEXT .. colorWhite .. '\n'
+
+    return list .. table.concat(C.INCOMPATIBLE_MODULE_NAMES, ', ') .. colorEscape
+  end
+
+  L.TXT_NOT_CLASSIC = colorRed .. L.TXT_NOT_CLASSIC_1 .. colorEscape
   L.OPTIONS_INFO = colorRed .. L.OPTIONS_INFO_1 .. colorEscape
 
   L.PPF = {L.PPF_1, colorRed .. L.PPF_2 ..colorEscape}
@@ -81,7 +93,7 @@ local buildCommonStrings = function (L)
     local nameSacrifice = GetSpellInfo(7812)
   
     local spellstoneId = 128
-    if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
+    if LE_EXPANSION_LEVEL_CURRENT > LE_EXPANSION_BURNING_CRUSADE then
       spellstoneId = 54730
     end
   
@@ -213,9 +225,10 @@ C.DEFINE_MODULES = function()
     return entries
   end
 
-  C.MODULES = {
+  local allModules = {
     {
-      ['frameName'] = 'BM', -- This is the base module to store base settings. It is unlike the rest of the modules.
+      ['frameName'] = 'BM', -- This is the base module to store base settings. It does not have a moduleKey.
+      ['checkCompatibility'] = function() return true end,
       ['subsettings'] = {
         -- Having the offsetX, offsetY or rowSize attributes here will override the defaults to fine tune the layout per module.
         ['entries'] = {
@@ -230,6 +243,7 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'AD', -- Used in subframe names
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_WRATH_OF_THE_LICH_KING end,
       ['subsettings'] = { -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
         ['entries'] = {
           {
@@ -249,14 +263,16 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'AHT',
       ['title'] = 'Auction House Tools',
       ['description'] = L.AHT,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM end,
     },
     {
       ['moduleName'] = 'BagUtilities',
       ['moduleKey'] = 'UIC_BU_IsEnabled',
       ['defaultValue'] = true,
       ['frameName'] = 'BU',
-      ['title'] = 'Bag Utilities ('..L.CLASSIC_ERA_ONLY..')',
+      ['title'] = 'Bag Utilities',
       ['description'] = L.BU,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_BURNING_CRUSADE end,
     },
     {
       ['moduleName'] = 'CriticalReminders',
@@ -265,6 +281,7 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'CR',
       ['title'] = 'Critical Reminders',
       ['description'] = L.CR,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM end,
       ['subsettings'] = {
         ['separator'] = { -- To draw a straight line in the middle of all the subsetting checkboxes
           ['topFrame'] = 3, -- These are hardcoded indices for the frames the line will be drawn relative to
@@ -309,8 +326,11 @@ C.DEFINE_MODULES = function()
       ['moduleKey'] = 'UIC_DMB_IsEnabled',
       ['defaultValue'] = true,
       ['frameName'] = 'DMB',
-      ['title'] = 'Druid Mana Bar ('..L.CLASSIC_ERA_ONLY..')',
+      ['title'] = 'Druid Mana Bar',
       ['description'] = L.DMB,
+      ['checkCompatibility'] = function()
+        return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_BURNING_CRUSADE and select(2, UnitClass('player')) == 'DRUID'
+      end,
     },
     {
       ['moduleName'] = 'PartyPetFrames',
@@ -319,6 +339,7 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'PPF',
       ['title'] = 'Party Pet Frames',
       ['description'] = L.PPF,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM end,
       -- If a module's state is tied to a console variable, that must be declared here. Such modules must be toggled outside of combat.
       ['consoleVariableName'] = 'showPartyPets', -- This is the name of the cVar that will be modified when this module's state is modified
     },
@@ -329,6 +350,7 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'PA',
       ['title'] = 'Ping Announcer',
       ['description'] = L.PA,
+      ['checkCompatibility'] = function() return true end,
       ['subsettings'] = {
         ['entries'] = {
           buildCheckboxEntry('UIC_PA_Raid', false, RAID),
@@ -386,6 +408,17 @@ C.DEFINE_MODULES = function()
         for i, subsettingEntry in ipairs(subsettingEntries) do
           addSubsetting(subsettingEntry, parentName)
         end
+      end
+    end
+  end
+
+  -- Check each module for compatibility
+  for _, moduleEntry in ipairs(allModules) do
+    if moduleEntry['checkCompatibility']() then
+      C.MODULES[#C.MODULES + 1] = moduleEntry
+    else
+      if moduleEntry['moduleName'] then
+        C.INCOMPATIBLE_MODULE_NAMES[#C.INCOMPATIBLE_MODULE_NAMES + 1] = moduleEntry['moduleName']
       end
     end
   end

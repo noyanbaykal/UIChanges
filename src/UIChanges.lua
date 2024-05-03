@@ -22,6 +22,32 @@ local _, addonTable = ...
 local L = addonTable.L
 local C = addonTable.C
 
+-- This supports classic and retail.
+local setupMinimapQuickZoom = function()
+  local zoomOut = _G['MinimapZoomOut'] or _G['Minimap'].ZoomOut
+  local zoomIn = _G['MinimapZoomIn'] or _G['Minimap'].ZoomIn
+
+  local onMinimapZoomChange = function(level)
+    Minimap:SetZoom(level)
+  
+    if Minimap_OnEvent then -- Call the minimap update function to update the button states in classic
+      Minimap_OnEvent(_G['MiniMap'], 'MINIMAP_UPDATE_ZOOM')
+    end
+  end
+  
+  zoomOut:HookScript('OnClick', function()
+    if UIChanges_Profile['UIC_Toggle_Quick_Zoom'] and IsShiftKeyDown() then
+      onMinimapZoomChange(0)
+    end
+  end)
+  
+  zoomIn:HookScript('OnClick', function()
+    if UIChanges_Profile['UIC_Toggle_Quick_Zoom'] and IsShiftKeyDown() then
+      onMinimapZoomChange(Minimap:GetZoomLevels() - 1)
+    end
+  end)
+end
+
 local initialize = function()
   C.DEFINE_MODULES()
   C.INITIALIZE_PROFILE()
@@ -31,12 +57,13 @@ local initialize = function()
     local moduleKey = moduleEntry['moduleKey']
 
     local module = addonTable[moduleName]
+    
     if module then
       module:Initialize()
-    end
 
-    if UIChanges_Profile[moduleKey] then
-      module:Enable()
+      if UIChanges_Profile[moduleKey] then
+        module:Enable()
+      end
     end
   end
   
@@ -47,7 +74,6 @@ end
 
 if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
   DEFAULT_CHAT_FRAME:AddMessage(L.TXT_NOT_CLASSIC)
-  return
 end
 
 local mainFrame = CreateFrame('Frame', 'UIC_Main', UIParent)
@@ -61,21 +87,4 @@ mainFrame:SetScript('OnEvent', function(self, event, ...)
   end
 end)
 
-local onMinimapZoomChange = function(level)
-  Minimap:SetZoom(level)
-
-  -- Call the minimap update function to update the button states
-  Minimap_OnEvent(_G['MiniMap'], 'MINIMAP_UPDATE_ZOOM')
-end
-
-_G['MinimapZoomOut']:HookScript('OnClick', function()
-  if UIChanges_Profile['UIC_Toggle_Quick_Zoom'] and IsShiftKeyDown() then
-    onMinimapZoomChange(0)
-  end
-end)
-
-_G['MinimapZoomIn']:HookScript('OnClick', function()
-  if UIChanges_Profile['UIC_Toggle_Quick_Zoom'] and IsShiftKeyDown() then
-    onMinimapZoomChange(Minimap:GetZoomLevels() - 1)
-  end
-end)
+setupMinimapQuickZoom()

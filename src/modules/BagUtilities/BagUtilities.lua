@@ -22,25 +22,22 @@ local _, addonTable = ...
 local L = addonTable.L
 local C = addonTable.C
 
-local CLAMS_TOTAL = 5
+local CLAMS_TOTAL = 4
 local CLAM_IDS = {
   [5523] = true, -- Small Barnacled Clam
   [5524] = true, -- Thick-shelled Clam
   [7973] = true, -- Big-mouth Clam
   [15874] = true, -- Soft-shelled Clam
-  [24476] = true, -- Jaggal Clam
 }
 
-if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-  CLAM_IDS[24476] = nil
-  CLAMS_TOTAL = CLAMS_TOTAL - 1
+if LE_EXPANSION_LEVEL_CURRENT > LE_EXPANSION_CLASSIC then
+  CLAM_IDS[24476] = true -- Jaggal Clam
+  CLAMS_TOTAL = CLAMS_TOTAL + 1
 end
 
 local TOGGLE_TIMER_INTERVAL = 1 -- Seconds
 
-local mainFrame, clams, clamsCount, shouldRespond, toggleTimer, isOpeningClams, stack, isWaitLootClose
-
-shouldRespond = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC or WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC
+local mainFrame, clams, clamsCount, toggleTimer, isOpeningClams, stack, isWaitLootClose
 
 local push = function(bagSlot, slot)
   local i = #stack + 1
@@ -189,30 +186,24 @@ BagUtilities.Initialize = function()
   isOpeningClams = false
   stack = {}
 
-  if shouldRespond then
-    mainFrame:SetScript('OnEvent', function(self, event, ...)
-      EVENTS[event](...)
-    end)
-  end
+  mainFrame:SetScript('OnEvent', function(self, event, ...)
+    EVENTS[event](...)
+  end)
 end
 
 BagUtilities.Enable = function()
-  if shouldRespond then
-    if not clams then
-      initializeClamsTable()
-    end
-
-    C.REGISTER_EVENTS(mainFrame, EVENTS)
+  if not clams then
+    initializeClamsTable()
   end
+
+  C.REGISTER_EVENTS(mainFrame, EVENTS)
 end
 
 BagUtilities.Disable = function()
-  if shouldRespond then
-    if clamsCount == CLAMS_TOTAL then
-      C.UNREGISTER_EVENTS(mainFrame, EVENTS)
-    else
-      toggleTimer = C_Timer.NewTicker(TOGGLE_TIMER_INTERVAL, toggleGuard)
-    end
+  if clamsCount == CLAMS_TOTAL then
+    C.UNREGISTER_EVENTS(mainFrame, EVENTS)
+  else
+    toggleTimer = C_Timer.NewTicker(TOGGLE_TIMER_INTERVAL, toggleGuard)
   end
 end
 

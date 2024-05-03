@@ -22,7 +22,7 @@ local _, addonTable = ...
 local L = addonTable.L
 local C = addonTable.C
 
-local mainFrame, shouldRespond, manaBarBorder, manaBar
+local mainFrame, manaBarBorder, manaBar
 
 local updateStatusTextStyle = function(style)
   if style == 'BOTH' then
@@ -141,50 +141,29 @@ local hideManaBar = function()
   manaBar.percentage:Hide()
 end
 
-local setShouldRespond = function()
-  -- WOTLK classic already has a mana bar
-  local isClassicEraOrTBC = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-  or WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC
-
-  local _, playerClass = UnitClass('player')
-  local isDruid = playerClass == 'DRUID'
-
-  shouldRespond = isClassicEraOrTBC and isDruid
-end
-
 local DruidManaBar = {}
 
 DruidManaBar.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_DruidManaBar', UIParent)
   mainFrame:Hide()
 
-  setShouldRespond()
-
   initializeManaBar()
 
-  if shouldRespond then
-    mainFrame:SetScript('OnEvent', function(self, event, ...)
-      EVENTS[event](...)
-    end)
-  else
-    hideManaBar()
-  end
+  mainFrame:SetScript('OnEvent', function(self, event, ...)
+    EVENTS[event](...)
+  end)
 end
 
 DruidManaBar.Enable = function()
-  if shouldRespond then
-    C.REGISTER_EVENTS(mainFrame, EVENTS)
+  C.REGISTER_EVENTS(mainFrame, EVENTS)
 
-    updateManaBar()
-  end
+  updateManaBar()
 end
 
 DruidManaBar.Disable = function()
-  if shouldRespond then
-    C.UNREGISTER_EVENTS(mainFrame, EVENTS)
+  C.UNREGISTER_EVENTS(mainFrame, EVENTS)
 
-    hideManaBar()
-  end
+  hideManaBar()
 end
 
 addonTable.DruidManaBar = DruidManaBar

@@ -22,10 +22,15 @@ local _, addonTable = ...
 local L = addonTable.L
 local C = addonTable.C
 
--- Spells scale with the caster's level. There isn't a clean way of accounting for this so we store
--- amount and maxAmount. We'll look at the player's level and use the maxAmount for lower level ranks.
+-- Spells scale with the caster's level, resulting in a range of amount to amountMax. There isn't a
+-- clean way of accounting for this except when the player is casting the PWS on themselves.
+-- In that case, in classic, we can read the spell tooltip which includes the correct base value, including
+-- any talent modifiers. Spell power from gear will be added on top of this base value.
+-- In TBC or WOTLK the shield amount formula is different and I can't test them at this time so we'll read
+-- tooltips only in classic for now.
 -- Spells cast by others will default to amount, unless the player is at max level.
--- The data & lookup tables may be altered in adjustDataTables based on expansion
+-- The data & lookup tables may be altered in adjustDataTables based on expansion.
+-- Data read from tooltips will be stored here with the 'current' key.
 local DATA_PWS = { -- Power Word: Shield
   {level = 6,  rank = 1,  spellId = 17,    amount = 44,   amountMax = 48},
   {level = 12, rank = 2,  spellId = 592,   amount = 88,   amountMax = 94},
@@ -138,8 +143,8 @@ local MAX_LEVEL = 60 -- Set for classic era, may be changed in adjustDataForExpa
 local nameWeakenedSoul = GetSpellInfo(6788)
 local playerName, playerClass, playerLevel
 local mainFrame, shieldFrame, spellShieldFrame, shields, backupTimer
--- These will get set to different functions based on expansion
-local checkItemBonuses, checkTalents, calculatorPwsHelper, spellNameLookup, cachedHighestKnown
+-- These will get set differently based on expansion
+local calculateSelfcastPws, readPwsTooltips, checkItemBonuses, checkTalents, spellNameLookup
 
 -- https://warcraft.wiki.gg/wiki/ItemLink
 local getEquippedItemId = function(slot)
@@ -183,6 +188,21 @@ local hasT10Bonus = function()
   end
 
   return false
+end
+
+local readPwsTooltipsClassic = function()
+  for i = 1, #DATA_PWS do
+    local spellId = DATA_PWS[i].spellId
+
+    if not IsSpellKnown(spellId) then
+      break
+    end
+
+    local text = GetSpellDescription(spellId)
+    local firstNumber = string.match(text, '%d+')
+
+    PWS[spellId].current = firstNumber
+  end
 end
 
 local adjustDataForExpansion = function()
@@ -232,44 +252,38 @@ local adjustDataForExpansion = function()
   end
 end
 
-local calculatorPwsHelperEra = function(_, buffData)
-  local baseAmount
-
-  if cachedHighestKnown[1].rank == buffData.rank then
-    baseAmount = cachedHighestKnown[1].amount
-  else
-    baseAmount = buffData.maxAmount * talentModifierIPWS
-  end
+local calculateSelfcastPwsClassic = function(dataTable, buffData)
+  local baseAmount = dataTable[buffData.rank].current or buffData.amount -- Have a fallback just in case
 
   local finalAmount = baseAmount + (spellpower * spellpowerCoefficientPWS)
   return math.floor(finalAmount)
 end
 
-local calculatorPwsHelperExpansion = function(dataTable, buffData)
-  local amount
+local calculateSelfcastPwsExpansion = function(dataTable, buffData)
+  local baseAmount
 
   if playerLevel == MAX_LEVEL or buffData.rank == #dataTable or playerLevel >= dataTable[buffData.rank + 1].level then
-    amount = buffData.maxAmount
+    baseAmount = buffData.amountMax
   else
-    amount = buffData.amount
+    baseAmount = buffData.amount
   end
 
   local coefficient = spellpowerCoefficientPWS + talentCoefficientBonusBT
 
-  local finalAmount = (amount + (spellpower * coefficient)) * talentModifierIPWS * setBonusModifierPWS
+  local finalAmount = (baseAmount + (spellpower * coefficient)) * talentModifierIPWS * setBonusModifierPWS
   return math.floor(finalAmount)
 end
 
 local calculatorPws = function(sourceName, dataTable, buffData)
   if sourceName ~= playerName or playerClass ~= 'PRIEST' then
     if playerLevel == MAX_LEVEL then
-      return buffData.maxAmount
+      return buffData.amountMax
     else
       return buffData.amount
     end
   end
 
-  return calculatorPwsHelper(dataTable, buffData)
+  return calculateSelfcastPws(dataTable, buffData)
 end
 
 -- We can't depend on the tooltips for these as the IsSpellKnown calls will return false
@@ -278,7 +292,7 @@ local calculatorSacrifice = function(_, dataTable, buffData)
   local amount
 
   if playerLevel == MAX_LEVEL or (buffData.rank ~= #dataTable and playerLevel >= dataTable[buffData.rank + 1].level) then
-    amount = buffData.maxAmount
+    amount = buffData.amountMax
   else
     amount = buffData.amount
   end
@@ -331,14 +345,16 @@ local initializeSpellLookup = function()
   end
 end
 
--- Era coefficients: https://www.reddit.com/r/classicwow/comments/95abc8/list_of_spellcoefficients_1121/
+-- Vanilla coefficients: https://www.reddit.com/r/classicwow/comments/95abc8/list_of_spellcoefficients_1121/
 -- TBC coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient?oldid=1492745
 -- WOTLK coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient
 local adjustFunctionsForExpansion = function()
-  calculatorPwsHelper = LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC and calculatorPwsHelperEra or calculatorPwsHelperExpansion
+  calculateSelfcastPws = LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC and calculateSelfcastPwsClassic or calculateSelfcastPwsExpansion
 
   if playerClass == 'PRIEST' then
     if LE_EXPANSION_LEVEL_CURRENT < LE_EXPANSION_WRATH_OF_THE_LICH_KING then
+      readPwsTooltips = LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC and readPwsTooltipsClassic or C.DUMMY_FUNCTION
+
       checkTalents = function()
         local _, _, _, _, ipwsRank = GetTalentInfo(1, 5)
         talentModifierIPWS = 1 + (ipwsRank * 0.05)
@@ -365,6 +381,7 @@ local adjustFunctionsForExpansion = function()
     return
   end
 
+  readPwsTooltips = C.DUMMY_FUNCTION
   checkItemBonuses = C.DUMMY_FUNCTION
 
   if playerClass == 'WARLOCK' then
@@ -392,30 +409,6 @@ local adjustFunctionsForExpansion = function()
   end
 
   checkTalents = C.DUMMY_FUNCTION
-end
-
-local cacheHighestKnownRank = function()
-  if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
-    return
-  end
-
-  cachedHighestKnown = {
-    {rank = 0, amount = 0},
-  }
-
-  for i = #DATA_PWS, 1, -1 do
-    local levelRequired = DATA_PWS[i].level
-    local spellId = DATA_PWS[i].spellId
-
-    if playerLevel >= levelRequired and IsSpellKnown(spellId) then
-      local text = GetSpellDescription(spellId)
-      local firstNumber = string.match(text, '%d+')
-
-      cachedHighestKnown[1].rank = i
-      cachedHighestKnown[1].amount = firstNumber or DATA_PWS[i].amount
-      break
-    end
-  end
 end
 
 local resetShields = function()
@@ -773,10 +766,10 @@ EVENTS['COMBAT_LOG_EVENT_UNFILTERED'] = function()
 end
 EVENTS['PLAYER_LEVEL_UP'] = function(level)
   playerLevel = level
-  cacheHighestKnownRank()
+  readPwsTooltips()
 end
 EVENTS['SPELLS_CHANGED'] = function()
-  cacheHighestKnownRank()
+  readPwsTooltips()
 end
 EVENTS['PLAYER_TALENT_UPDATE'] = function()
   checkTalents()
@@ -822,7 +815,7 @@ AbsorbDisplay.Initialize = function()
 end
 
 AbsorbDisplay.Enable = function()
-  cacheHighestKnownRank()
+  readPwsTooltips()
   checkTalents()
   checkItemBonuses()
 

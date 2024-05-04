@@ -130,9 +130,8 @@ local initializeClamsTable = function()
 end
 
 local EVENTS = {}
-EVENTS['GET_ITEM_INFO_RECEIVED'] = function(itemID, success)
-  handleItemInfoReceived(itemID, success)
-end
+EVENTS['GET_ITEM_INFO_RECEIVED'] = handleItemInfoReceived
+
 EVENTS['LOOT_READY'] = function()
   if isOpeningClams then
     for i = GetNumLootItems(), 1, -1 do
@@ -140,22 +139,26 @@ EVENTS['LOOT_READY'] = function()
     end
   end
 end
+
 EVENTS['LOOT_CLOSED'] = function()
   if isWaitLootClose then
     isWaitLootClose = false
     startOpeningClams()
   end
 end
+
 EVENTS['PLAYER_MONEY'] = function()
   if not InCombatLockdown() and _G['LootFrame']:IsVisible() == false then
     startOpeningClams()
   end
 end
+
 EVENTS['BAG_UPDATE_DELAYED'] = function()
   if not InCombatLockdown() and _G['LootFrame']:IsVisible() == false then
     startOpeningClams()
   end
 end
+
 EVENTS['PLAYER_REGEN_ENABLED'] = function()
   if _G['LootFrame']:IsVisible() then
     -- This is for the edge case of the player getting out of combat while looting

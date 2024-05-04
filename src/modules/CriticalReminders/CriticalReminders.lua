@@ -348,7 +348,7 @@ local initializeErrorFrame = function()
   errorFrame:Hide()
 end
 
-local handleErrorMessage = function(message)
+local handleErrorMessage = function(_, message)
   if ErrorMap[message] == nil then
     return
   end
@@ -364,15 +364,13 @@ local handleErrorMessage = function(message)
 end
 
 local EVENTS = {}
-EVENTS['UI_ERROR_MESSAGE'] = function(errorType, message)
-  handleErrorMessage(message)
-end
+EVENTS['UI_ERROR_MESSAGE'] = handleErrorMessage
 
 EVENTS['PLAYER_REGEN_DISABLED'] = function()
-  handleErrorMessage('PLAYER_REGEN_DISABLED')
+  handleErrorMessage(nil, 'PLAYER_REGEN_DISABLED')
 end
 
-EVENTS['PLAYER_REGEN_ENABLED'] = function(...)
+EVENTS['PLAYER_REGEN_ENABLED'] = function()
   if errorFrame.texture:GetTexture() == 132147 then -- Ability_DualWield used when the player enters combat
     stopAttackTimer()
   end

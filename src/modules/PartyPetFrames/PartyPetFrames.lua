@@ -50,77 +50,41 @@ local onUpdateAll = function()
 end
 
 local EVENTS = {}
-EVENTS['GROUP_FORMED'] = function()
-  onUpdateAll()
-end
+EVENTS['GROUP_FORMED'] = onUpdateAll
 
-EVENTS['GROUP_JOINED'] = function()
-  onUpdateAll()
-end
+EVENTS['GROUP_JOINED'] = onUpdateAll
 
-EVENTS['GROUP_ROSTER_UPDATE'] = function()
-  onUpdateAll()
-end
+EVENTS['GROUP_ROSTER_UPDATE'] = onUpdateAll
 
-EVENTS['INSTANCE_GROUP_SIZE_CHANGED'] = function()
-  onUpdateAll()
-end
+EVENTS['INSTANCE_GROUP_SIZE_CHANGED'] = onUpdateAll
 
-EVENTS['UPDATE_ACTIVE_BATTLEFIELD'] = function()
-  onUpdateAll()
-end
+EVENTS['UPDATE_ACTIVE_BATTLEFIELD'] = onUpdateAll
 
-EVENTS['GROUP_LEFT'] = function()
-  onUpdateAll()
-end
+EVENTS['GROUP_LEFT'] = onUpdateAll
 
-EVENTS['PLAYER_ENTERING_WORLD'] = function()
-  onUpdateAll()
-end
+EVENTS['PLAYER_ENTERING_WORLD'] = onUpdateAll
 
-EVENTS['PORTRAITS_UPDATED'] = function()
-  onUpdateAll()
-end
+EVENTS['PORTRAITS_UPDATED'] = onUpdateAll
 
-EVENTS['PARTY_MEMBER_DISABLE'] = function(unitTarget)
-  onUpdate(unitTarget)
-end
+EVENTS['PARTY_MEMBER_DISABLE'] = onUpdate
 
-EVENTS['PARTY_MEMBER_ENABLE'] = function(unitTarget)
-  onUpdate(unitTarget)
-end
+EVENTS['PARTY_MEMBER_ENABLE'] = onUpdate
 
-EVENTS['UNIT_OTHER_PARTY_CHANGED'] = function(unitTarget)
-  onUpdate(unitTarget)
-end
+EVENTS['UNIT_OTHER_PARTY_CHANGED'] = onUpdate
 
-EVENTS['UNIT_PORTRAIT_UPDATE'] = function(unitTarget)
-  onUpdate(unitTarget)
-end
+EVENTS['UNIT_PORTRAIT_UPDATE'] = onUpdate
 
-EVENTS['UNIT_MODEL_CHANGED'] = function(unitTarget)
-  onUpdate(unitTarget)
-end
+EVENTS['UNIT_MODEL_CHANGED'] = onUpdate
 
-EVENTS['UNIT_PET'] = function(unitTarget)
-  onUpdate(unitTarget)
-end
+EVENTS['UNIT_PET'] = onUpdate
 
-EVENTS['UNIT_PHASE'] = function(unitTarget)
-  onUpdate(unitTarget)
-end
+EVENTS['UNIT_PHASE'] = onUpdate
 
-EVENTS['LOCALPLAYER_PET_RENAMED'] = function(unitTarget)
-  onUpdate(unitTarget)
-end
+EVENTS['LOCALPLAYER_PET_RENAMED'] = onUpdate
 
-EVENTS['UNIT_POWER_UPDATE'] = function(unitTarget, powerType)
-  onUpdate(unitTarget)
-end
+EVENTS['UNIT_POWER_UPDATE'] = onUpdate
 
-EVENTS['UNIT_MAXPOWER'] = function(unitTarget, powerType)
-  onUpdate(unitTarget)
-end
+EVENTS['UNIT_MAXPOWER'] = onUpdate
 
 local PartyPetFrames = {}
 

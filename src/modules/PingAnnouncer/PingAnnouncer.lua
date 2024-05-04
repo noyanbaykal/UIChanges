@@ -146,9 +146,7 @@ local handlePing = function(unitId, x, y)
 end
 
 local EVENTS = {}
-EVENTS['MINIMAP_PING'] = function(...)
-  handlePing(...)
-end
+EVENTS['MINIMAP_PING'] = handlePing
 
 local PingAnnouncer = {}
 

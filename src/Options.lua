@@ -562,12 +562,9 @@ local storeScreenSize = function()
 end
 
 local EVENTS = {}
-EVENTS['DISPLAY_SIZE_CHANGED'] = function()
-  storeScreenSize()
-end
-EVENTS['UI_SCALE_CHANGED'] = function()
-  storeScreenSize()
-end
+EVENTS['DISPLAY_SIZE_CHANGED'] = storeScreenSize
+
+EVENTS['UI_SCALE_CHANGED'] = storeScreenSize
 
 local UIC_Options = {}
 

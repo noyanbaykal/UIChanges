@@ -45,13 +45,9 @@ local function onClosed()
 end
 
 local EVENTS = {}
-EVENTS['AUCTION_HOUSE_SHOW'] = function()
-  onShow()
-end
+EVENTS['AUCTION_HOUSE_SHOW'] = onShow
 
-EVENTS['AUCTION_HOUSE_CLOSED'] = function()
-  onClosed()
-end
+EVENTS['AUCTION_HOUSE_CLOSED'] = onClosed
 
 local function searchItemInAH(bagID, slotID)
   -- It is possible for this call to return nil and then result in an GET_ITEM_INFO_RECEIVED event but

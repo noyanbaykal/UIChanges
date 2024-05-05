@@ -23,12 +23,12 @@ local L = addonTable.L
 local C = addonTable.C
 
 -- Spells scale with the caster's level, resulting in a range of amount to amountMax. There isn't a
--- clean way of accounting for this except when the player is casting the PWS on themselves.
--- In that case, in classic, we can read the spell tooltip which includes the correct base value, including
+-- clean way of accounting for this except when the player is the one casting.
+-- In that case, in vanilla, we can read the spell tooltip which includes the correct base value, including
 -- any talent modifiers. Spell power from gear will be added on top of this base value.
--- In TBC or WOTLK the shield amount formula is different and I can't test them at this time so we'll read
--- tooltips only in classic for now.
--- Spells cast by others will default to amount, unless the player is at max level.
+-- In TBC or WOTLK the PWS shield amount formula is different and I can't test them at this time so we'll
+-- read PWS tooltips only in vanilla for now.
+-- As an approximation, spells cast by others will default to amount, unless the player is at max level.
 -- The data & lookup tables may be altered in adjustDataTables based on expansion.
 -- Data read from tooltips will be stored here with the 'current' key.
 local DATA_PWS = { -- Power Word: Shield
@@ -47,25 +47,27 @@ local DATA_PWS = { -- Power Word: Shield
   {level = 75, rank = 13, spellId = 48065, amount = 1920, amountMax = 1951},
   {level = 80, rank = 14, spellId = 48066, amount = 2230, amountMax = 2230},
 }
+-- Set up lookups
+DATA_PWS[17] = DATA_PWS[1]
+DATA_PWS[592] = DATA_PWS[2]
+DATA_PWS[600] = DATA_PWS[3]
+DATA_PWS[3747] = DATA_PWS[4]
+DATA_PWS[6065] = DATA_PWS[5]
+DATA_PWS[6066] = DATA_PWS[6]
+DATA_PWS[10898] = DATA_PWS[7]
+DATA_PWS[10899] = DATA_PWS[8]
+DATA_PWS[10900] = DATA_PWS[9]
+DATA_PWS[10901] = DATA_PWS[10]
+DATA_PWS[25217] = DATA_PWS[11]
+DATA_PWS[25218] = DATA_PWS[12]
+DATA_PWS[48065] = DATA_PWS[13]
+DATA_PWS[48066] = DATA_PWS[14]
+DATA_PWS.index = 1
 
-local PWS = {
-  [17] = DATA_PWS[1],
-  [592] = DATA_PWS[2],
-  [600] = DATA_PWS[3],
-  [3747] = DATA_PWS[4],
-  [6065] = DATA_PWS[5],
-  [6066] = DATA_PWS[6],
-  [10898] = DATA_PWS[7],
-  [10899] = DATA_PWS[8],
-  [10900] = DATA_PWS[9],
-  [10901] = DATA_PWS[10],
-  [25217] = DATA_PWS[11],
-  [25218] = DATA_PWS[12],
-  [48065] = DATA_PWS[13],
-  [48066] = DATA_PWS[14],
-}
-
-local DATA_SACRIFICE = { -- Voidwalker ability
+-- Voidwalker ability. It scales with player level but does not benefit from spell power.
+-- Downranking is not possible here and there will only be one rank present at any time (or none).
+-- In vanilla we'll store the current values from tooltips.
+local DATA_SACRIFICE = {
   {level = 16, rank = 1,  spellId = 7812,  amount = 305,   amountMax = 319},
   {level = 24, rank = 2,  spellId = 19438, amount = 510,   amountMax = 529},
   {level = 32, rank = 3,  spellId = 19440, amount = 770,   amountMax = 794},
@@ -76,31 +78,36 @@ local DATA_SACRIFICE = { -- Voidwalker ability
   {level = 72, rank = 8,  spellId = 47985, amount = 6750,  amountMax = 6810},
   {level = 79, rank = 9,  spellId = 47986, amount = 8350,  amountMax = 8365},
 }
+-- Set up lookups
+DATA_SACRIFICE[7812] = DATA_SACRIFICE[1]
+DATA_SACRIFICE[19438] = DATA_SACRIFICE[2]
+DATA_SACRIFICE[19440] = DATA_SACRIFICE[3]
+DATA_SACRIFICE[19441] = DATA_SACRIFICE[4]
+DATA_SACRIFICE[19442] = DATA_SACRIFICE[5]
+DATA_SACRIFICE[19443] = DATA_SACRIFICE[6]
+DATA_SACRIFICE[27273] = DATA_SACRIFICE[7]
+DATA_SACRIFICE[47985] = DATA_SACRIFICE[8]
+DATA_SACRIFICE[47986] = DATA_SACRIFICE[9]
+DATA_SACRIFICE.index = 2
 
-local SACRIFICE = { -- Voidwalker ability
-  [7812] = DATA_SACRIFICE[1],
-  [19438] = DATA_SACRIFICE[2],
-  [19440] = DATA_SACRIFICE[3],
-  [19441] = DATA_SACRIFICE[4],
-  [19442] = DATA_SACRIFICE[5],
-  [19443] = DATA_SACRIFICE[6],
-  [27273] = DATA_SACRIFICE[7],
-  [47985] = DATA_SACRIFICE[8],
-  [47986] = DATA_SACRIFICE[9],
-}
-
+-- This selfcast effect is present only in vanilla. It doesn't scale with player level or benefit from spell power.
+-- The spellIds refer to the spells for conjuring the spellstones. The effectIds will show up in the combat log.
+-- We'll update the current amounts from the tooltips.
 local DATA_SPELLSTONE = {
-  {level = 31, rank = 1,  spellId = 128,  amount = 400,   amountMax = 400},
-  {level = 43, rank = 2,  spellId = 17729, amount = 650,   amountMax = 650},
-  {level = 55, rank = 3,  spellId = 17730, amount = 900,   amountMax = 900},
+  {level = 31, rank = 1, spellId = 2362,  effectId = 128,   amount = 400},
+  {level = 43, rank = 2, spellId = 17727, effectId = 17729, amount = 650},
+  {level = 55, rank = 3, spellId = 17728, effectId = 17730, amount = 900},
 }
+-- Set up lookups for the spellIds & effectIds
+DATA_SPELLSTONE[2362] = DATA_SPELLSTONE[1]
+DATA_SPELLSTONE[128] = DATA_SPELLSTONE[1]
+DATA_SPELLSTONE[17727] = DATA_SPELLSTONE[2]
+DATA_SPELLSTONE[17729] = DATA_SPELLSTONE[2]
+DATA_SPELLSTONE[17728] = DATA_SPELLSTONE[3]
+DATA_SPELLSTONE[17730] = DATA_SPELLSTONE[3]
+DATA_SPELLSTONE.index = 3
 
--- This effect is present only in classic era and doesn't scale with player level
-local SPELLSTONE = {
-  [128] = DATA_SPELLSTONE[1],
-  [17729] = DATA_SPELLSTONE[2],
-  [17730] = DATA_SPELLSTONE[3],
-}
+local WEAKENED_SOUL = GetSpellInfo(6788)
 
 local SHIELD_COLOR = {1, 1, 0.353, 1}
 
@@ -131,20 +138,75 @@ local BASE_OFFSET_Y = 150
 local SHIELD_WIDTH_MAX = 120
 local SHIELD_WIDTH_RESIDUAL = 12
 
-local spellpower = 0
-local spellpowerCoefficientPWS = 0.1 -- Set for classic era, may be changed in adjustDataForExpansion
+local playerName, playerClass, playerLevel
+local mainFrame, shieldFrame, spellShieldFrame, shields, backupTimer, spellLookup
+
+local maxLevel = 80 -- May be adjusted in adjustDataForExpansion
+local spellpowerCoefficientPWS = 0.1 -- May be adjusted in adjustDataForExpansion
+
 local setBonusModifierPWS = 1 -- Item - Priest T10 Healer 4P Bonus, 70798, only in WOTLK
 local talentModifierIPWS = 1 -- Improved Power Word: Shield
 local talentCoefficientBonusBT = 0 -- Borrowed Time, only in WOTLK
 local talentModifierSacrifice = 1
 local talentModifierSpellstone = 1
 
-local MAX_LEVEL = 60 -- Set for classic era, may be changed in adjustDataForExpansion
-local nameWeakenedSoul = GetSpellInfo(6788)
-local playerName, playerClass, playerLevel
-local mainFrame, shieldFrame, spellShieldFrame, shields, backupTimer
+local spellpower = 0
+
 -- These will get set differently based on expansion
-local calculateSelfcastPws, readPwsTooltips, checkItemBonuses, checkTalents, spellNameLookup
+local calculateAmountSelfcastPws = C.DUMMY_FUNCTION
+local checkTooltips = C.DUMMY_FUNCTION
+local checkTalents = C.DUMMY_FUNCTION
+local checkItemBonuses = C.DUMMY_FUNCTION
+
+local adjustDataForExpansion = function()
+  if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
+    maxLevel = 60
+
+    DATA_PWS[10].amountMax = DATA_PWS[10].amount
+
+    DATA_PWS[11] = nil
+    DATA_PWS[12] = nil
+    DATA_PWS[13] = nil
+    DATA_PWS[14] = nil
+
+    DATA_PWS[25217] = nil
+    DATA_PWS[25218] = nil
+    DATA_PWS[48065] = nil
+    DATA_PWS[48066] = nil
+
+    DATA_SACRIFICE[7] = nil
+    DATA_SACRIFICE[8] = nil
+    DATA_SACRIFICE[9] = nil
+
+    DATA_SACRIFICE[27273] = nil
+    DATA_SACRIFICE[47985] = nil
+    DATA_SACRIFICE[47986] = nil
+
+    spellpowerCoefficientPWS = 0.1
+  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
+    maxLevel = 70
+
+    DATA_PWS[12].amountMax = DATA_PWS[12].amount
+
+    DATA_PWS[13] = nil
+    DATA_PWS[14] = nil
+
+    DATA_PWS[48065] = nil
+    DATA_PWS[48066] = nil
+
+    DATA_SACRIFICE[8] = nil
+    DATA_SACRIFICE[9] = nil
+
+    DATA_SACRIFICE[47985] = nil
+    DATA_SACRIFICE[47986] = nil
+
+    spellpowerCoefficientPWS = 0.3
+  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
+    maxLevel = 80
+
+    spellpowerCoefficientPWS = 0.8068
+  end
+end
 
 -- https://warcraft.wiki.gg/wiki/ItemLink
 local getEquippedItemId = function(slot)
@@ -190,9 +252,9 @@ local hasT10Bonus = function()
   return false
 end
 
-local readPwsTooltipsClassic = function()
-  for i = 1, #DATA_PWS do
-    local spellId = DATA_PWS[i].spellId
+local checkTooltipsHelper = function(dataTable)
+  for i = 1, #dataTable do
+    local spellId = dataTable[i].spellId
 
     if not IsSpellKnown(spellId) then
       break
@@ -201,71 +263,18 @@ local readPwsTooltipsClassic = function()
     local text = GetSpellDescription(spellId)
     local firstNumber = string.match(text, '%d+')
 
-    PWS[spellId].current = firstNumber
+    dataTable[spellId].current = firstNumber
   end
 end
 
-local adjustDataForExpansion = function()
-  if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
-    DATA_PWS[10].amountMax = DATA_PWS[10].amount
-    DATA_SACRIFICE[6].amountMax = 1931
-
-    DATA_PWS[11] = nil
-    DATA_PWS[12] = nil
-    DATA_PWS[13] = nil
-    DATA_PWS[14] = nil
-
-    PWS[25217] = nil
-    PWS[25218] = nil
-    PWS[48065] = nil
-    PWS[48066] = nil
-
-    DATA_SACRIFICE[7] = nil
-    DATA_SACRIFICE[8] = nil
-    DATA_SACRIFICE[9] = nil
-
-    SACRIFICE[27273] = nil
-    SACRIFICE[47985] = nil
-    SACRIFICE[47986] = nil
-  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
-    MAX_LEVEL = 70
-
-    DATA_PWS[12].amountMax = DATA_PWS[12].amount
-
-    DATA_PWS[13] = nil
-    DATA_PWS[14] = nil
-
-    PWS[48065] = nil
-    PWS[48066] = nil
-
-    DATA_SACRIFICE[8] = nil
-    DATA_SACRIFICE[9] = nil
-
-    SACRIFICE[47985] = nil
-    SACRIFICE[47986] = nil
-
-    spellpowerCoefficientPWS = 0.3
-  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
-    MAX_LEVEL = 80
-
-    spellpowerCoefficientPWS = 0.8068
-  end
-end
-
-local calculateSelfcastPwsClassic = function(dataTable, buffData)
-  local baseAmount = dataTable[buffData.rank].current or buffData.amount -- Have a fallback just in case
-
-  local finalAmount = baseAmount + (spellpower * spellpowerCoefficientPWS)
-  return math.floor(finalAmount)
-end
-
-local calculateSelfcastPwsExpansion = function(dataTable, buffData)
+-- TODO: this could use a refactoring to introduce the maxlevel parameter!
+local calculateAmountSelfcastPwsExpansion = function(dataTable, buffEntry)
   local baseAmount
 
-  if playerLevel == MAX_LEVEL or buffData.rank == #dataTable or playerLevel >= dataTable[buffData.rank + 1].level then
-    baseAmount = buffData.amountMax
+  if playerLevel == maxLevel or buffEntry.rank == #dataTable or playerLevel >= dataTable[buffEntry.rank + 1].level then
+    baseAmount = buffEntry.amountMax
   else
-    baseAmount = buffData.amount
+    baseAmount = buffEntry.amount
   end
 
   local coefficient = spellpowerCoefficientPWS + talentCoefficientBonusBT
@@ -274,86 +283,36 @@ local calculateSelfcastPwsExpansion = function(dataTable, buffData)
   return math.floor(finalAmount)
 end
 
-local calculatorPws = function(sourceName, dataTable, buffData)
-  if sourceName ~= playerName or playerClass ~= 'PRIEST' then
-    if playerLevel == MAX_LEVEL then
-      return buffData.amountMax
-    else
-      return buffData.amount
-    end
-  end
-
-  return calculateSelfcastPws(dataTable, buffData)
-end
-
--- We can't depend on the tooltips for these as the IsSpellKnown calls will return false
--- unless the player has the voidwalker out
-local calculatorSacrifice = function(_, dataTable, buffData)
-  local amount
-
-  if playerLevel == MAX_LEVEL or (buffData.rank ~= #dataTable and playerLevel >= dataTable[buffData.rank + 1].level) then
-    amount = buffData.amountMax
-  else
-    amount = buffData.amount
-  end
-
-  return math.floor(amount * talentModifierSacrifice)
-end
-
--- Have to pick the right table based on localized spell name
-local initializeSpellLookup = function()
-  local namePws = GetSpellInfo(17)
-  local nameSacrifice = GetSpellInfo(7812)
-
-  spellNameLookup = {
-    [namePws] = {
-      index = 1,
-      data = DATA_PWS,
-      table = PWS,
-      calculateFinalAmount = calculatorPws,
-    },
-  }
-
-  if playerClass == 'WARLOCK' then
-    spellNameLookup[nameSacrifice] = {
-      index = 2,
-      data = DATA_SACRIFICE,
-      table = SACRIFICE,
-      calculateFinalAmount = calculatorSacrifice,
-    }
-
-    if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
-      local nameSpellstone = GetSpellInfo(128)
-      local nameSpellstoneGreater = GetSpellInfo(17729)
-      local nameSpellstoneMajor = GetSpellInfo(17730)
-
-      local calculatorSpellstone = function(_, _, buffData)
-        return math.floor(buffData.amount * talentModifierSpellstone)
-      end
-
-      local spellstoneEntry = {
-        index = 3,
-        data = DATA_SPELLSTONE,
-        table = SPELLSTONE,
-        calculateFinalAmount = calculatorSpellstone,
-      }
-
-      spellNameLookup[nameSpellstone] = spellstoneEntry
-      spellNameLookup[nameSpellstoneGreater] = spellstoneEntry
-      spellNameLookup[nameSpellstoneMajor] = spellstoneEntry
-    end
-  end
-end
 
 -- Vanilla coefficients: https://www.reddit.com/r/classicwow/comments/95abc8/list_of_spellcoefficients_1121/
 -- TBC coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient?oldid=1492745
 -- WOTLK coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient
 local adjustFunctionsForExpansion = function()
-  calculateSelfcastPws = LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC and calculateSelfcastPwsClassic or calculateSelfcastPwsExpansion
+  -- This is a lookup table for the shield spells we are interested in.
+  -- Have to pick the right table based on localized spell name.
+  spellLookup = {}
+
+  local namePws = GetSpellInfo(17)
+  spellLookup[namePws] = DATA_PWS
+
+  DATA_PWS.calculateAmount = function(dataTable, buffEntry, sourceName)
+    if sourceName == playerName then
+      return calculateAmountSelfcastPws(dataTable, buffEntry)
+    else
+      return playerLevel == maxLevel and buffEntry.amountMax or buffEntry.amount
+    end
+  end
+
 
   if playerClass == 'PRIEST' then
-    if LE_EXPANSION_LEVEL_CURRENT < LE_EXPANSION_WRATH_OF_THE_LICH_KING then
-      readPwsTooltips = LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC and readPwsTooltipsClassic or C.DUMMY_FUNCTION
+    if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
+      calculateAmountSelfcastPws = function(_, buffEntry)
+        return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
+      end
+
+      checkTooltips = function()
+        checkTooltipsHelper(DATA_PWS)
+      end
 
       checkTalents = function()
         local _, _, _, _, ipwsRank = GetTalentInfo(1, 5)
@@ -363,7 +322,20 @@ local adjustFunctionsForExpansion = function()
       checkItemBonuses = function()
         spellpower = GetSpellBonusHealing() or 0
       end
-    else
+    elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
+      calculateAmountSelfcastPws = calculateAmountSelfcastPwsExpansion
+
+      checkTalents = function()
+        local _, _, _, _, ipwsRank = GetTalentInfo(1, 5)
+        talentModifierIPWS = 1 + (ipwsRank * 0.05)
+      end
+
+      checkItemBonuses = function()
+        spellpower = GetSpellBonusHealing() or 0
+      end
+    elseif LE_EXPANSION_LEVEL_CURRENT < LE_EXPANSION_WRATH_OF_THE_LICH_KING then
+      calculateAmountSelfcastPws = calculateAmountSelfcastPwsExpansion
+
       checkTalents = function()
         local _, _, _, _, ipwsRank = GetTalentInfo(1, 9)
         talentModifierIPWS = 1 + (ipwsRank * 0.05)
@@ -377,15 +349,34 @@ local adjustFunctionsForExpansion = function()
         setBonusModifierPWS = hasT10Bonus() and 1.05 or 1
       end
     end
-
-    return
   end
 
-  readPwsTooltips = C.DUMMY_FUNCTION
-  checkItemBonuses = C.DUMMY_FUNCTION
-
   if playerClass == 'WARLOCK' then
+    local nameSacrifice = GetSpellInfo(7812)
+    spellLookup[nameSacrifice] = DATA_SACRIFICE
+
     if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
+      checkTooltips = function()
+        checkTooltipsHelper(DATA_SACRIFICE)
+        checkTooltipsHelper(DATA_SPELLSTONE)
+      end
+
+      DATA_SACRIFICE.calculateAmount = function(_, buffEntry)
+        return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
+      end
+
+      DATA_SPELLSTONE.calculateAmount = function(_, buffEntry)
+        return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
+      end
+
+      local nameSpellstone = GetSpellInfo(128)
+      local nameSpellstoneGreater = GetSpellInfo(17729)
+      local nameSpellstoneMajor = GetSpellInfo(17730)
+
+      spellLookup[nameSpellstone] = DATA_SPELLSTONE
+      spellLookup[nameSpellstoneGreater] = DATA_SPELLSTONE
+      spellLookup[nameSpellstoneMajor] = DATA_SPELLSTONE
+
       checkTalents = function()
         local _, _, _, _, sacrificeRank = GetTalentInfo(2, 5)
         talentModifierSacrifice = 1 + (sacrificeRank * 0.1)
@@ -394,21 +385,41 @@ local adjustFunctionsForExpansion = function()
         talentModifierSpellstone = 1 + (spellstoneRank * 0.15)
       end
     elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
+      DATA_SACRIFICE.calculateAmount = function(dataTable, buffEntry)
+        local amount
+      
+        if playerLevel == maxLevel or (buffEntry.rank ~= #dataTable and playerLevel >= dataTable[buffEntry.rank + 1].level) then
+          amount = buffEntry.amountMax
+        else
+          amount = buffEntry.amount
+        end
+      
+        return math.floor(amount * talentModifierSacrifice)
+      end
+
       checkTalents = function()
         local _, _, _, _, sacrificeRank = GetTalentInfo(2, 5)
         talentModifierSacrifice = 1 + (sacrificeRank * 0.1)
       end
     elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
+      DATA_SACRIFICE.calculateAmount = function(dataTable, buffEntry)
+        local amount
+      
+        if playerLevel == maxLevel or (buffEntry.rank ~= #dataTable and playerLevel >= dataTable[buffEntry.rank + 1].level) then
+          amount = buffEntry.amountMax
+        else
+          amount = buffEntry.amount
+        end
+      
+        return math.floor(amount * talentModifierSacrifice)
+      end
+
       checkTalents = function()
         local _, _, _, _, sacrificeRank = GetTalentInfo(2, 6)
         talentModifierSacrifice = 1 + (sacrificeRank * 0.1)
       end
     end
-
-    return
   end
-
-  checkTalents = C.DUMMY_FUNCTION
 end
 
 local resetShields = function()
@@ -484,7 +495,7 @@ local updateDisplay = function()
 end
 
 -- Have to check all active buffs to find the one present in the passed in table
-local getShieldBuffData = function(tableReference)
+local findShieldBuffEntry = function(dataTable)
   local isDone = false
   local i = 1
 
@@ -496,8 +507,8 @@ local getShieldBuffData = function(tableReference)
     else
       local spellId = buffInfo[10]
 
-      if tableReference[spellId] then
-        return tableReference[spellId]
+      if dataTable[spellId] then
+        return dataTable[spellId]
       end
     end
 
@@ -507,10 +518,10 @@ local getShieldBuffData = function(tableReference)
   return nil
 end
 
-local clearBuff = function(tableReference, index)
-  local buffData = getShieldBuffData(tableReference)
+local clearBuff = function(dataTable, index)
+  local buffEntry = findShieldBuffEntry(dataTable)
 
-  if buffData == nil then
+  if buffEntry == nil then
     shields[index].max = 0
     shields[index].left = 0
 
@@ -519,21 +530,19 @@ local clearBuff = function(tableReference, index)
 end
 
 local clearPws = function()
-  clearBuff(PWS, 1)
+  clearBuff(DATA_PWS, 1)
 end
 
 local clearSacrifice = function()
-  clearBuff(SACRIFICE, 2)
+  clearBuff(DATA_SACRIFICE, 2)
 end
 
 local clearSpellstone = function()
-  clearBuff(SPELLSTONE, 3)
+  clearBuff(DATA_SPELLSTONE, 3)
 end
 
--- If pws is reapplied before the first one falls off, we won't get an aura_applied event for pws
--- but we do get it for weakened soul
 local checkReapplication = function(isApplied, spellName)
-  if spellName == nameWeakenedSoul then
+  if spellName == WEAKENED_SOUL then
     if backupTimer and backupTimer:IsCancelled() ~= true then
       backupTimer:Cancel()
     end
@@ -547,82 +556,100 @@ local checkReapplication = function(isApplied, spellName)
 end
 
 local handleAuraChange = function(isApplied, sourceName, spellName)
-  local lookup = spellNameLookup[spellName]
-  if lookup == nil then
-    return false
+  local dataTable = spellLookup[spellName]
+
+  -- If pws is reapplied before the first one falls off, we won't get an aura_applied event for pws
+  -- but we do get it for weakened soul
+  if not dataTable then
+    checkReapplication(isApplied, spellName)
+    updateDisplay()
+    return
   end
 
-  local index = lookup.index
-  local dataTableReference = lookup.data
-  local tableReference = lookup.table
-  local calculateFinalAmount = lookup.calculateFinalAmount
+  local index = dataTable.index
 
   if isApplied == false then
     shields[index].max = 0
     shields[index].left = 0
 
-    return true
-  else
-    local buffData = getShieldBuffData(tableReference)
-    if buffData ~= nil then
-      local amount = calculateFinalAmount(sourceName, dataTableReference, buffData)
-
-      shields[index].max = amount
-      shields[index].left = amount
-
-      -- Start a ticker as a backup to update the display
-      if tableReference == SACRIFICE then
-        C_Timer.NewTicker(TIMER_INTERVAL_SACRIFICE, clearSacrifice, 1)
-      elseif tableReference == SPELLSTONE then
-        C_Timer.NewTicker(TIMER_INTERVAL_SPELLSTONE, clearSpellstone, 1)
-      end
-
-      return true
-    else
-      return false
-    end
+    updateDisplay()
+    return
   end
+
+  local buffEntry = findShieldBuffEntry(dataTable)
+  if not buffEntry then
+    checkReapplication(isApplied, spellName)
+    updateDisplay()
+    return
+  end
+
+  local amount = dataTable.calculateAmount(dataTable, buffEntry, sourceName)
+
+  shields[index].max = amount
+  shields[index].left = amount
+
+  -- Start a ticker as a backup to update the display
+  if dataTable == DATA_SACRIFICE then
+    C_Timer.NewTicker(TIMER_INTERVAL_SACRIFICE, clearSacrifice, 1)
+  elseif dataTable == DATA_SPELLSTONE then
+    C_Timer.NewTicker(TIMER_INTERVAL_SPELLSTONE, clearSpellstone, 1)
+  end
+
+  updateDisplay()
 end
 
-local absorbEventParser = function(info)
+-- The info has variable number of values based on melee / spell damage absorbed
+local handleAbsorb = function(destName, info)
+  local spellOrCasterName = info[13]
+
+  local spellName, amount
+
   -- Sacrifice is different than the others
-  if info[9] == playerName then
-    if spellNameLookup[info[17]] then
-      return info[17], info[19]
-    elseif spellNameLookup[info[20]] then
-      return info[20], info[22]
-    else
-      return nil, nil
+  if destName == playerName then
+    if spellLookup[info[17]] then
+      spellName = info[17]
+      amount = info[19]
+    elseif spellLookup[info[20]] then
+      spellName = info[20]
+      amount = info[22]
     end
   end
 
-  if info[13] == playerName then
-    return info[17], info[19]
+  if spellOrCasterName == playerName then
+    spellName = info[17]
+    amount = info[19]
   elseif info[16] == playerName then
-    return info[20], info[22]
-  else
-    return nil, nil
+    spellName = info[20]
+    amount = info[22]
+  end
+
+  if spellName and amount and spellLookup[spellName] then
+    local shieldIndex = spellLookup[spellName].index
+
+    shields[shieldIndex].left = shields[shieldIndex].left - amount
+  
+    updateDisplay()
   end
 end
 
--- This event returns variable number of values based on melee / spell damage absorbed
-local handleAbsorb = function(info)
-  local spellName, amount = absorbEventParser(info)
+local onCLEU = function()
+  local info = {CombatLogGetCurrentEventInfo()}
 
-  if spellName == nil then
-    return false
+  -- All types of info have the same 11 base values and then a variable number of extra values in different orderings
+  local subevent = info[2]
+  local destName = info[9]
+
+  if subevent == 'SPELL_ABSORBED' then
+    handleAbsorb(destName, info)
   end
 
-  local lookup = spellNameLookup[spellName]
-  if lookup == nil then
-    return false
+  if destName == playerName and (subevent == 'SPELL_AURA_APPLIED' or subevent == 'SPELL_AURA_REMOVED') then
+    local isApplied = subevent == 'SPELL_AURA_APPLIED'
+    local sourceName = info[5]
+    local spellName = info[13]
+
+    handleAuraChange(isApplied, sourceName, spellName)
   end
-
-  local shieldIndex = lookup.index
-
-  shields[shieldIndex].left = shields[shieldIndex].left - amount
-
-  return true
 end
 
 local resetDisplayLocation = function()
@@ -737,49 +764,32 @@ local initializeFrames = function()
 end
 
 local EVENTS = {}
-EVENTS['COMBAT_LOG_EVENT_UNFILTERED'] = function()
-  local info = {CombatLogGetCurrentEventInfo()}
+EVENTS['COMBAT_LOG_EVENT_UNFILTERED'] = onCLEU
 
-  local subevent = info[2]
-  local sourceName = info[5]
-  local destName = info[9]
-  local spellName = info[13]
-
-  if subevent == 'SPELL_ABSORBED' then
-    local shouldUpdate = handleAbsorb(info)
-    if shouldUpdate == false then
-      return
-    end
-  elseif subevent == 'SPELL_AURA_APPLIED' and destName == playerName then
-    if handleAuraChange(true, sourceName, spellName) == false then
-      checkReapplication(true, spellName)
-    end
-  elseif subevent == 'SPELL_AURA_REMOVED' and destName == playerName then
-    if handleAuraChange(false, sourceName, spellName) == false then
-      checkReapplication(false, spellName)
-    end
-  else
-    return
-  end
-
-  updateDisplay()
-end
 EVENTS['PLAYER_LEVEL_UP'] = function(level)
   playerLevel = level
-  readPwsTooltips()
+  checkTooltips()
 end
-EVENTS['SPELLS_CHANGED'] = function()
-  readPwsTooltips()
+
+EVENTS['SPELLS_CHANGED'] = checkTooltips
+
+EVENTS['UNIT_PET'] = function(unitTarget)
+  if unitTarget == 'player' then
+    checkTooltips()
+  end
 end
-EVENTS['PLAYER_TALENT_UPDATE'] = function()
-  checkTalents()
+
+EVENTS['SPELL_DATA_LOAD_RESULT'] = function(spellID)
+  if DATA_SACRIFICE[spellID] then
+    checkTooltips()
+  end
 end
-EVENTS['CHARACTER_POINTS_CHANGED'] = function()
-  checkTalents()
-end
-EVENTS['PLAYER_EQUIPMENT_CHANGED'] = function()
-  checkItemBonuses()
-end
+
+EVENTS['PLAYER_TALENT_UPDATE'] = checkTalents
+
+EVENTS['CHARACTER_POINTS_CHANGED'] = checkTalents
+
+EVENTS['PLAYER_EQUIPMENT_CHANGED'] = checkItemBonuses
 
 local AbsorbDisplay = {}
 
@@ -790,7 +800,6 @@ AbsorbDisplay.Initialize = function()
 
   adjustDataForExpansion()
   adjustFunctionsForExpansion()
-  initializeSpellLookup()
 
   initializeFrames()
 
@@ -809,13 +818,28 @@ AbsorbDisplay.Initialize = function()
     },
   }
 
+  if playerClass ~= 'PRIEST' then
+    EVENTS['PLAYER_EQUIPMENT_CHANGED'] = nil
+  end
+
+  if playerClass ~= 'WARLOCK' then
+    EVENTS['UNIT_PET'] = nil
+    EVENTS['SPELL_DATA_LOAD_RESULT'] = nil
+  end
+
+  if playerClass ~= 'PRIEST' and playerClass ~= 'WARLOCK' then
+    EVENTS['SPELLS_CHANGED'] = nil
+    EVENTS['PLAYER_TALENT_UPDATE'] = nil
+    EVENTS['CHARACTER_POINTS_CHANGED'] = nil
+  end
+
   mainFrame:SetScript('OnEvent', function(self, event, ...)
     EVENTS[event](...)
   end)
 end
 
 AbsorbDisplay.Enable = function()
-  readPwsTooltips()
+  checkTooltips()
   checkTalents()
   checkItemBonuses()
 

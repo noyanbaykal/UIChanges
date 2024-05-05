@@ -23,13 +23,15 @@ local C = addonTable.C
 
 -- Spells scale with the caster's level, resulting in a range of amount to amountMax. There isn't a
 -- clean way of accounting for this except when the player is the one casting.
--- In that case, in vanilla, we can read the spell tooltip which includes the correct base value, including
+-- In that case we can read the spell tooltip which includes the correct base value, including
 -- any talent modifiers. Spell power from gear will be added on top of this base value.
--- In TBC or WOTLK the PWS shield amount formula is different and I can't test them at this time so we'll
--- read PWS tooltips only in vanilla for now.
--- As an approximation, spells cast by others will default to amount, unless the player is at max level.
+-- Spells cast by others will default to amount as an approximation. Unless the player is at max level
+-- in which case we'll assume they are playing with other max level players and we'll use amountMax.
 -- The data & lookup tables may be altered in adjustDataTables based on expansion.
--- Data read from tooltips will be stored here with the 'current' key.
+-- Data read from tooltips will be stored the data tables with the 'current' key.
+
+-- In TBC and WOTLK the PWS shield amount formula is different and I can't test them at this time so
+-- we'll read PWS tooltips only in vanilla for now.
 local DATA_PWS = { -- Power Word: Shield
   {level = 6,  rank = 1,  spellId = 17,    amount = 44,   amountMax = 48},
   {level = 12, rank = 2,  spellId = 592,   amount = 88,   amountMax = 94},
@@ -65,7 +67,6 @@ DATA_PWS.index = 1
 
 -- Voidwalker ability. It scales with player level but does not benefit from spell power.
 -- Downranking is not possible here and there will only be one rank present at any time (or none).
--- In vanilla we'll store the current values from tooltips.
 local DATA_SACRIFICE = {
   {level = 16, rank = 1,  spellId = 7812,  amount = 305,   amountMax = 319},
   {level = 24, rank = 2,  spellId = 19438, amount = 510,   amountMax = 529},
@@ -91,7 +92,6 @@ DATA_SACRIFICE.index = 2
 
 -- This selfcast effect is present only in vanilla. It doesn't scale with player level or benefit from spell power.
 -- The spellIds refer to the spells for conjuring the spellstones. The effectIds will show up in the combat log.
--- We'll update the current amounts from the tooltips.
 local DATA_SPELLSTONE = {
   {level = 31, rank = 1, spellId = 2362,  effectId = 128,   amount = 400},
   {level = 43, rank = 2, spellId = 17727, effectId = 17729, amount = 650},
@@ -114,26 +114,26 @@ local ITEM_SET_885 = {51732, 51733, 51734, 51735, 51736} -- https://www.wowhead.
 -- https://www.wowhead.com/wotlk/spell=70798/item-priest-t10-healer-4p-bonus
 local PRIEST_T10_SETS = {ITEM_SET_249, ITEM_SET_230, ITEM_SET_841, ITEM_SET_885}
 
-local playerName, playerClass
+local playerName, playerLevel
 
 local maxLevel = 80 -- May be adjusted in adjustDataForExpansion
 local spellpowerCoefficientPWS = 0.1 -- May be adjusted in adjustDataForExpansion
 
+-- Vanilla coefficients: https://www.reddit.com/r/classicwow/comments/95abc8/list_of_spellcoefficients_1121/
+-- TBC coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient?oldid=1492745
+-- WOTLK coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient
+
 local setBonusModifierPWS = 1 -- Item - Priest T10 Healer 4P Bonus, 70798, only in WOTLK
 local talentModifierIPWS = 1 -- Improved Power Word: Shield
 local talentCoefficientBonusBT = 0 -- Borrowed Time, only in WOTLK
-local talentModifierSacrifice = 1
-local talentModifierSpellstone = 1
 
 local spellpower = 0
 
-local spellLookup
-
--- These will get set differently based on expansion
-local calculateAmountSelfcastPws = C.DUMMY_FUNCTION
-local checkTooltips = C.DUMMY_FUNCTION
+local checkTooltips = C.DUMMY_FUNCTION -- These will be set differently based on expansion
 local checkTalents = C.DUMMY_FUNCTION
 local checkItemBonuses = C.DUMMY_FUNCTION
+
+local spellLookup
 
 local adjustDataForExpansion = function()
   if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
@@ -233,26 +233,44 @@ local checkTooltipsHelper = function(dataTable)
   for i = 1, #dataTable do
     local spellId = dataTable[i].spellId
 
-    if not IsSpellKnown(spellId) then
-      break
+    if IsSpellKnown(spellId) or IsSpellKnown(spellId, true) then
+      local text = GetSpellDescription(spellId)
+      local firstNumber = string.match(text, '%d+')
+  
+      dataTable[spellId].current = firstNumber
     end
-
-    local text = GetSpellDescription(spellId)
-    local firstNumber = string.match(text, '%d+')
-
-    dataTable[spellId].current = firstNumber
   end
 end
 
--- TODO: this could use a refactoring to introduce the maxlevel parameter!
-local calculateAmountSelfcastPwsExpansion = function(dataTable, buffEntry)
-  local baseAmount
+local calculateAmountPwsOther = function(_, buffEntry)
+  return playerLevel == maxLevel and buffEntry.amountMax or buffEntry.amount
+end
 
-  if playerLevel == maxLevel or buffEntry.rank == #dataTable or playerLevel >= dataTable[buffEntry.rank + 1].level then
-    baseAmount = buffEntry.amountMax
-  else
-    baseAmount = buffEntry.amount
+local calculateAmountPwsPriest = function(selfCastHelper)
+  return function(dataTable, buffEntry, sourceName)
+    if sourceName == playerName then
+      return selfCastHelper(dataTable, buffEntry)
+    else
+      return calculateAmountPwsOther(dataTable, buffEntry)
+    end
   end
+end
+
+-- If the player is at max level, all spell ranks are scaled to their amountMax.
+-- If the player is not at max level but is casting a downranked spell, check if they are high level enough
+-- to learn the next rank in which case the downranked spell would be scaled to its amountMax.
+-- Otherwise default to amount where we might return a slightly lower value since we can't easily account for the
+-- spell scaling between player levels.
+local getSelfcastApproximateAmount = function(dataTable, buffEntry)
+  if playerLevel == maxLevel or (buffEntry.rank ~= #dataTable and playerLevel >= dataTable[buffEntry.rank + 1].level) then
+    return buffEntry.amountMax
+  end
+  
+  return buffEntry.amount
+end
+
+local selfcastHelperPwsExpansion = function(dataTable, buffEntry)
+  local baseAmount = getSelfcastApproximateAmount(dataTable, buffEntry)
 
   local coefficient = spellpowerCoefficientPWS + talentCoefficientBonusBT
 
@@ -260,173 +278,133 @@ local calculateAmountSelfcastPwsExpansion = function(dataTable, buffEntry)
   return math.floor(finalAmount)
 end
 
--- TODO: bu korkunc bir fonksiyon oldu. Burasi sirf logic olsun, butun atamalari yardimci fonksiyonlara at.
--- TODO: hatta acaba ikinci bir dosya butun bu data ve setup ile ilgilense de bu dosya sadece genel logic
--- ve frameler ile mi ugrassa?
+local checkTalentIpws = function(columnIndex)
+  local _, _, _, _, ipwsRank = GetTalentInfo(1, columnIndex)
+  talentModifierIPWS = 1 + (ipwsRank * 0.05)
+end
 
--- Vanilla coefficients: https://www.reddit.com/r/classicwow/comments/95abc8/list_of_spellcoefficients_1121/
--- TBC coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient?oldid=1492745
--- WOTLK coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient
-local adjustFunctionsForExpansion = function()
-  -- This is a lookup table for the shield spells we are interested in.
-  -- Have to pick the right table based on localized spell name.
+local checkItemBonusesPriestPreWotlk = function()
+  spellpower = GetSpellBonusHealing() or 0
+end
+
+local adjustPriest = function()
+  local selfCastHelper
+
+  if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
+    selfCastHelper = function(_, buffEntry)
+      -- talentModifierIPWS is baked into buffEntry.current
+      local baseAmount = math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
+      return baseAmount + (spellpower * spellpowerCoefficientPWS)
+    end
+
+    checkTooltips = function()
+      checkTooltipsHelper(DATA_PWS)
+    end
+
+    checkTalents = function()
+      checkTalentIpws(5)
+    end
+
+    checkItemBonuses = checkItemBonusesPriestPreWotlk
+  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
+    selfCastHelper = selfcastHelperPwsExpansion
+
+    checkTalents = function()
+      checkTalentIpws(5)
+    end
+
+    checkItemBonuses = checkItemBonusesPriestPreWotlk
+  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
+    selfCastHelper = selfcastHelperPwsExpansion
+
+    checkTalents = function()
+      checkTalentIpws(9)
+
+      local _, _, _, _, btRank = GetTalentInfo(1, 27)
+      talentCoefficientBonusBT = btRank * 0.08
+    end
+
+    checkItemBonuses = function()
+      spellpower = GetSpellBonusDamage(2) or 0
+      setBonusModifierPWS = hasT10Bonus() and 1.05 or 1
+    end
+  end
+
+  DATA_PWS.calculateAmount = calculateAmountPwsPriest(selfCastHelper)
+end
+
+local checkTooltipsWarlockExpansion = function()
+  checkTooltipsHelper(DATA_SACRIFICE)
+end
+
+local adjustWarlock = function()
+  local nameSacrifice = GetSpellInfo(7812)
+  spellLookup[nameSacrifice] = DATA_SACRIFICE
+
+  DATA_PWS.calculateAmount = calculateAmountPwsOther
+
+  DATA_SACRIFICE.calculateAmount = function(_, buffEntry)
+    --talentModifierSacrifice is baked into buffEntry.current
+    return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
+  end
+
+  if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
+    for _, spellStoneEntry in ipairs(DATA_SPELLSTONE) do
+      local spellName = GetSpellInfo(spellStoneEntry.effectId)
+      spellLookup[spellName] = DATA_SPELLSTONE
+    end
+
+    DATA_SPELLSTONE.calculateAmount = function(_, buffEntry)
+      --talentModifierSpellstone is baked into buffEntry.current
+      return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
+    end
+
+    checkTooltips = function()
+      checkTooltipsHelper(DATA_SACRIFICE)
+      checkTooltipsHelper(DATA_SPELLSTONE)
+    end
+  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
+    checkTooltips = checkTooltipsWarlockExpansion
+  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
+    checkTooltips = checkTooltipsWarlockExpansion
+  end
+end
+
+local adjustOtherClass = function()
+  DATA_PWS.calculateAmount = calculateAmountPwsOther
+end
+
+local adjust = function(name, playerClass)
+  playerName = name
+
+  adjustDataForExpansion()
+
+  -- This is a lookup table for the shield spells we are interested in. Localized spell names map to the data tables.
   spellLookup = {}
 
   local namePws = GetSpellInfo(17)
   spellLookup[namePws] = DATA_PWS
 
-  DATA_PWS.calculateAmount = function(dataTable, buffEntry, sourceName)
-    if sourceName == playerName then
-      return calculateAmountSelfcastPws(dataTable, buffEntry)
-    else
-      return playerLevel == maxLevel and buffEntry.amountMax or buffEntry.amount
-    end
-  end
-
-  -- TODO: buraya asil bir de maxLevel vs lowlevel eklenecek!!! Parametre olarak birazdan eklenecek
-  -- setupVanillaWarlockFunctions() tarzi yardimcilara paslansin!
-
-  if playerClass == 'PRIEST' then
-    if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
-      calculateAmountSelfcastPws = function(_, buffEntry)
-        return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
-      end
-
-      checkTooltips = function()
-        checkTooltipsHelper(DATA_PWS)
-      end
-
-      checkTalents = function()
-        local _, _, _, _, ipwsRank = GetTalentInfo(1, 5)
-        talentModifierIPWS = 1 + (ipwsRank * 0.05)
-      end
-
-      checkItemBonuses = function()
-        spellpower = GetSpellBonusHealing() or 0
-      end
-    elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
-      calculateAmountSelfcastPws = calculateAmountSelfcastPwsExpansion
-
-      checkTalents = function()
-        local _, _, _, _, ipwsRank = GetTalentInfo(1, 5)
-        talentModifierIPWS = 1 + (ipwsRank * 0.05)
-      end
-
-      checkItemBonuses = function()
-        spellpower = GetSpellBonusHealing() or 0
-      end
-    elseif LE_EXPANSION_LEVEL_CURRENT < LE_EXPANSION_WRATH_OF_THE_LICH_KING then
-      calculateAmountSelfcastPws = calculateAmountSelfcastPwsExpansion
-
-      checkTalents = function()
-        local _, _, _, _, ipwsRank = GetTalentInfo(1, 9)
-        talentModifierIPWS = 1 + (ipwsRank * 0.05)
-
-        local _, _, _, _, btRank = GetTalentInfo(1, 27)
-        talentCoefficientBonusBT = btRank * 0.08
-      end
-
-      checkItemBonuses = function()
-        spellpower = GetSpellBonusDamage(2) or 0
-        setBonusModifierPWS = hasT10Bonus() and 1.05 or 1
-      end
-    end
-  end
+  playerLevel = UnitLevel('player')
 
   if playerClass == 'WARLOCK' then
-    local nameSacrifice = GetSpellInfo(7812)
-    spellLookup[nameSacrifice] = DATA_SACRIFICE
-
-    if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
-      checkTooltips = function()
-        checkTooltipsHelper(DATA_SACRIFICE)
-        checkTooltipsHelper(DATA_SPELLSTONE)
-      end
-
-      DATA_SACRIFICE.calculateAmount = function(_, buffEntry)
-        return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
-      end
-
-      DATA_SPELLSTONE.calculateAmount = function(_, buffEntry)
-        return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
-      end
-
-      local nameSpellstone = GetSpellInfo(128)
-      local nameSpellstoneGreater = GetSpellInfo(17729)
-      local nameSpellstoneMajor = GetSpellInfo(17730)
-
-      spellLookup[nameSpellstone] = DATA_SPELLSTONE
-      spellLookup[nameSpellstoneGreater] = DATA_SPELLSTONE
-      spellLookup[nameSpellstoneMajor] = DATA_SPELLSTONE
-
-      checkTalents = function()
-        local _, _, _, _, sacrificeRank = GetTalentInfo(2, 5)
-        talentModifierSacrifice = 1 + (sacrificeRank * 0.1)
-  
-        local _, _, _, _, spellstoneRank = GetTalentInfo(2, 17)
-        talentModifierSpellstone = 1 + (spellstoneRank * 0.15)
-      end
-    elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
-      DATA_SACRIFICE.calculateAmount = function(dataTable, buffEntry)
-        local amount
-      
-        if playerLevel == maxLevel or (buffEntry.rank ~= #dataTable and playerLevel >= dataTable[buffEntry.rank + 1].level) then
-          amount = buffEntry.amountMax
-        else
-          amount = buffEntry.amount
-        end
-      
-        return math.floor(amount * talentModifierSacrifice)
-      end
-
-      checkTalents = function()
-        local _, _, _, _, sacrificeRank = GetTalentInfo(2, 5)
-        talentModifierSacrifice = 1 + (sacrificeRank * 0.1)
-      end
-    elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
-      DATA_SACRIFICE.calculateAmount = function(dataTable, buffEntry)
-        local amount
-      
-        if playerLevel == maxLevel or (buffEntry.rank ~= #dataTable and playerLevel >= dataTable[buffEntry.rank + 1].level) then
-          amount = buffEntry.amountMax
-        else
-          amount = buffEntry.amount
-        end
-      
-        return math.floor(amount * talentModifierSacrifice)
-      end
-
-      checkTalents = function()
-        local _, _, _, _, sacrificeRank = GetTalentInfo(2, 6)
-        talentModifierSacrifice = 1 + (sacrificeRank * 0.1)
-      end
-    end
+    adjustWarlock()
+  elseif playerClass == 'PRIEST' then
+    adjustPriest()
+  else
+    adjustOtherClass()
   end
-end
-
-
-local adjust = function(playerName, playerClass)
-  local playerLevel = UnitLevel('player')
-
-  adjustDataForExpansion()
-  adjustFunctionsForExpansion()
-
-  -- local setup
-  -- setupWarlock()
-  -- setupPriest()
 end
 
 local Adjuster = {}
 
 Adjuster.new = function(playerName, playerClass)
   local self = {}
-  
+
   adjust(playerName, playerClass)
 
   function self.OnLevelUp(newLevel)
-    playerLevel = level
-
-    -- TODO: check if we need to replace the calculateAmount functions
+    playerLevel = newLevel
   end
 
   self.DATA_PWS = DATA_PWS

@@ -36,7 +36,7 @@ local SPELL_SHIELD_COLOR = {0, 0, 1, 1}
 
 local SPELL_SHIELD_COLOR_EXPENDED = {0, 0, 1, 0.5}
 
--- Sometimes the aura_removed event for pws isn't sent. We'll run a timer as a backup to remove the shield display.
+-- Sometimes the aura_removed event for PWS isn't sent. We'll run a timer as a backup to remove the shield display.
 local TIMER_INTERVAL_PWS = 17 -- Seconds
 local TIMER_INTERVAL_SACRIFICE = 32 -- Seconds
 local TIMER_INTERVAL_SPELLSTONE = 62 -- Seconds
@@ -183,8 +183,8 @@ end
 local handleAuraChange = function(isApplied, sourceName, spellName)
   local dataTable = adjuster.spellLookup[spellName]
 
-  -- If pws is reapplied before the first one falls off, we won't get an aura_applied event for pws
-  -- but we do get it for weakened soul
+  -- If PWS is reapplied with the same rank before it falls off, we won't get an
+  -- aura_applied event for PWS but we do get it for weakened soul
   if not dataTable then
     checkReapplication(isApplied, spellName)
     updateDisplay()
@@ -470,10 +470,16 @@ AbsorbDisplay.Initialize = function()
 end
 
 AbsorbDisplay.Enable = function()
-  adjuster.OnLevelUp(UnitLevel('player')) -- In case the player has leveled up before they enable this module
   adjuster.CheckTooltips()
   adjuster.CheckTalents()
   adjuster.CheckItemBonuses()
+
+  -- If the player is already shielded
+  local buffEntry = findShieldBuffEntry(adjuster.DATA_PWS)
+  if buffEntry then
+    -- Show residual since we can't know how much of the shield is still intact
+    updateDisplayHelper(1, -1, shieldFrame, SHIELD_COLOR) 
+  end
 
   C.REGISTER_EVENTS(mainFrame, EVENTS)
 end

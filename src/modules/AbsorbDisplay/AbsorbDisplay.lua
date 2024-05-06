@@ -166,117 +166,6 @@ local clearSpellstone = function()
   clearBuff(adjuster.DATA_SPELLSTONE, 3)
 end
 
-local checkReapplication = function(isApplied, spellName)
-  if spellName == WEAKENED_SOUL then
-    if backupTimer and backupTimer:IsCancelled() ~= true then
-      backupTimer:Cancel()
-    end
-
-    if isApplied then
-      shields[1].left = shields[1].max
-    else
-      backupTimer = C_Timer.NewTicker(TIMER_INTERVAL_PWS, clearPws, 1)
-    end
-  end
-end
-
-local handleAuraChange = function(isApplied, sourceName, spellName)
-  local dataTable = adjuster.spellLookup[spellName]
-
-  -- If PWS is reapplied with the same rank before it falls off, we won't get an
-  -- aura_applied event for PWS but we do get it for weakened soul
-  if not dataTable then
-    checkReapplication(isApplied, spellName)
-    updateDisplay()
-    return
-  end
-
-  local index = dataTable.index
-
-  if isApplied == false then
-    shields[index].max = 0
-    shields[index].left = 0
-
-    updateDisplay()
-    return
-  end
-
-  local buffEntry = findShieldBuffEntry(dataTable)
-  if not buffEntry then
-    checkReapplication(isApplied, spellName)
-    updateDisplay()
-    return
-  end
-
-  local amount = dataTable.calculateAmount(dataTable, buffEntry, sourceName)
-
-  shields[index].max = amount
-  shields[index].left = amount
-
-  -- Start a ticker as a backup to update the display
-  if dataTable == adjuster.DATA_SACRIFICE then
-    C_Timer.NewTicker(TIMER_INTERVAL_SACRIFICE, clearSacrifice, 1)
-  elseif dataTable == adjuster.DATA_SPELLSTONE then
-    C_Timer.NewTicker(TIMER_INTERVAL_SPELLSTONE, clearSpellstone, 1)
-  end
-
-  updateDisplay()
-end
-
--- The info has variable number of values based on melee / spell damage absorbed
-local handleAbsorb = function(destName, info)
-  local spellOrCasterName = info[13]
-
-  local spellName, amount
-
-  -- Sacrifice is different than the others
-  if destName == playerName then
-    if adjuster.spellLookup[info[17]] then
-      spellName = info[17]
-      amount = info[19]
-    elseif adjuster.spellLookup[info[20]] then
-      spellName = info[20]
-      amount = info[22]
-    end
-  end
-
-  if spellOrCasterName == playerName then
-    spellName = info[17]
-    amount = info[19]
-  elseif info[16] == playerName then
-    spellName = info[20]
-    amount = info[22]
-  end
-
-  if spellName and amount and adjuster.spellLookup[spellName] then
-    local shieldIndex = adjuster.spellLookup[spellName].index
-
-    shields[shieldIndex].left = shields[shieldIndex].left - amount
-  
-    updateDisplay()
-  end
-end
-
-local onCLEU = function()
-  local info = {CombatLogGetCurrentEventInfo()}
-
-  -- All types of info have the same 11 base values and then a variable number of extra values in different orderings
-  local subevent = info[2]
-  local destName = info[9]
-
-  if subevent == 'SPELL_ABSORBED' then
-    handleAbsorb(destName, info)
-  end
-
-  if destName == playerName and (subevent == 'SPELL_AURA_APPLIED' or subevent == 'SPELL_AURA_REMOVED') then
-    local isApplied = subevent == 'SPELL_AURA_APPLIED'
-    local sourceName = info[5]
-    local spellName = info[13]
-
-    handleAuraChange(isApplied, sourceName, spellName)
-  end
-end
-
 local resetDisplayLocation = function()
   UIChanges_Profile['UIC_AD_FrameInfo'] = {}
 
@@ -386,6 +275,118 @@ local initializeFrames = function()
 
   initializeShieldFrame()
   initializeSpellShieldFrame()
+end
+
+-- The info has variable number of values based on melee / spell damage absorbed
+local handleAbsorb = function(destName, info)
+  local spellOrCasterName = info[13]
+
+  local spellName, amount
+
+  -- Sacrifice is different than the others
+  if destName == playerName then
+    if adjuster.spellLookup[info[17]] then
+      spellName = info[17]
+      amount = info[19]
+    elseif adjuster.spellLookup[info[20]] then
+      spellName = info[20]
+      amount = info[22]
+    end
+  end
+
+  if spellOrCasterName == playerName then
+    spellName = info[17]
+    amount = info[19]
+  elseif info[16] == playerName then
+    spellName = info[20]
+    amount = info[22]
+  end
+
+  if spellName and amount and adjuster.spellLookup[spellName] then
+    local shieldIndex = adjuster.spellLookup[spellName].index
+
+    shields[shieldIndex].left = shields[shieldIndex].left - amount
+  
+    updateDisplay()
+  end
+end
+
+local checkReapplication = function(isApplied, spellName)
+  if spellName == WEAKENED_SOUL then
+    if backupTimer and backupTimer:IsCancelled() ~= true then
+      backupTimer:Cancel()
+    end
+
+    if isApplied then
+      shields[1].left = shields[1].max
+    else
+      backupTimer = C_Timer.NewTicker(TIMER_INTERVAL_PWS, clearPws, 1)
+    end
+  end
+end
+
+local handleAuraChange = function(isApplied, sourceName, spellName)
+  local dataTable = adjuster.spellLookup[spellName]
+
+  -- If PWS is reapplied with the same rank before it falls off, we won't get an
+  -- aura_applied event for PWS but we do get it for weakened soul
+  if not dataTable then
+    checkReapplication(isApplied, spellName)
+    updateDisplay()
+    return
+  end
+
+  local index = dataTable.index
+
+  if isApplied == false then
+    shields[index].max = 0
+    shields[index].left = 0
+
+    updateDisplay()
+    return
+  end
+
+  local buffEntry = findShieldBuffEntry(dataTable)
+
+  if not buffEntry then
+    checkReapplication(isApplied, spellName)
+    updateDisplay()
+    return
+  end
+
+  local amount = dataTable.calculateAmount(dataTable, buffEntry, sourceName)
+
+  shields[index].max = amount
+  shields[index].left = amount
+
+  -- Start a ticker as a backup to update the display
+  if dataTable == adjuster.DATA_SACRIFICE then
+    C_Timer.NewTicker(TIMER_INTERVAL_SACRIFICE, clearSacrifice, 1)
+  elseif dataTable == adjuster.DATA_SPELLSTONE then
+    C_Timer.NewTicker(TIMER_INTERVAL_SPELLSTONE, clearSpellstone, 1)
+  end
+
+  updateDisplay()
+end
+
+local onCLEU = function()
+  local info = {CombatLogGetCurrentEventInfo()}
+
+  -- All types of info have the same 11 base values and then a variable number of extra values in different orderings
+  local subevent = info[2]
+  local destName = info[9]
+
+  if subevent == 'SPELL_ABSORBED' then
+    handleAbsorb(destName, info)
+  end
+
+  if destName == playerName and (subevent == 'SPELL_AURA_APPLIED' or subevent == 'SPELL_AURA_REMOVED') then
+    local isApplied = subevent == 'SPELL_AURA_APPLIED'
+    local sourceName = info[5]
+    local spellName = info[13]
+
+    handleAuraChange(isApplied, sourceName, spellName)
+  end
 end
 
 local EVENTS = {}

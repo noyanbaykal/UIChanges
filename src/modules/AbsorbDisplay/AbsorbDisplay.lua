@@ -407,17 +407,13 @@ EVENTS['UNIT_PET'] = function(unitTarget)
   end
 end
 
-EVENTS['SPELL_DATA_LOAD_RESULT'] = function(spellID)
-  if adjuster.DATA_SACRIFICE[spellID] then
-    adjuster.CheckTooltips()
-  end
-end
-
 EVENTS['PLAYER_TALENT_UPDATE'] = function()
+  adjuster.CheckTooltips()
   adjuster.CheckTalents()
 end
 
 EVENTS['CHARACTER_POINTS_CHANGED'] = function()
+  adjuster.CheckTooltips()
   adjuster.CheckTalents()
 end
 
@@ -456,7 +452,6 @@ AbsorbDisplay.Initialize = function()
 
   if playerClass ~= 'WARLOCK' then
     EVENTS['UNIT_PET'] = nil
-    EVENTS['SPELL_DATA_LOAD_RESULT'] = nil
   end
 
   if playerClass ~= 'PRIEST' and playerClass ~= 'WARLOCK' then

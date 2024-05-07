@@ -21,8 +21,6 @@ local _, addonTable = ...
 
 local C = addonTable.C
 
-local WEAKENED_SOUL = GetSpellInfo(6788)
-
 local SHIELD_COLOR = {1, 1, 0.353, 1}
 
 local SHIELD_COLOR_EXPENDED = {1, 1, 0.353, 0.5}
@@ -36,16 +34,12 @@ local SPELL_SHIELD_COLOR = {0, 0, 1, 1}
 
 local SPELL_SHIELD_COLOR_EXPENDED = {0, 0, 1, 0.5}
 
--- Sometimes the aura_removed event for PWS isn't sent. We'll run a timer as a backup to remove the shield display.
-local TIMER_INTERVAL_PWS = 17 -- Seconds
-local TIMER_INTERVAL_SACRIFICE = 32 -- Seconds
-local TIMER_INTERVAL_SPELLSTONE = 62 -- Seconds
 local BASE_OFFSET_Y = 150
 local SHIELD_WIDTH_MAX = 120
 local SHIELD_WIDTH_RESIDUAL = 12
 
 local playerName, playerClass
-local mainFrame, shieldFrame, spellShieldFrame, shields, backupTimer, adjuster
+local mainFrame, shieldFrame, spellShieldFrame, shields, backupTimers, adjuster
 
 local resetShields = function()
   shields[1].max = 0
@@ -117,53 +111,6 @@ local updateDisplay = function()
 
   updateDisplayHelper(absorbMax, absorbLeft, shieldFrame, SHIELD_COLOR)
   updateDisplayHelper(spellAbsorbMax, spellAbsorbLeft, spellShieldFrame, SPELL_SHIELD_COLOR)
-end
-
--- Have to check all active buffs to find the one present in the passed in table
-local findShieldBuffEntry = function(dataTable)
-  local isDone = false
-  local i = 1
-
-  while isDone == false do
-    local buffInfo = {UnitBuff('player', i, 'CANCELABLE')}
-
-    if (buffInfo[1] == nil) then
-      isDone = true
-    else
-      local spellId = buffInfo[10]
-
-      if dataTable[spellId] then
-        return dataTable[spellId]
-      end
-    end
-
-    i = i + 1
-  end
-
-  return nil
-end
-
-local clearBuff = function(dataTable, index)
-  local buffEntry = findShieldBuffEntry(dataTable)
-
-  if buffEntry == nil then
-    shields[index].max = 0
-    shields[index].left = 0
-
-    updateDisplay()
-  end
-end
-
-local clearPws = function()
-  clearBuff(adjuster.DATA_PWS, 1)
-end
-
-local clearSacrifice = function()
-  clearBuff(adjuster.DATA_SACRIFICE, 2)
-end
-
-local clearSpellstone = function()
-  clearBuff(adjuster.DATA_SPELLSTONE, 3)
 end
 
 local resetDisplayLocation = function()
@@ -277,6 +224,94 @@ local initializeFrames = function()
   initializeSpellShieldFrame()
 end
 
+-- Traverse all buffs present to determine if we have a shield active that belongs to the passed in dataTable
+local findShieldBuffEntry = function(dataTable)
+  local isDone = false
+  local i = 1
+
+  while isDone == false do
+    local buffInfo = {UnitBuff('player', i, 'CANCELABLE')}
+
+    if (buffInfo[1] == nil) then
+      isDone = true
+    else
+      local spellId = buffInfo[10]
+
+      if dataTable[spellId] then
+        return dataTable[spellId]
+      end
+    end
+
+    i = i + 1
+  end
+
+  return nil
+end
+
+-- Make sure the display is hidden if the shield buff is no longer active
+local hideShieldIfNecessary = function(dataTable, index)
+  local buffEntry = findShieldBuffEntry(dataTable)
+
+  if buffEntry == nil then
+    shields[index].max = 0
+    shields[index].left = 0
+
+    updateDisplay()
+  end
+end
+
+-- Callbacks for the timers so we don't have to keep creating new functions
+local clearPws = function()
+  hideShieldIfNecessary(adjuster.DATA_PWS, 1)
+end
+
+local clearSacrifice = function()
+  hideShieldIfNecessary(adjuster.DATA_SACRIFICE, 2)
+end
+
+local clearSpellstone = function()
+  hideShieldIfNecessary(adjuster.DATA_SPELLSTONE, 3)
+end
+
+local handleAuraChange = function(dataTable, isAuraApplied, sourceName, spellId)
+  local index = dataTable.index
+
+  local timer = backupTimers[index]
+  if timer and not timer:IsCancelled() then
+    timer:Cancel()
+  end
+
+  local amount = 0
+
+  if isApplied then
+    local buffEntry = adjuster.spellLookup[spellId]
+
+    amount = dataTable.calculateAmount(dataTable, buffEntry, sourceName)
+
+    -- Start a ticker as a backup to prevent unexpected cases of the shield display sticking around
+    local interval = dataTable.timerInterval
+
+    local callback
+
+    if dataTable == adjuster.DATA_PWS then
+      callback = clearPws
+    elseif dataTable == adjuster.DATA_SACRIFICE then
+      callback = clearSacrifice
+    elseif dataTable == adjuster.DATA_SPELLSTONE then
+      callback = clearSpellstone
+    end
+
+    if callback then
+      backupTimers[index] = C_Timer.NewTimer(interval, callback)
+    end
+  end
+
+  shields[index].max = amount
+  shields[index].left = amount
+
+  updateDisplay()
+end
+
 -- The info has variable number of values based on melee / spell damage absorbed
 local handleAbsorb = function(destName, info)
   local spellOrCasterName = info[13]
@@ -311,64 +346,6 @@ local handleAbsorb = function(destName, info)
   end
 end
 
-local checkReapplication = function(isApplied, spellName)
-  if spellName == WEAKENED_SOUL then
-    if backupTimer and backupTimer:IsCancelled() ~= true then
-      backupTimer:Cancel()
-    end
-
-    if isApplied then
-      shields[1].left = shields[1].max
-    else
-      backupTimer = C_Timer.NewTicker(TIMER_INTERVAL_PWS, clearPws, 1)
-    end
-  end
-end
-
-local handleAuraChange = function(isApplied, sourceName, spellName)
-  local dataTable = adjuster.spellLookup[spellName]
-
-  -- If PWS is reapplied with the same rank before it falls off, we won't get an
-  -- aura_applied event for PWS but we do get it for weakened soul
-  if not dataTable then
-    checkReapplication(isApplied, spellName)
-    updateDisplay()
-    return
-  end
-
-  local index = dataTable.index
-
-  if isApplied == false then
-    shields[index].max = 0
-    shields[index].left = 0
-
-    updateDisplay()
-    return
-  end
-
-  local buffEntry = findShieldBuffEntry(dataTable)
-
-  if not buffEntry then
-    checkReapplication(isApplied, spellName)
-    updateDisplay()
-    return
-  end
-
-  local amount = dataTable.calculateAmount(dataTable, buffEntry, sourceName)
-
-  shields[index].max = amount
-  shields[index].left = amount
-
-  -- Start a ticker as a backup to update the display
-  if dataTable == adjuster.DATA_SACRIFICE then
-    C_Timer.NewTicker(TIMER_INTERVAL_SACRIFICE, clearSacrifice, 1)
-  elseif dataTable == adjuster.DATA_SPELLSTONE then
-    C_Timer.NewTicker(TIMER_INTERVAL_SPELLSTONE, clearSpellstone, 1)
-  end
-
-  updateDisplay()
-end
-
 local onCLEU = function()
   local info = {CombatLogGetCurrentEventInfo()}
 
@@ -378,15 +355,30 @@ local onCLEU = function()
 
   if subevent == 'SPELL_ABSORBED' then
     handleAbsorb(destName, info)
+    return
   end
 
-  if destName == playerName and (subevent == 'SPELL_AURA_APPLIED' or subevent == 'SPELL_AURA_REMOVED') then
-    local isApplied = subevent == 'SPELL_AURA_APPLIED'
-    local sourceName = info[5]
-    local spellName = info[13]
-
-    handleAuraChange(isApplied, sourceName, spellName)
+  local isAuraApplied = nil
+  if subevent == 'SPELL_AURA_APPLIED' then
+    isAuraApplied = true
+  elseif subevent == 'SPELL_AURA_REMOVED' then
+    isAuraApplied = false
   end
+
+  if destName ~= playerName or isAuraApplied == nil then
+    return
+  end
+
+  local sourceName = info[5]
+  local spellId = info[12]
+  local spellName = info[13]
+
+  local dataTable = adjuster.spellLookup[spellName]
+  if not dataTable then
+    return
+  end
+
+  handleAuraChange(dataTable, isAuraApplied, sourceName, spellId)
 end
 
 local EVENTS = {}
@@ -430,6 +422,7 @@ AbsorbDisplay.Initialize = function()
   adjuster = addonTable.Adjuster.new(playerName, playerClass)
 
   initializeFrames()
+  backupTimers = {}
 
   shields = {
     [1] = {
@@ -470,7 +463,7 @@ AbsorbDisplay.Enable = function()
   adjuster.CheckTalents()
   adjuster.CheckItemBonuses()
 
-  -- If the player is already shielded
+  -- Check if the player is already shielded
   local buffEntry = findShieldBuffEntry(adjuster.DATA_PWS)
   if buffEntry then
     -- Show residual since we can't know how much of the shield is still intact

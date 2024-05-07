@@ -48,22 +48,10 @@ local DATA_PWS = { -- Power Word: Shield
   {level = 75, rank = 13, spellId = 48065, amount = 1920, amountMax = 1951},
   {level = 80, rank = 14, spellId = 48066, amount = 2230, amountMax = 2230},
 }
--- Set up lookups
-DATA_PWS[17] = DATA_PWS[1]
-DATA_PWS[592] = DATA_PWS[2]
-DATA_PWS[600] = DATA_PWS[3]
-DATA_PWS[3747] = DATA_PWS[4]
-DATA_PWS[6065] = DATA_PWS[5]
-DATA_PWS[6066] = DATA_PWS[6]
-DATA_PWS[10898] = DATA_PWS[7]
-DATA_PWS[10899] = DATA_PWS[8]
-DATA_PWS[10900] = DATA_PWS[9]
-DATA_PWS[10901] = DATA_PWS[10]
-DATA_PWS[25217] = DATA_PWS[11]
-DATA_PWS[25218] = DATA_PWS[12]
-DATA_PWS[48065] = DATA_PWS[13]
-DATA_PWS[48066] = DATA_PWS[14]
+-- The index values are used to separately track different types of shield amunts.
 DATA_PWS.index = 1
+-- We'll run a timer to hide the shield display for the odd cases of not receiving the SPELL_AURA_REMOVED event.
+DATA_PWS.timerInterval = 32
 
 -- Voidwalker ability. It scales with player level but does not benefit from spell power.
 -- Downranking is not possible here and there will only be one rank present at any time (or none).
@@ -78,17 +66,8 @@ local DATA_SACRIFICE = {
   {level = 72, rank = 8,  spellId = 47985, amount = 6750,  amountMax = 6810},
   {level = 79, rank = 9,  spellId = 47986, amount = 8350,  amountMax = 8365},
 }
--- Set up lookups
-DATA_SACRIFICE[7812] = DATA_SACRIFICE[1]
-DATA_SACRIFICE[19438] = DATA_SACRIFICE[2]
-DATA_SACRIFICE[19440] = DATA_SACRIFICE[3]
-DATA_SACRIFICE[19441] = DATA_SACRIFICE[4]
-DATA_SACRIFICE[19442] = DATA_SACRIFICE[5]
-DATA_SACRIFICE[19443] = DATA_SACRIFICE[6]
-DATA_SACRIFICE[27273] = DATA_SACRIFICE[7]
-DATA_SACRIFICE[47985] = DATA_SACRIFICE[8]
-DATA_SACRIFICE[47986] = DATA_SACRIFICE[9]
 DATA_SACRIFICE.index = 2
+DATA_SACRIFICE.timerInterval = 32
 
 -- This selfcast effect is present only in vanilla. It doesn't scale with player level or benefit from spell power.
 -- The spellIds refer to the spells for conjuring the spellstones. The effectIds will show up in the combat log.
@@ -97,14 +76,8 @@ local DATA_SPELLSTONE = {
   {level = 43, rank = 2, spellId = 17727, effectId = 17729, amount = 650},
   {level = 55, rank = 3, spellId = 17728, effectId = 17730, amount = 900},
 }
--- Set up lookups for the spellIds & effectIds
-DATA_SPELLSTONE[2362] = DATA_SPELLSTONE[1]
-DATA_SPELLSTONE[128] = DATA_SPELLSTONE[1]
-DATA_SPELLSTONE[17727] = DATA_SPELLSTONE[2]
-DATA_SPELLSTONE[17729] = DATA_SPELLSTONE[2]
-DATA_SPELLSTONE[17728] = DATA_SPELLSTONE[3]
-DATA_SPELLSTONE[17730] = DATA_SPELLSTONE[3]
 DATA_SPELLSTONE.index = 3
+DATA_SPELLSTONE.timerInterval = 62
 
 local ITEM_SET_249 = {51262, 51263, 51264, 51260, 51261} -- https://www.wowhead.com/wotlk/item-set=-249/sanctified-crimson-acolytes-raiment
 local ITEM_SET_230 = {51177, 51176, 51175, 51179, 51178} -- https://www.wowhead.com/wotlk/item-set=-230/sanctified-crimson-acolytes-raiment
@@ -133,55 +106,46 @@ local checkTooltips = C.DUMMY_FUNCTION -- These will be set differently based on
 local checkTalents = C.DUMMY_FUNCTION
 local checkItemBonuses = C.DUMMY_FUNCTION
 
+-- This is a lookup table for direct access to data table entries by spellId / effectId.
 local spellLookup
+
+-- Helper to remove spell entries from later expansions
+local removeLaterEntries = function(dataTable)
+  for i = #dataTable, 1, -1 do
+    local entry = dataTable[i]
+    
+    if entry.level > maxLevel then
+      table.remove(dataTable, i)
+    else
+      if entry.level == maxLevel then
+        entry.amountMax = entry.amount -- This spell can only be learned at maxLevel so it won't scale any further
+      end
+
+      break
+    end
+  end
+end
 
 local adjustDataForExpansion = function()
   if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
     maxLevel = 60
-
-    DATA_PWS[10].amountMax = DATA_PWS[10].amount
-
-    DATA_PWS[11] = nil
-    DATA_PWS[12] = nil
-    DATA_PWS[13] = nil
-    DATA_PWS[14] = nil
-
-    DATA_PWS[25217] = nil
-    DATA_PWS[25218] = nil
-    DATA_PWS[48065] = nil
-    DATA_PWS[48066] = nil
-
-    DATA_SACRIFICE[7] = nil
-    DATA_SACRIFICE[8] = nil
-    DATA_SACRIFICE[9] = nil
-
-    DATA_SACRIFICE[27273] = nil
-    DATA_SACRIFICE[47985] = nil
-    DATA_SACRIFICE[47986] = nil
-
     spellpowerCoefficientPWS = 0.1
+
+    removeLaterEntries(DATA_PWS)
+    removeLaterEntries(DATA_SACRIFICE)
   elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
     maxLevel = 70
-
-    DATA_PWS[12].amountMax = DATA_PWS[12].amount
-
-    DATA_PWS[13] = nil
-    DATA_PWS[14] = nil
-
-    DATA_PWS[48065] = nil
-    DATA_PWS[48066] = nil
-
-    DATA_SACRIFICE[8] = nil
-    DATA_SACRIFICE[9] = nil
-
-    DATA_SACRIFICE[47985] = nil
-    DATA_SACRIFICE[47986] = nil
-
     spellpowerCoefficientPWS = 0.3
+
+    removeLaterEntries(DATA_PWS)
+    removeLaterEntries(DATA_SACRIFICE)
+
+    DATA_SPELLSTONE = nil
   elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
     maxLevel = 80
-
     spellpowerCoefficientPWS = 0.8068
+
+    DATA_SPELLSTONE = nil
   end
 end
 
@@ -237,7 +201,7 @@ local checkTooltipsHelper = function(dataTable)
       local text = GetSpellDescription(spellId)
       local firstNumber = string.match(text, '%d+')
   
-      dataTable[spellId].current = firstNumber
+      dataTable[i].current = firstNumber
     end
   end
 end
@@ -338,22 +302,12 @@ local checkTooltipsWarlockExpansion = function()
 end
 
 local adjustWarlock = function()
-  local nameSacrifice = GetSpellInfo(7812)
-  spellLookup[nameSacrifice] = DATA_SACRIFICE
-
-  DATA_PWS.calculateAmount = calculateAmountPwsOther
-
   DATA_SACRIFICE.calculateAmount = function(_, buffEntry)
     --talentModifierSacrifice is baked into buffEntry.current
     return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
   end
 
   if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
-    for _, spellStoneEntry in ipairs(DATA_SPELLSTONE) do
-      local spellName = GetSpellInfo(spellStoneEntry.effectId)
-      spellLookup[spellName] = DATA_SPELLSTONE
-    end
-
     DATA_SPELLSTONE.calculateAmount = function(_, buffEntry)
       --talentModifierSpellstone is baked into buffEntry.current
       return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
@@ -370,30 +324,50 @@ local adjustWarlock = function()
   end
 end
 
-local adjustOtherClass = function()
-  DATA_PWS.calculateAmount = calculateAmountPwsOther
+local addLookupEntries = function(dataTable)
+  if not dataTable or not dataTable[1] then
+    return
+  end
+
+  -- We'll need to reference the data tables too. Use the spell name for that.
+  local spellName = GetSpellInfo(dataTable[1].effectId or dataTable[1].spellId)
+  spellLookup[spellName] = dataTable
+
+  for _, entry in ipairs(dataTable) do
+    spellLookup[entry.spellId] = entry
+    
+    if entry.effectId then
+      spellLookup[entry.effectId] = entry
+    end
+  end
 end
 
 local adjust = function(name, playerClass)
   playerName = name
+  playerLevel = UnitLevel('player')
 
   adjustDataForExpansion()
 
-  -- This is a lookup table for the shield spells we are interested in. Localized spell names map to the data tables.
-  spellLookup = {}
-
-  local namePws = GetSpellInfo(17)
-  spellLookup[namePws] = DATA_PWS
-
-  playerLevel = UnitLevel('player')
-
   if playerClass == 'WARLOCK' then
+    DATA_PWS.calculateAmount = calculateAmountPwsOther
+
     adjustWarlock()
   elseif playerClass == 'PRIEST' then
+    DATA_SACRIFICE = nil
+    DATA_SPELLSTONE = nil
+
     adjustPriest()
   else
-    adjustOtherClass()
+    DATA_PWS.calculateAmount = calculateAmountPwsOther
+    DATA_SACRIFICE = nil
+    DATA_SPELLSTONE = nil
   end
+
+  -- Setup the spell lookups
+  spellLookup = {}
+  addLookupEntries(DATA_PWS)
+  addLookupEntries(DATA_SACRIFICE)
+  addLookupEntries(DATA_SPELLSTONE)
 end
 
 local Adjuster = {}

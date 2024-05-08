@@ -113,6 +113,74 @@ local updateDisplay = function()
   updateDisplayHelper(spellAbsorbMax, spellAbsorbLeft, spellShieldFrame, SPELL_SHIELD_COLOR)
 end
 
+-- Traverse all buffs present to determine if we have a shield active that belongs to the passed in dataTable
+local isShieldTypeActive = function(dataTable)
+  local i = 1
+
+  while true do
+    local auraData = C_UnitAuras.GetAuraDataByIndex('player', i, 'HELPFUL')
+
+    if not auraData then
+      return false
+    end
+    
+    local spellId = auraData.spellId
+    local spellName = auraData.name
+
+    if adjuster.spellLookup[spellName] == dataTable and adjuster.spellLookup[spellId] then
+      return true
+    end
+
+    i = i + 1
+  end
+end
+
+local checkShieldsOnLoad = function()
+  local pwsEntry = isShieldTypeActive(adjuster.DATA_PWS)
+
+  local sacrificeEntry
+  if adjuster.DATA_SACRIFICE then
+    sacrificeEntry = isShieldTypeActive(adjuster.DATA_SACRIFICE)
+  end
+
+  local spellstoneEntry
+  if adjuster.DATA_SPELLSTONE then
+    spellstoneEntry = isShieldTypeActive(adjuster.DATA_SPELLSTONE)
+  end
+
+  -- Show shields with the residual amount since we can't know how much of them are still intact
+  if pwsEntry or sacrificeEntry then
+    updateDisplayHelper(1, -1, shieldFrame, SHIELD_COLOR)
+  end
+
+  if spellstoneEntry then
+    updateDisplayHelper(1, -1, spellShieldFrame, SPELL_SHIELD_COLOR)
+  end
+end
+
+-- Make sure the display is hidden if the shield type is no longer active
+local hideShieldIfNecessary = function(dataTable, index)
+  if not isShieldTypeActive(dataTable) then
+    shields[index].max = 0
+    shields[index].left = 0
+
+    updateDisplay()
+  end
+end
+
+-- Callbacks for the timers so we don't have to keep creating new functions
+local clearPws = function()
+  hideShieldIfNecessary(adjuster.DATA_PWS, 1)
+end
+
+local clearSacrifice = function()
+  hideShieldIfNecessary(adjuster.DATA_SACRIFICE, 2)
+end
+
+local clearSpellstone = function()
+  hideShieldIfNecessary(adjuster.DATA_SPELLSTONE, 3)
+end
+
 local resetDisplayLocation = function()
   UIChanges_Profile['UIC_AD_FrameInfo'] = {}
 
@@ -224,55 +292,6 @@ local initializeFrames = function()
   initializeSpellShieldFrame()
 end
 
--- Traverse all buffs present to determine if we have a shield active that belongs to the passed in dataTable
-local findShieldBuffEntry = function(dataTable)
-  local isDone = false
-  local i = 1
-
-  while isDone == false do
-    local buffInfo = {UnitBuff('player', i, 'CANCELABLE')}
-
-    if (buffInfo[1] == nil) then
-      isDone = true
-    else
-      local spellId = buffInfo[10]
-
-      if dataTable[spellId] then
-        return dataTable[spellId]
-      end
-    end
-
-    i = i + 1
-  end
-
-  return nil
-end
-
--- Make sure the display is hidden if the shield buff is no longer active
-local hideShieldIfNecessary = function(dataTable, index)
-  local buffEntry = findShieldBuffEntry(dataTable)
-
-  if buffEntry == nil then
-    shields[index].max = 0
-    shields[index].left = 0
-
-    updateDisplay()
-  end
-end
-
--- Callbacks for the timers so we don't have to keep creating new functions
-local clearPws = function()
-  hideShieldIfNecessary(adjuster.DATA_PWS, 1)
-end
-
-local clearSacrifice = function()
-  hideShieldIfNecessary(adjuster.DATA_SACRIFICE, 2)
-end
-
-local clearSpellstone = function()
-  hideShieldIfNecessary(adjuster.DATA_SPELLSTONE, 3)
-end
-
 local handleAuraChange = function(dataTable, isAuraApplied, sourceName, spellId)
   local index = dataTable.index
 
@@ -283,7 +302,7 @@ local handleAuraChange = function(dataTable, isAuraApplied, sourceName, spellId)
 
   local amount = 0
 
-  if isApplied then
+  if isAuraApplied then
     local buffEntry = adjuster.spellLookup[spellId]
 
     amount = dataTable.calculateAmount(dataTable, buffEntry, sourceName)
@@ -359,7 +378,7 @@ local onCLEU = function()
   end
 
   local isAuraApplied = nil
-  if subevent == 'SPELL_AURA_APPLIED' then
+  if subevent == 'SPELL_AURA_APPLIED' or subevent == 'SPELL_AURA_REFRESH' then
     isAuraApplied = true
   elseif subevent == 'SPELL_AURA_REMOVED' then
     isAuraApplied = false
@@ -463,12 +482,7 @@ AbsorbDisplay.Enable = function()
   adjuster.CheckTalents()
   adjuster.CheckItemBonuses()
 
-  -- Check if the player is already shielded
-  local buffEntry = findShieldBuffEntry(adjuster.DATA_PWS)
-  if buffEntry then
-    -- Show residual since we can't know how much of the shield is still intact
-    updateDisplayHelper(1, -1, shieldFrame, SHIELD_COLOR) 
-  end
+  checkShieldsOnLoad() -- Check if the player is already shielded
 
   C.REGISTER_EVENTS(mainFrame, EVENTS)
 end

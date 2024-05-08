@@ -113,8 +113,8 @@ local updateDisplay = function()
   updateDisplayHelper(spellAbsorbMax, spellAbsorbLeft, spellShieldFrame, SPELL_SHIELD_COLOR)
 end
 
--- Traverse all buffs present to determine if we have a shield active that belongs to the passed in dataTable
-local isShieldTypeActive = function(dataTable)
+-- Traverse all buffs present to determine if we have an active shield spell with the passed in spellName
+local isShieldTypeActive = function(spellName)
   local i = 1
 
   while true do
@@ -123,11 +123,9 @@ local isShieldTypeActive = function(dataTable)
     if not auraData then
       return false
     end
-    
-    local spellId = auraData.spellId
-    local spellName = auraData.name
 
-    if adjuster.spellLookup[spellName] == dataTable and adjuster.spellLookup[spellId] then
+    -- Not comparing directly as the spellstone ranks have different names
+    if string.find(auraData.name, spellName) then
       return true
     end
 
@@ -135,34 +133,11 @@ local isShieldTypeActive = function(dataTable)
   end
 end
 
-local checkShieldsOnLoad = function()
-  local pwsEntry = isShieldTypeActive(adjuster.DATA_PWS)
-
-  local sacrificeEntry
-  if adjuster.DATA_SACRIFICE then
-    sacrificeEntry = isShieldTypeActive(adjuster.DATA_SACRIFICE)
-  end
-
-  local spellstoneEntry
-  if adjuster.DATA_SPELLSTONE then
-    spellstoneEntry = isShieldTypeActive(adjuster.DATA_SPELLSTONE)
-  end
-
-  -- Show shields with the residual amount since we can't know how much of them are still intact
-  if pwsEntry or sacrificeEntry then
-    updateDisplayHelper(1, -1, shieldFrame, SHIELD_COLOR)
-  end
-
-  if spellstoneEntry then
-    updateDisplayHelper(1, -1, spellShieldFrame, SPELL_SHIELD_COLOR)
-  end
-end
-
 -- Make sure the display is hidden if the shield type is no longer active
-local hideShieldIfNecessary = function(dataTable, index)
-  if not isShieldTypeActive(dataTable) then
-    shields[index].max = 0
-    shields[index].left = 0
+local hideShieldIfNecessary = function(dataTable)
+  if not isShieldTypeActive(dataTable.spellName) then
+    shields[dataTable.index].max = 0
+    shields[dataTable.index].left = 0
 
     updateDisplay()
   end
@@ -170,15 +145,41 @@ end
 
 -- Callbacks for the timers so we don't have to keep creating new functions
 local clearPws = function()
-  hideShieldIfNecessary(adjuster.DATA_PWS, 1)
+  hideShieldIfNecessary(adjuster.DATA_PWS)
 end
 
 local clearSacrifice = function()
-  hideShieldIfNecessary(adjuster.DATA_SACRIFICE, 2)
+  hideShieldIfNecessary(adjuster.DATA_SACRIFICE)
 end
 
 local clearSpellstone = function()
-  hideShieldIfNecessary(adjuster.DATA_SPELLSTONE, 3)
+  hideShieldIfNecessary(adjuster.DATA_SPELLSTONE)
+end
+
+-- This is only called when the module is enabled.
+local checkShieldsOnEnable = function()
+  if isShieldTypeActive(adjuster.DATA_PWS.spellName) then
+    shields[adjuster.DATA_PWS.index].max = 1
+    shields[adjuster.DATA_PWS.index].left = -1
+
+    backupTimers[adjuster.DATA_PWS.index] = C_Timer.NewTimer(adjuster.DATA_PWS.timerInterval, clearPws)
+  end
+
+  if adjuster.DATA_SACRIFICE and isShieldTypeActive(adjuster.DATA_SACRIFICE.spellName) then
+    shields[adjuster.DATA_SACRIFICE.index].max = 1
+    shields[adjuster.DATA_SACRIFICE.index].left = -1
+
+    backupTimers[adjuster.DATA_SACRIFICE.index] = C_Timer.NewTimer(adjuster.DATA_SACRIFICE.timerInterval, clearSacrifice)
+  end
+
+  if adjuster.DATA_SPELLSTONE and isShieldTypeActive(adjuster.DATA_SPELLSTONE.spellName) then
+    shields[adjuster.DATA_SPELLSTONE.index].max = 1
+    shields[adjuster.DATA_SPELLSTONE.index].left = -1
+
+    backupTimers[adjuster.DATA_SPELLSTONE.index] = C_Timer.NewTimer(adjuster.DATA_SPELLSTONE.timerInterval, clearSpellstone)
+  end
+
+  updateDisplay()
 end
 
 local resetDisplayLocation = function()
@@ -482,7 +483,7 @@ AbsorbDisplay.Enable = function()
   adjuster.CheckTalents()
   adjuster.CheckItemBonuses()
 
-  checkShieldsOnLoad() -- Check if the player is already shielded
+  checkShieldsOnEnable() -- Check if the player is already shielded
 
   C.REGISTER_EVENTS(mainFrame, EVENTS)
 end

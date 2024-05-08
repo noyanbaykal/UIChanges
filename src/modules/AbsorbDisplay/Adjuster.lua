@@ -70,11 +70,11 @@ DATA_SACRIFICE.index = 2
 DATA_SACRIFICE.timerInterval = 32
 
 -- This selfcast effect is present only in vanilla. It doesn't scale with player level or benefit from spell power.
--- The spellIds refer to the spells for conjuring the spellstones. The effectIds will show up in the combat log.
+-- The spellIds refer to the spell effects, the sourceIds refer to the spells for conjuring the spellstones.
 local DATA_SPELLSTONE = {
-  {level = 31, rank = 1, spellId = 2362,  effectId = 128,   amount = 400},
-  {level = 43, rank = 2, spellId = 17727, effectId = 17729, amount = 650},
-  {level = 55, rank = 3, spellId = 17728, effectId = 17730, amount = 900},
+  {level = 31, rank = 1, spellId = 128,   sourceId = 2362,  amount = 400},
+  {level = 43, rank = 2, spellId = 17729, sourceId = 17727, amount = 650},
+  {level = 55, rank = 3, spellId = 17730, sourceId = 17728, amount = 900},
 }
 DATA_SPELLSTONE.index = 3
 DATA_SPELLSTONE.timerInterval = 62
@@ -106,7 +106,7 @@ local checkTooltips = C.DUMMY_FUNCTION -- These will be set differently based on
 local checkTalents = C.DUMMY_FUNCTION
 local checkItemBonuses = C.DUMMY_FUNCTION
 
--- This is a lookup table for direct access to data table entries by spellId / effectId.
+-- This is a lookup table for direct access to data table entries by spellId
 local spellLookup
 
 -- Helper to remove spell entries from later expansions
@@ -196,8 +196,9 @@ end
 local checkTooltipsHelper = function(dataTable)
   for i = 1, #dataTable do
     local spellId = dataTable[i].spellId
+    local sourceId = dataTable[i].sourceId
 
-    if IsSpellKnown(spellId) or IsSpellKnown(spellId, true) then
+    if IsSpellKnown(spellId) or IsSpellKnown(spellId, true) or (sourceId and IsSpellKnown(sourceId)) then
       local text = GetSpellDescription(spellId)
       local firstNumber = string.match(text, '%d+')
   
@@ -330,14 +331,16 @@ local addLookupEntries = function(dataTable)
   end
 
   -- We'll need to reference the data tables too. Use the spell name for that.
-  local spellName = GetSpellInfo(dataTable[1].effectId or dataTable[1].spellId)
+  local spellName = GetSpellInfo(dataTable[1].spellId)
   spellLookup[spellName] = dataTable
+  dataTable.spellName = spellName
 
   for _, entry in ipairs(dataTable) do
     spellLookup[entry.spellId] = entry
-    
-    if entry.effectId then
-      spellLookup[entry.effectId] = entry
+
+    local currentSpellName = GetSpellInfo(entry.spellId)
+    if currentSpellName ~= spellName then -- For spells that have different names per rank
+      spellLookup[currentSpellName] = dataTable
     end
   end
 end

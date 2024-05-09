@@ -39,7 +39,10 @@ local SHIELD_WIDTH_MAX = 120
 local SHIELD_WIDTH_RESIDUAL = 12
 
 local playerName, playerClass
-local mainFrame, shieldFrame, spellShieldFrame, shields, backupTimers, adjuster
+local mainFrame, shieldFrame, spellShieldFrame, shields, backupTimers
+
+-- References to the variables returned from AdjustShieldSpellData
+local SpellLookup, CheckTooltips, CheckTalents, CheckItemBonuses, OnLevelUp
 
 local resetShields = function()
   shields[1].max = 0
@@ -134,7 +137,7 @@ local isShieldTypeActive = function(spellName)
 end
 
 -- Make sure the display is hidden if the shield type is no longer active
-local hideShieldIfNecessary = function(dataTable)
+local hideShieldIfNotActive = function(dataTable)
   if not isShieldTypeActive(dataTable.spellName) then
     shields[dataTable.index].max = 0
     shields[dataTable.index].left = 0
@@ -143,40 +146,17 @@ local hideShieldIfNecessary = function(dataTable)
   end
 end
 
--- Callbacks for the timers so we don't have to keep creating new functions
-local clearPws = function()
-  hideShieldIfNecessary(adjuster.DATA_PWS)
-end
-
-local clearSacrifice = function()
-  hideShieldIfNecessary(adjuster.DATA_SACRIFICE)
-end
-
-local clearSpellstone = function()
-  hideShieldIfNecessary(adjuster.DATA_SPELLSTONE)
-end
-
 -- This is only called when the module is enabled.
 local checkShieldsOnEnable = function()
-  if isShieldTypeActive(adjuster.DATA_PWS.spellName) then
-    shields[adjuster.DATA_PWS.index].max = 1
-    shields[adjuster.DATA_PWS.index].left = -1
-
-    backupTimers[adjuster.DATA_PWS.index] = C_Timer.NewTimer(adjuster.DATA_PWS.timerInterval, clearPws)
-  end
-
-  if adjuster.DATA_SACRIFICE and isShieldTypeActive(adjuster.DATA_SACRIFICE.spellName) then
-    shields[adjuster.DATA_SACRIFICE.index].max = 1
-    shields[adjuster.DATA_SACRIFICE.index].left = -1
-
-    backupTimers[adjuster.DATA_SACRIFICE.index] = C_Timer.NewTimer(adjuster.DATA_SACRIFICE.timerInterval, clearSacrifice)
-  end
-
-  if adjuster.DATA_SPELLSTONE and isShieldTypeActive(adjuster.DATA_SPELLSTONE.spellName) then
-    shields[adjuster.DATA_SPELLSTONE.index].max = 1
-    shields[adjuster.DATA_SPELLSTONE.index].left = -1
-
-    backupTimers[adjuster.DATA_SPELLSTONE.index] = C_Timer.NewTimer(adjuster.DATA_SPELLSTONE.timerInterval, clearSpellstone)
+  for _, dataTable in ipairs(SpellLookup.activeTables) do
+    if isShieldTypeActive(dataTable.spellName) then
+      local index = dataTable.index
+  
+      shields[index].max = 1
+      shields[index].left = -1
+  
+      backupTimers[index] = C_Timer.NewTimer(dataTable.timerInterval, dataTable.backupTimerCallback)
+    end
   end
 
   updateDisplay()
@@ -304,26 +284,12 @@ local handleAuraChange = function(dataTable, isAuraApplied, sourceName, spellId)
   local amount = 0
 
   if isAuraApplied then
-    local buffEntry = adjuster.spellLookup[spellId]
+    local buffEntry = SpellLookup[spellId]
 
     amount = dataTable.calculateAmount(dataTable, buffEntry, sourceName)
 
     -- Start a ticker as a backup to prevent unexpected cases of the shield display sticking around
-    local interval = dataTable.timerInterval
-
-    local callback
-
-    if dataTable == adjuster.DATA_PWS then
-      callback = clearPws
-    elseif dataTable == adjuster.DATA_SACRIFICE then
-      callback = clearSacrifice
-    elseif dataTable == adjuster.DATA_SPELLSTONE then
-      callback = clearSpellstone
-    end
-
-    if callback then
-      backupTimers[index] = C_Timer.NewTimer(interval, callback)
-    end
+    backupTimers[index] = C_Timer.NewTimer(dataTable.timerInterval, dataTable.backupTimerCallback)
   end
 
   shields[index].max = amount
@@ -340,10 +306,10 @@ local handleAbsorb = function(destName, info)
 
   -- Sacrifice is different than the others
   if destName == playerName then
-    if adjuster.spellLookup[info[17]] then
+    if SpellLookup[info[17]] then
       spellName = info[17]
       amount = info[19]
-    elseif adjuster.spellLookup[info[20]] then
+    elseif SpellLookup[info[20]] then
       spellName = info[20]
       amount = info[22]
     end
@@ -357,8 +323,8 @@ local handleAbsorb = function(destName, info)
     amount = info[22]
   end
 
-  if spellName and amount and adjuster.spellLookup[spellName] then
-    local shieldIndex = adjuster.spellLookup[spellName].index
+  if spellName and amount and SpellLookup[spellName] then
+    local shieldIndex = SpellLookup[spellName].index
 
     shields[shieldIndex].left = shields[shieldIndex].left - amount
   
@@ -393,7 +359,7 @@ local onCLEU = function()
   local spellId = info[12]
   local spellName = info[13]
 
-  local dataTable = adjuster.spellLookup[spellName]
+  local dataTable = SpellLookup[spellName]
   if not dataTable then
     return
   end
@@ -405,32 +371,32 @@ local EVENTS = {}
 EVENTS['COMBAT_LOG_EVENT_UNFILTERED'] = onCLEU
 
 EVENTS['PLAYER_LEVEL_UP'] = function(level)
-  adjuster.OnLevelUp(level)
-  adjuster.CheckTooltips()
+  OnLevelUp(level)
+  CheckTooltips()
 end
 
 EVENTS['SPELLS_CHANGED'] = function()
-  adjuster.CheckTooltips()
+  CheckTooltips()
 end
 
 EVENTS['UNIT_PET'] = function(unitTarget)
   if unitTarget == 'player' then
-    adjuster.CheckTooltips()
+    CheckTooltips()
   end
 end
 
 EVENTS['PLAYER_TALENT_UPDATE'] = function()
-  adjuster.CheckTooltips()
-  adjuster.CheckTalents()
+  CheckTooltips()
+  CheckTalents()
 end
 
 EVENTS['CHARACTER_POINTS_CHANGED'] = function()
-  adjuster.CheckTooltips()
-  adjuster.CheckTalents()
+  CheckTooltips()
+  CheckTalents()
 end
 
 EVENTS['PLAYER_EQUIPMENT_CHANGED'] = function()
-  adjuster.CheckItemBonuses()
+  CheckItemBonuses()
 end
 
 local AbsorbDisplay = {}
@@ -438,8 +404,6 @@ local AbsorbDisplay = {}
 AbsorbDisplay.Initialize = function()
   playerName = UnitName('player')
   playerClass = select(2, UnitClass('player'))
-
-  adjuster = addonTable.Adjuster.new(playerName, playerClass)
 
   initializeFrames()
   backupTimers = {}
@@ -458,6 +422,8 @@ AbsorbDisplay.Initialize = function()
       left = 0,
     },
   }
+
+  SpellLookup, CheckTooltips, CheckTalents, CheckItemBonuses, OnLevelUp = addonTable.AdjustShieldSpellData(playerName, playerClass, hideShieldIfNotActive)
 
   if playerClass ~= 'PRIEST' then
     EVENTS['PLAYER_EQUIPMENT_CHANGED'] = nil
@@ -479,9 +445,9 @@ AbsorbDisplay.Initialize = function()
 end
 
 AbsorbDisplay.Enable = function()
-  adjuster.CheckTooltips()
-  adjuster.CheckTalents()
-  adjuster.CheckItemBonuses()
+  CheckTooltips()
+  CheckTalents()
+  CheckItemBonuses()
 
   checkShieldsOnEnable() -- Check if the player is already shielded
 

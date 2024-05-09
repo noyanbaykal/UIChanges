@@ -193,6 +193,10 @@ local hasT10Bonus = function()
   return false
 end
 
+local onLevelUp = function(newLevel)
+  playerLevel = newLevel
+end
+
 local checkTooltipsHelper = function(dataTable)
   for i = 1, #dataTable do
     local spellId = dataTable[i].spellId
@@ -325,15 +329,22 @@ local adjustWarlock = function()
   end
 end
 
-local addLookupEntries = function(dataTable)
+local addLookupEntries = function(dataTable, timerCallback)
   if not dataTable or not dataTable[1] then
     return
   end
+
+  spellLookup.activeTables[#spellLookup.activeTables + 1] = dataTable
 
   -- We'll need to reference the data tables too. Use the spell name for that.
   local spellName = GetSpellInfo(dataTable[1].spellId)
   spellLookup[spellName] = dataTable
   dataTable.spellName = spellName
+
+  -- Set up callbacks for the timers so we don't have to keep creating new functions
+  dataTable.backupTimerCallback = function()
+    timerCallback(dataTable)
+  end
 
   for _, entry in ipairs(dataTable) do
     spellLookup[entry.spellId] = entry
@@ -345,7 +356,7 @@ local addLookupEntries = function(dataTable)
   end
 end
 
-local adjust = function(name, playerClass)
+local AdjustShieldSpellData = function(name, playerClass, timerCallback)
   playerName = name
   playerLevel = UnitLevel('player')
 
@@ -368,33 +379,13 @@ local adjust = function(name, playerClass)
 
   -- Setup the spell lookups
   spellLookup = {}
-  addLookupEntries(DATA_PWS)
-  addLookupEntries(DATA_SACRIFICE)
-  addLookupEntries(DATA_SPELLSTONE)
+  spellLookup.activeTables = {}
+
+  addLookupEntries(DATA_PWS, timerCallback)
+  addLookupEntries(DATA_SACRIFICE, timerCallback)
+  addLookupEntries(DATA_SPELLSTONE, timerCallback)
+
+  return spellLookup, checkTooltips, checkTalents, checkItemBonuses, onLevelUp
 end
 
-local Adjuster = {}
-
-Adjuster.new = function(playerName, playerClass)
-  local self = {}
-
-  adjust(playerName, playerClass)
-
-  function self.OnLevelUp(newLevel)
-    playerLevel = newLevel
-  end
-
-  self.DATA_PWS = DATA_PWS
-  self.DATA_SACRIFICE = DATA_SACRIFICE
-  self.DATA_SPELLSTONE = DATA_SPELLSTONE
-
-  self.spellLookup = spellLookup
-
-  self.CheckTooltips = checkTooltips
-  self.CheckTalents = checkTalents
-  self.CheckItemBonuses = checkItemBonuses
-
-  return self
-end
-
-addonTable.Adjuster = Adjuster
+addonTable.AdjustShieldSpellData = AdjustShieldSpellData

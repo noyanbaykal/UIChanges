@@ -121,6 +121,9 @@ local isShieldTypeActive = function(spellName)
   local i = 1
 
   while true do
+    -- This function returns a 'points' array which could have the remaining absorb amount in it for the
+    -- shield spells but it does not do so in vanilla. In Cata, an amount is returned which does not fully
+    -- take into account talents & spellpower.
     local auraData = C_UnitAuras.GetAuraDataByIndex('player', i, 'HELPFUL')
 
     if not auraData then
@@ -273,7 +276,7 @@ local initializeFrames = function()
   initializeSpellShieldFrame()
 end
 
-local handleAuraChange = function(dataTable, isAuraApplied, sourceName, spellId)
+local handleAuraChange = function(dataTable, isAuraApplied, sourceName, spellId, baseAmount)
   local index = dataTable.index
 
   local timer = backupTimers[index]
@@ -286,7 +289,7 @@ local handleAuraChange = function(dataTable, isAuraApplied, sourceName, spellId)
   if isAuraApplied then
     local buffEntry = SpellLookup[spellId]
 
-    amount = dataTable.calculateAmount(dataTable, buffEntry, sourceName)
+    amount = dataTable.calculateAmount(dataTable, buffEntry, sourceName, baseAmount)
 
     -- Start a ticker as a backup to prevent unexpected cases of the shield display sticking around
     backupTimers[index] = C_Timer.NewTimer(dataTable.timerInterval, dataTable.backupTimerCallback)
@@ -326,7 +329,7 @@ local handleAbsorb = function(destName, info)
   if spellName and amount and SpellLookup[spellName] then
     local shieldIndex = SpellLookup[spellName].index
 
-    shields[shieldIndex].left = shields[shieldIndex].left - amount
+    shields[shieldIndex].left = math.ceil(shields[shieldIndex].left - amount)
   
     updateDisplay()
   end
@@ -364,7 +367,9 @@ local onCLEU = function()
     return
   end
 
-  handleAuraChange(dataTable, isAuraApplied, sourceName, spellId)
+  local baseAmount = type(info[16]) == 'number' and math.ceil(info[16]) or nil -- Cataclysm only!
+  
+  handleAuraChange(dataTable, isAuraApplied, sourceName, spellId, baseAmount)
 end
 
 local EVENTS = {}

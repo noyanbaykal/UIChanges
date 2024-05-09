@@ -243,7 +243,7 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'AD', -- Used in subframe names
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_WRATH_OF_THE_LICH_KING end,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM end,
       ['subsettings'] = { -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
         ['entries'] = {
           {

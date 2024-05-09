@@ -30,6 +30,12 @@ local C = addonTable.C
 -- The data & lookup tables may be altered in adjustDataTables based on expansion.
 -- Data read from tooltips will be stored the data tables with the 'current' key.
 
+-- Spell ranks go away with Cataclysm.
+-- The spell tooltips in the Cataclysm client seem to take into account all factors and display the final
+-- amounts so we can solely rely on the tooltips for selfcast spells. Unlike in previous expansions,
+-- the SPELL_AURA_APPLIED event in Cataclysm provides the amount value. This is only base amount but we'll
+-- use it for PWS casts by others.
+
 -- In TBC and WOTLK the PWS shield amount formula is different and I can't test them at this time so
 -- we'll read PWS tooltips only in vanilla for now.
 local DATA_PWS = { -- Power Word: Shield
@@ -109,7 +115,18 @@ local checkItemBonuses = C.DUMMY_FUNCTION
 -- This is a lookup table for direct access to data table entries by spellId
 local spellLookup
 
--- Helper to remove spell entries from later expansions
+-- Cataclysm and later
+local removeSpellRanks = function(dataTable)
+  for i = #dataTable, 2, -1 do
+    dataTable[i] = nil
+  end
+
+  dataTable[1].rank = nil
+  dataTable[1].amount = nil
+  dataTable[1].amountMax = nil
+end
+
+-- Helper called in Vanilla and TBC to remove spell entries from later expansions
 local removeLaterEntries = function(dataTable)
   for i = #dataTable, 1, -1 do
     local entry = dataTable[i]
@@ -144,6 +161,17 @@ local adjustDataForExpansion = function()
   elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
     maxLevel = 80
     spellpowerCoefficientPWS = 0.8068
+
+    DATA_SPELLSTONE = nil
+  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CATACLYSM then
+    maxLevel = 85
+    spellpowerCoefficientPWS = 0.87
+
+    removeSpellRanks(DATA_PWS)
+    removeSpellRanks(DATA_SACRIFICE)
+
+    DATA_PWS[1].level = 5
+    DATA_SACRIFICE[1].level = 1
 
     DATA_SPELLSTONE = nil
   end
@@ -206,12 +234,16 @@ local checkTooltipsHelper = function(dataTable)
       local text = GetSpellDescription(spellId)
       local firstNumber = string.match(text, '%d+')
   
-      dataTable[i].current = firstNumber
+      dataTable[i].current = tonumber(firstNumber)
     end
   end
 end
 
-local calculateAmountPwsOther = function(_, buffEntry)
+local calculateAmountPwsOther = function(_, buffEntry, _, baseAmount)
+  if baseAmount then -- Only in Cataclysm
+    return baseAmount
+  end
+
   return playerLevel == maxLevel and buffEntry.amountMax or buffEntry.amount
 end
 
@@ -244,7 +276,7 @@ local selfcastHelperPwsExpansion = function(dataTable, buffEntry)
   local coefficient = spellpowerCoefficientPWS + talentCoefficientBonusBT
 
   local finalAmount = (baseAmount + (spellpower * coefficient)) * talentModifierIPWS * setBonusModifierPWS
-  return math.floor(finalAmount)
+  return math.ceil(finalAmount)
 end
 
 local checkTalentIpws = function(columnIndex)
@@ -257,14 +289,14 @@ local checkItemBonusesPriestPreWotlk = function()
 end
 
 local adjustPriest = function()
-  local selfCastHelper
-
   if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
-    selfCastHelper = function(_, buffEntry)
+    local selfCastHelper = function(_, buffEntry)
       -- talentModifierIPWS is baked into buffEntry.current
-      local baseAmount = math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
-      return baseAmount + (spellpower * spellpowerCoefficientPWS)
+      local baseAmount = buffEntry.current or buffEntry.amount -- Have a fallback
+      return math.ceil(baseAmount + (spellpower * spellpowerCoefficientPWS))
     end
+
+    DATA_PWS.calculateAmount = calculateAmountPwsPriest(selfCastHelper)
 
     checkTooltips = function()
       checkTooltipsHelper(DATA_PWS)
@@ -276,7 +308,7 @@ local adjustPriest = function()
 
     checkItemBonuses = checkItemBonusesPriestPreWotlk
   elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
-    selfCastHelper = selfcastHelperPwsExpansion
+    DATA_PWS.calculateAmount = calculateAmountPwsPriest(selfcastHelperPwsExpansion)
 
     checkTalents = function()
       checkTalentIpws(5)
@@ -284,7 +316,7 @@ local adjustPriest = function()
 
     checkItemBonuses = checkItemBonusesPriestPreWotlk
   elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
-    selfCastHelper = selfcastHelperPwsExpansion
+    DATA_PWS.calculateAmount = calculateAmountPwsPriest(selfcastHelperPwsExpansion)
 
     checkTalents = function()
       checkTalentIpws(9)
@@ -297,9 +329,19 @@ local adjustPriest = function()
       spellpower = GetSpellBonusDamage(2) or 0
       setBonusModifierPWS = hasT10Bonus() and 1.05 or 1
     end
-  end
+  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CATACLYSM then
+    DATA_PWS.calculateAmount = function(dataTable, buffEntry, sourceName, baseAmount)
+      if sourceName == playerName then
+        return buffEntry.current
+      else
+        return calculateAmountPwsOther(dataTable, buffEntry, sourceName, baseAmount)
+      end
+    end
 
-  DATA_PWS.calculateAmount = calculateAmountPwsPriest(selfCastHelper)
+    checkTooltips = function()
+      checkTooltipsHelper(DATA_PWS)
+    end
+  end
 end
 
 local checkTooltipsWarlockExpansion = function()
@@ -309,22 +351,20 @@ end
 local adjustWarlock = function()
   DATA_SACRIFICE.calculateAmount = function(_, buffEntry)
     --talentModifierSacrifice is baked into buffEntry.current
-    return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
+    return math.ceil(buffEntry.current or buffEntry.amount) -- Have a fallback
   end
 
   if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
     DATA_SPELLSTONE.calculateAmount = function(_, buffEntry)
       --talentModifierSpellstone is baked into buffEntry.current
-      return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
+      return math.ceil(buffEntry.current or buffEntry.amount) -- Have a fallback
     end
 
     checkTooltips = function()
       checkTooltipsHelper(DATA_SACRIFICE)
       checkTooltipsHelper(DATA_SPELLSTONE)
     end
-  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
-    checkTooltips = checkTooltipsWarlockExpansion
-  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
+  elseif LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM then
     checkTooltips = checkTooltipsWarlockExpansion
   end
 end

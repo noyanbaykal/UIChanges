@@ -303,8 +303,6 @@ end
 
 -- The info has variable number of values based on melee / spell damage absorbed
 local handleAbsorb = function(destName, info)
-  local spellOrCasterName = info[13]
-
   local spellName, amount
 
   -- Sacrifice is different than the others
@@ -317,6 +315,8 @@ local handleAbsorb = function(destName, info)
       amount = info[22]
     end
   end
+
+  local spellOrCasterName = info[13]
 
   if spellOrCasterName == playerName then
     spellName = info[17]

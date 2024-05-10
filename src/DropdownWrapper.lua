@@ -132,7 +132,7 @@ end
 
 addonTable.CreateDropdown = function(parentFrame, frameName, text, key, tooltipText, width, onChange)
   -- The wrapper aligns with the visible parts of the dropdown and allows us to isolate
-  -- all the dropdown setup in this file.
+  -- all the dropdown setup into this file.
   local wrapper = CreateFrame('Frame', frameName, parentFrame)
 
   local dropdown = createLibUIDropdown(wrapper, frameName, text, key, tooltipText, width, onChange)
@@ -146,7 +146,7 @@ addonTable.CreateDropdown = function(parentFrame, frameName, text, key, tooltipT
   dropdown:SetPoint('TOP', wrapper, 'TOP', 0, paddingAdjustmentY)
   dropdown:SetPoint('LEFT', wrapper, 'LEFT', offsetX, 0)
 
-  -- Route the "public" attributes to the dropdown
+  -- Route the 'public' attributes to the dropdown
   wrapper.Text = dropdown.Text
   wrapper.Button = dropdown.Button
   wrapper['GetSize'] = dropdown['GetSize']

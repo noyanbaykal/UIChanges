@@ -112,7 +112,7 @@ local checkTooltips = C.DUMMY_FUNCTION -- These will be set differently based on
 local checkTalents = C.DUMMY_FUNCTION
 local checkItemBonuses = C.DUMMY_FUNCTION
 
--- This is a lookup table for direct access to data table entries by spellId
+-- This is a lookup table for direct access to data table entries by spellId, or the dataTables by spellName.
 local spellLookup
 
 -- Cataclysm and later

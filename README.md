@@ -21,7 +21,7 @@ Buyout warning: Whenever you select an item from the Browse Tab results, this mo
 Quick search: Clicking on an item in your bags with the mouse MiddleButton while the AH Browse tab is visible will initiate a search with that item's name.
 
 **Bag Utilities**
-Opens looted clams for convenience and avoiding inventory congestion. UseContainerItem is protected in WOTLK so this feature is classic era only.
+Opens looted clams for convenience and avoiding inventory congestion. UseContainerItem is protected in WOTLK & onwards so this feature is classic era only.
 
 **Critical Reminders**
 This module makes the selected types of events / failures more noticeable by displaying an error icon and optionally playing a sound.
@@ -29,7 +29,7 @@ The 'Breath Warning' reminder displays a numeric timer next to the standard brea
 The reminders that are turned on by default are breath timer with sound, enter combat event, ability / spell failed due to lack of line of sight and gathering failure. Many other reminders for combat events can be enabled. The error display can be moved with a CTRL click or anchored to the TargetFrame.
 
 **Druid Mana Bar**
-Displays a mana bar underneath the player frame when shapeshifted into a druid form that does not use mana. This feature exists in WOTLK classic so this is for classic era only. The mana bar obeys the "Status Text Display" preference under the Interface options.
+Displays a mana bar underneath the player frame when shapeshifted into a druid form that does not use mana. This feature exists in WOTLK & onwards so this is for classic era only. The mana bar obeys the "Status Text Display" preference under the Interface options.
 
 **Party Pet Frames**
 Back in vanilla the default party frames used to show party pet frames as well. This feature seems to have been hidden behind a console variable and the pet power frames dropped somewhere around patch 7.0.3. This module enables the console variable and implements the missing power bars. The visibility provided might come in handy when you are in a dungeon with a pet class and notice through the pet frame the pet getting two shotted even though you don't expect anyone to be in combat or when you are forced to make a last stand and a clutch heal to a pet might make all the difference.

@@ -41,6 +41,29 @@ Please let me know if you encounter any issues.
 
 UIChanges makes use of LibStub and LibUIDropDownMenu.
 
+### How to Install
+
+1. Download the code as a zip file from: <https://github.com/noyanbaykal/UIChanges/archive/refs/heads/master.zip>.
+2. The zip file has a folder called "UIChanges-master" at the root.
+Extract this folder & all it's contents into the AddOns folder of the WoW classic client you're targeting.
+3. Rename the extracted folder to "UIChanges".
+
+The default installation path for WoW on Windows is:
+
+`C:\Program Files (x86)\World of Warcraft`
+
+on Mac:
+
+`/Applications/World of Warcraft/`
+
+Inside the WoW directory you will find the AddOns folder.
+
+For the classic client:
+`C:\Program Files (x86)\World of Warcraft\_classic_\Interface\AddOns`
+
+For the classic era client:
+`C:\Program Files (x86)\World of Warcraft\_classic_era_\Interface\AddOns`
+
 ### License
 UIChanges
 

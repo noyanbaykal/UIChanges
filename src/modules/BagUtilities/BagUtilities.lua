@@ -37,7 +37,9 @@ end
 
 local TOGGLE_TIMER_INTERVAL = 1 -- Seconds
 
-local mainFrame, clams, clamsCount, toggleTimer, isOpeningClams, stack, isWaitLootClose
+local mainFrame, clams, clamInfoCount, toggleTimer, stack
+
+local haveClam, isWaitingLootClose, isWaitingCombatEnd, isOpeningClams
 
 local push = function(bagSlot, slot)
   local i = #stack + 1
@@ -64,6 +66,7 @@ local openNextClam = function()
 
   if bagSlot == nil or slot == nil then
     isOpeningClams = false
+    haveClam = false
     return
   end
 
@@ -95,18 +98,31 @@ local startOpeningClams = function()
   openNextClam()
 end
 
+local isClamItem = function(text)
+  local left = string.find(text, '%[')
+  local right = string.find(text, '%]', left)
+
+  if not left or not right then
+    return false
+  end
+
+  local itemName = string.sub(text, left + 1, right - 1)
+  
+  return clams[itemName] == true
+end
+
 local checkIfDoneReceivingClamInfo = function()
-  if clamsCount == CLAMS_TOTAL then
+  if clamInfoCount == CLAMS_TOTAL then
     mainFrame:UnregisterEvent('GET_ITEM_INFO_RECEIVED')
   end
 end
 
 local handleItemInfoReceived = function(itemID, success)
   if itemID and success and CLAM_IDS[itemID] then
-    local name = GetItemInfo(itemID)
+    local name = C_Item.GetItemInfo(itemID)
 
     clams[name] = true
-    clamsCount = clamsCount + 1
+    clamInfoCount = clamInfoCount + 1
 
     checkIfDoneReceivingClamInfo()
   end
@@ -115,14 +131,14 @@ end
 -- Getting itemInfo is not guaranteed. Have to query and then listen to events afterwards
 local initializeClamsTable = function()
   clams = {}
-  clamsCount = 0
+  clamInfoCount = 0
 
   for id, _ in pairs(CLAM_IDS) do
-    local name = GetItemInfo(id)
+    local name = C_Item.GetItemInfo(id)
 
     if name then
       clams[name] = true
-      clamsCount = clamsCount + 1
+      clamInfoCount = clamInfoCount + 1
     end
   end
 
@@ -141,37 +157,64 @@ EVENTS['LOOT_READY'] = function()
 end
 
 EVENTS['LOOT_CLOSED'] = function()
-  if isWaitLootClose then
-    isWaitLootClose = false
-    startOpeningClams()
-  end
-end
+  if isWaitingLootClose then
+    isWaitingLootClose = false
 
-EVENTS['PLAYER_MONEY'] = function()
-  if not InCombatLockdown() and _G['LootFrame']:IsVisible() == false then
-    startOpeningClams()
-  end
-end
-
-EVENTS['BAG_UPDATE_DELAYED'] = function()
-  if not InCombatLockdown() and _G['LootFrame']:IsVisible() == false then
-    startOpeningClams()
+    if InCombatLockdown() then
+      isWaitingCombatEnd = true
+    else
+      startOpeningClams()
+    end
   end
 end
 
 EVENTS['PLAYER_REGEN_ENABLED'] = function()
+  if not isWaitingCombatEnd then
+    return
+  end
+
+  isWaitingCombatEnd = false
+
   if _G['LootFrame']:IsVisible() then
-    -- This is for the edge case of the player getting out of combat while looting
-    isWaitLootClose = true
+    -- This is for the edge case of the player getting out of combat while still looting
+    isWaitingLootClose = true
   else
     startOpeningClams()
   end
 end
 
+EVENTS['BAG_UPDATE_DELAYED'] = function()
+  if not haveClam then -- No clams to open
+    return
+  end
+
+  if _G['LootFrame']:IsVisible() then -- Not yet done with looting all the items
+    return
+  end
+
+  if isOpeningClams then -- Just finished looting the contents of a clam
+    openNextClam()
+    return
+  end
+
+  if InCombatLockdown() then
+    isWaitingCombatEnd = true
+    return
+  end
+
+  startOpeningClams()
+end
+
+EVENTS['CHAT_MSG_LOOT'] = function(text)
+  if isClamItem(text) then
+    haveClam = true
+  end
+end
+
 -- Make sure we have finished with the itemInfos before disabling the module, to prevent breaking
--- the setup incase the user rapidly toggles the addon.
+-- the setup in case the user rapidly toggles the addon.
 local toggleGuard = function()
-  if clamsCount == CLAMS_TOTAL then
+  if clamInfoCount == CLAMS_TOTAL then
     if toggleTimer and not toggleTimer:IsCancelled() then
       toggleTimer:Cancel()
     end
@@ -186,6 +229,8 @@ BagUtilities.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_BagUtilities', UIParent)
   mainFrame:Hide()
 
+  haveClam = false
+  isWaitingLootClose = false
   isOpeningClams = false
   stack = {}
 
@@ -203,7 +248,7 @@ BagUtilities.Enable = function()
 end
 
 BagUtilities.Disable = function()
-  if clamsCount == CLAMS_TOTAL then
+  if clamInfoCount == CLAMS_TOTAL then
     C.UNREGISTER_EVENTS(mainFrame, EVENTS)
   else
     toggleTimer = C_Timer.NewTicker(TOGGLE_TIMER_INTERVAL, toggleGuard)

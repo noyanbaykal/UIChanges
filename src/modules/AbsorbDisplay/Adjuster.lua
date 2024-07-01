@@ -21,7 +21,7 @@ local _, addonTable = ...
 
 local C = addonTable.C
 
--- Spells scale with the caster's level, resulting in a range of amount to amountMax. There isn't a
+-- Spells scale with the caster's level, resulting in a range from amount to amountMax. There isn't a
 -- clean way of accounting for this except when the player is the one casting.
 -- In that case we can read the spell tooltip which includes the correct base value, including
 -- any talent modifiers. Spell power from gear will be added on top of this base value.

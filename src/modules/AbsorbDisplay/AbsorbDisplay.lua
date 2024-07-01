@@ -454,7 +454,7 @@ AbsorbDisplay.Enable = function()
   CheckTalents()
   CheckItemBonuses()
 
-  checkShieldsOnEnable() -- Check if the player is already shielded
+  checkShieldsOnEnable()
 
   C.REGISTER_EVENTS(mainFrame, EVENTS)
 end

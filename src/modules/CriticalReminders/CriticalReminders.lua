@@ -21,7 +21,7 @@ local _, addonTable = ...
 
 local C = addonTable.C
 
-local mainFrame, errorFrame, breathFrame, attackTimer, breathTimer, breathValues
+local mainFrame, errorFrame, breathFrame, errorTimer, breathTimer, breathValues
 
 local TIMER_INTERVAL = 4 -- Seconds
 local BREATH_TIMER_INTERVAL = 1 -- Seconds
@@ -187,17 +187,17 @@ local breathStart = function(value, maxValue, scale, paused)
   end
 end
 
-local stopAttackTimer = function()
-  if attackTimer and not attackTimer:IsCancelled() then
-    attackTimer:Cancel()
+local stopErrorTimer = function()
+  if errorTimer and not errorTimer:IsCancelled() then
+    errorTimer:Cancel()
   end
 
   errorFrame:Hide()
 end
 
 local showUIErrorMessage = function(textureName, playSound, size, offsetX, offsetY)
-  stopAttackTimer()
-  attackTimer = C_Timer.NewTicker(TIMER_INTERVAL, stopAttackTimer)
+  stopErrorTimer()
+  errorTimer = C_Timer.NewTicker(TIMER_INTERVAL, stopErrorTimer)
   setErrorFrame(textureName, playSound, size, offsetX, offsetY)
 end
 
@@ -372,7 +372,7 @@ end
 
 EVENTS['PLAYER_REGEN_ENABLED'] = function()
   if errorFrame.texture:GetTexture() == 132147 then -- Ability_DualWield used when the player enters combat
-    stopAttackTimer()
+    stopErrorTimer()
   end
 end
 
@@ -408,7 +408,7 @@ end
 
 CriticalReminders.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
-  stopAttackTimer()
+  stopErrorTimer()
   breathStop()
 end
 

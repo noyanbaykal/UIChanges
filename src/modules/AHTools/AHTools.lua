@@ -55,7 +55,7 @@ local function searchItemInAH(bagID, slotID)
   -- to physically click on items etc.
   local item = C_Container.GetContainerItemLink(bagID, slotID)
   if item then
-    local itemName = '"'..select(1, GetItemInfo(item))..'"'
+    local itemName = '"'..select(1, C_Item.GetItemInfo(item))..'"'
 
     BrowseName:SetText(itemName)
     BrowseSearchButton:Click()

@@ -29,6 +29,9 @@ C.SETTINGS_TABLE = {} -- This is for key lookups into the Modules table but bewa
 C.INCOMPATIBLE_MODULE_NAMES = {}
 C.MODULES = {}
 
+C.GET_SPELL_NAME = C_Spell and C_Spell.GetSpellName or GetSpellInfo
+C.GET_SPELL_DESCRIPTION = C_Spell and C_Spell.GetSpellDescription or GetSpellDescription
+
 C.DUMMY_FUNCTION = function() end -- Will re-use this single function when we need a dummy function.
 
 C.REGISTER_EVENTS = function(frame, eventsTable)
@@ -89,15 +92,15 @@ local buildCommonStrings = function (L)
   L.PPF = {L.PPF_1, colorRed .. L.PPF_2 ..colorEscape}
 
   local AbsorbDisplayStringHelper = function()
-    local namePws = GetSpellInfo(17)
-    local nameSacrifice = GetSpellInfo(7812)
+    local namePws = C.GET_SPELL_NAME(17)
+    local nameSacrifice = C.GET_SPELL_NAME(7812)
   
     local spellstoneId = 128
     if LE_EXPANSION_LEVEL_CURRENT > LE_EXPANSION_BURNING_CRUSADE then
       spellstoneId = 54730
     end
   
-    local nameSpellstone = GetSpellInfo(spellstoneId)
+    local nameSpellstone = C.GET_SPELL_NAME(spellstoneId)
 
     if not nameSpellstone then
       return namePws..' & '..nameSacrifice..'.'

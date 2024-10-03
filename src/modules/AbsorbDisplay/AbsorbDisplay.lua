@@ -86,7 +86,7 @@ local updateDisplayHelper = function(max, left, frame, color)
   else
     local percentage, width = getDrawWidth(max, left)
 
-    frame.value:SetText(left)
+    frame.value:SetText(FormatLargeNumber(left))
     frame.percentage:SetText(percentage..'%')
 
     frame.remaining:SetBackdropColor(unpack(color))
@@ -384,6 +384,10 @@ EVENTS['SPELLS_CHANGED'] = function()
   CheckTooltips()
 end
 
+EVENTS['SPELL_TEXT_UPDATE'] = function()
+  CheckTooltips()
+end
+
 EVENTS['UNIT_PET'] = function(unitTarget)
   if unitTarget == 'player' then
     CheckTooltips()
@@ -440,6 +444,7 @@ AbsorbDisplay.Initialize = function()
 
   if playerClass ~= 'PRIEST' and playerClass ~= 'WARLOCK' then
     EVENTS['SPELLS_CHANGED'] = nil
+    EVENTS['SPELL_TEXT_UPDATE'] = nil
     EVENTS['PLAYER_TALENT_UPDATE'] = nil
     EVENTS['CHARACTER_POINTS_CHANGED'] = nil
   end

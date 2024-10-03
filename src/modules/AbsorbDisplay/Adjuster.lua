@@ -231,10 +231,14 @@ local checkTooltipsHelper = function(dataTable)
     local sourceId = dataTable[i].sourceId
 
     if IsSpellKnown(spellId) or IsSpellKnown(spellId, true) or (sourceId and IsSpellKnown(sourceId)) then
-      local text = GetSpellDescription(spellId)
-      local firstNumber = string.match(text, '%d+')
-  
-      dataTable[i].current = tonumber(firstNumber)
+      local text = C.GET_SPELL_DESCRIPTION(spellId)
+      local firstNumber = string.match(text, '%d+%.?%,?%d+') -- May include a comma or dot
+
+      if firstNumber then
+        firstNumber = firstNumber:gsub('%.?%,?', '')
+
+        dataTable[i].current = tonumber(firstNumber)
+      end
     end
   end
 end
@@ -377,7 +381,7 @@ local addLookupEntries = function(dataTable, timerCallback)
   spellLookup.activeTables[#spellLookup.activeTables + 1] = dataTable
 
   -- We'll need to reference the data tables too. Use the spell name for that.
-  local spellName = GetSpellInfo(dataTable[1].spellId)
+  local spellName = C.GET_SPELL_NAME(dataTable[1].spellId)
   spellLookup[spellName] = dataTable
   dataTable.spellName = spellName
 
@@ -389,7 +393,7 @@ local addLookupEntries = function(dataTable, timerCallback)
   for _, entry in ipairs(dataTable) do
     spellLookup[entry.spellId] = entry
 
-    local currentSpellName = GetSpellInfo(entry.spellId)
+    local currentSpellName = C.GET_SPELL_NAME(entry.spellId)
     if currentSpellName ~= spellName then -- For spells that have different names per rank
       spellLookup[currentSpellName] = dataTable
     end

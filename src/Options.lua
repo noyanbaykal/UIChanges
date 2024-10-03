@@ -25,7 +25,7 @@ local C = addonTable.C
 local settingsTable = C.SETTINGS_TABLE -- We'll be able to reference entries by their keys through the settingsTable
 
 local isClassic = WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE
-local defaultOptionsFrame = isClassic and _G['InterfaceOptionsFramePanelContainer'] or _G['SettingsPanel']
+local defaultOptionsFrame = _G['SettingsPanel']
 
 local gameFontColor = {} -- Yellow. Module checkboxes will override checkbox text color.
 gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4] = _G['GameFontNormal']:GetTextColor()
@@ -153,16 +153,18 @@ local createCheckBox = function(frameName, text, key, tooltipText, isSubsetting)
     checkbox:SetChecked(newValue)
   end
 
-  -- Subsetting checkboxes should not become wider than buttons or dropdowns
-  local maxTextWidth = BUTTON_WIDTH - checkbox:GetWidth()
-
+  checkbox.Text:SetPoint('LEFT', checkbox, 'RIGHT', 4, 0)
   checkbox.Text:SetText(text)
 
   if isSubsetting then
+    -- Subsetting checkboxes should not become wider than buttons or dropdowns
+    local maxTextWidth = BUTTON_WIDTH - checkbox:GetWidth()
+
     checkbox.Text:SetWidth(maxTextWidth)
     checkbox.Text:SetNonSpaceWrap(true)
     checkbox.Text:SetWordWrap(true)
     checkbox.Text:SetMaxLines(2)
+    checkbox.Text:SetJustifyH('LEFT')
 
     -- Not using the built-in tooltipText attribute because that gets truncated too if the text
     -- is too long and doesn't support this case here
@@ -348,17 +350,13 @@ local createModuleOptions = function(moduleEntry)
   -- Module description
   for i = 1, #description do
     local descriptionText = moduleCheckbox:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
+    descriptionText:SetPoint('LEFT', moduleCheckbox.Text, 'LEFT', 2, 0)
+    descriptionText:SetPoint('TOP', moduleCheckbox, 'BOTTOM', 0, (i - 1) * -16)
+    descriptionText:SetPoint('RIGHT', _G['SettingsPanel'].Container, 'RIGHT', -28, 0)
+
     descriptionText:SetTextColor(1, 1, 1)
     descriptionText:SetFormattedText(description[i])
-    descriptionText:SetPoint('LEFT', moduleCheckbox.Text, 'LEFT', 0, 0)
-    descriptionText:SetPoint('TOP', moduleCheckbox, 'BOTTOM', 0, (i - 1) * -16)
     descriptionText:SetJustifyH('LEFT')
-
-    if isClassic then
-      descriptionText:SetWidth(scrollChild:GetWidth() - math.floor(moduleCheckbox:GetSize()))
-    else
-      descriptionText:SetPoint('RIGHT', _G['SettingsPanel'].Container, 'RIGHT', -28, 0)
-    end
 
     lastFrameTop = descriptionText
   end
@@ -499,15 +497,14 @@ local setupOptionsPanel = function()
   infoText:SetSpacing(2)
 
   if isClassic then
-    infoText:SetWidth(outerPanelWidth)
     infoText:SetText(L.OPTIONS_INFO)
-    infoText:SetPoint('TOPLEFT', headerText, 7, -24)
   else
     infoText:SetText(L.TXT_NOT_CLASSIC)
-    infoText:SetPoint('LEFT', optionsPanel, 'LEFT', 16, 0)
-    infoText:SetPoint('RIGHT', optionsPanel, 'RIGHT', -28, 0)
-    infoText:SetPoint('TOP', headerText, 'BOTTOM', 0, -10)
   end
+
+  infoText:SetPoint('LEFT', optionsPanel, 'LEFT', 16, 0)
+  infoText:SetPoint('RIGHT', optionsPanel, 'RIGHT', -28, 0)
+  infoText:SetPoint('TOP', headerText, 'BOTTOM', 0, -10)
 
   -- List the names of incompatible modules if there are any
   local incompatibleModulesText
@@ -517,17 +514,12 @@ local setupOptionsPanel = function()
   if missingModuleString then
     incompatibleModulesText = optionsPanel:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
     incompatibleModulesText:SetPoint('TOP', infoText, 'BOTTOM', 0, -10)
+    incompatibleModulesText:SetPoint('LEFT', optionsPanel, 'LEFT', 16, 0)
+    incompatibleModulesText:SetPoint('RIGHT', optionsPanel, 'RIGHT', -28, 0)
+
     incompatibleModulesText:SetText(missingModuleString)
     incompatibleModulesText:SetJustifyH('LEFT')
     incompatibleModulesText:SetSpacing(6)
-
-    if isClassic then
-      incompatibleModulesText:SetWidth(outerPanelWidth)
-      incompatibleModulesText:SetPoint('LEFT', infoText, 'LEFT', 0, 0)
-    else
-      incompatibleModulesText:SetPoint('LEFT', optionsPanel, 'LEFT', 16, 0)
-      incompatibleModulesText:SetPoint('RIGHT', optionsPanel, 'RIGHT', -28, 0)
-    end
   end
 
   -- All the options will be within a scrollFrame
@@ -588,7 +580,8 @@ UIC_Options.Initialize = function()
     end
   end
 
-  InterfaceOptions_AddCategory(optionsPanel)
+  local category = Settings.RegisterCanvasLayoutCategory(optionsPanel, "UI Changes")
+  Settings.RegisterAddOnCategory(category)
 end
 
 addonTable.UIC_Options = UIC_Options

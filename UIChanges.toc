@@ -17,7 +17,7 @@
 
 ## Interface: 11505, 20504, 30403, 40401
 ## Title: UIChanges
-## Version: 1.2.4
+## Version: 1.2.5
 ## Notes: Simple additions to the classic UI to make it nicer.
 ## SavedVariablesPerCharacter: UIChanges_Profile
 

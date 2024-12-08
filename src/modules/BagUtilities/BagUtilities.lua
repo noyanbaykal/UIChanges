@@ -202,7 +202,8 @@ EVENTS['BAG_UPDATE_DELAYED'] = function()
     return
   end
 
-  startOpeningClams()
+  -- There is now a delay between receiving this event and the clam actually appearing in the inventory
+  C_Timer.After(0.5, startOpeningClams)
 end
 
 EVENTS['CHAT_MSG_LOOT'] = function(text)

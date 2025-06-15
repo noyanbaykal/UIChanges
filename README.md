@@ -1,6 +1,6 @@
 # UI Changes
 
-UI Changes consists of modules that improve parts of the default UI. The modules and their features can be individually toggled and not all are enabled by default. Please check out the in-game addon options page to see everything UIChanges has to offer.
+UI Changes consists of modules that improve parts of the default UI. The modules and their features can be individually toggled and not all are enabled by default. Please check out the in-game addon options page to see everything UI Changes has to offer.
 
 **General**
 Minimap quick zoom in / out: Shift click the minimap plus / negative buttons to set the zoom level to max in / out.
@@ -9,7 +9,7 @@ Hide the minimap worldMap button in classic era so it won't overlap with the tra
 
 **Absorb Display**
 Displays the approximate amount of damage absorption the player has from active Power Word: Shield, Sacrifice and Spellstone effects.
-It is not feasible to determine other player's talents or item bonuses so the display for Power Word: Shield cast by others will start off with a base amount and then show a residual sign if the effects are still active beyond the base amount. The shield display can be moved with a CTRL click.
+It is not feasible to determine other player's talents or item bonuses so the display for Power Word: Shield cast by others will start off with a base amount and then show a residual sign for any remaining amounts. The shield display can be moved with a CTRL click.
 
 **Auction House Tools**
 Provides utilities for the AH browse tab.
@@ -21,7 +21,7 @@ Buyout warning: Whenever you select an item from the Browse Tab results, this mo
 Quick search: Clicking on an item in your bags with the mouse MiddleButton while the AH Browse tab is visible will initiate a search with that item's name.
 
 **Bag Utilities**
-Opens looted containers for convenience and avoiding inventory congestion. UseContainerItem is protected in WOTLK & onwards so this feature is classic era only.
+Opens looted containers for convenience and avoiding inventory congestion. Note that opening a container will cancel ongoing spell casts! UseContainerItem is protected in WOTLK & onwards so this feature is classic era only.
 
 **Critical Reminders**
 This module makes the selected types of events / failures more noticeable by displaying an error icon and optionally playing a sound.
@@ -38,6 +38,12 @@ Back in vanilla the default party frames used to show party pet frames as well. 
 Listens to the player pinging in the mini-map on a marker with text and sends a message to chat mentioning the player's name, marker text and direction (in relation to the player). The module defaults to party chat, but if Control (CTRL) is pressed while the mini-map ping is sent out, the instance chat channel will be used instead. The instance chat channel only exists when in a battleground, arena or instance.
 
 Please let me know if you encounter any issues.
+
+Support UI Changes Development
+PayPal[https://www.paypal.com/donate/?hosted_button_id=A5SZGXCWNP32A]
+
+More of my content
+https://www.noyanbaykal.com/
 
 UIChanges makes use of LibStub and LibUIDropDownMenu.
 

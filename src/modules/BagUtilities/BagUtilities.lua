@@ -22,12 +22,15 @@ local _, addonTable = ...
 local L = addonTable.L
 local C = addonTable.C
 
-local CLAMS_TOTAL = 4
+local CLAMS_TOTAL = 7
 local CLAM_IDS = {
   [5523] = true, -- Small Barnacled Clam
   [5524] = true, -- Thick-shelled Clam
   [7973] = true, -- Big-mouth Clam
   [15874] = true, -- Soft-shelled Clam
+  [20766] = true, -- Slimy Bag
+  [20767] = true, -- Scum Covered Bag
+  [20768] = true, -- Oozing Bag
 }
 
 if LE_EXPANSION_LEVEL_CURRENT > LE_EXPANSION_CLASSIC then

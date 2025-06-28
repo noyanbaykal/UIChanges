@@ -48,6 +48,31 @@ local setupMinimapQuickZoom = function()
   end)
 end
 
+-- The minimap tracking icon disappears after a ui reload
+local fixMissingTrackingIcon = function()
+  local tracking = _G['MiniMapTracking']
+  local border = _G['MiniMapTrackingBorder']
+  local icon = _G['MiniMapTrackingIcon']
+
+  -- The wiki suggests that classic era should mirror the classic APIs, but this is not the case atm.
+  -- Adding nil checks to prevent issues on patch days
+  if not GetTrackingTexture or not tracking or not border or not icon or not icon.SetTexture then
+    return
+  end
+
+  local trackingTextureID = GetTrackingTexture()
+  if trackingTextureID == nil then
+    return
+  end
+
+  icon:SetTexture(trackingTextureID)
+
+  tracking:Show()
+  border:Show()
+  icon:Show()
+end
+
+
 local initialize = function()
   C.DEFINE_MODULES()
   C.INITIALIZE_PROFILE()
@@ -88,3 +113,7 @@ mainFrame:SetScript('OnEvent', function(self, event, ...)
 end)
 
 setupMinimapQuickZoom()
+
+if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
+  fixMissingTrackingIcon()
+end

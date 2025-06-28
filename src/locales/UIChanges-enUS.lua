@@ -59,7 +59,7 @@ locale.AHT = {
 -- ~AHTools
 
 -- BagUtilities
-locale.BU = {'Opens containers after picking them up.'}
+locale.BU = {'Opens bag & clams after picking them up.'}
 -- ~BagUtilities
 
 -- CriticalReminders

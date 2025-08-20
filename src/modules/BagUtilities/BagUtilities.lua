@@ -42,6 +42,7 @@ local TOGGLE_TIMER_INTERVAL = 1 -- Seconds
 
 local mainFrame, containers, containerInfoCount, toggleTimer, stack
 
+-- isWaitingCombatEnd is also used for cases where the player is casting when the combat ends
 local haveContainer, isWaitingLootClose, isWaitingCombatEnd, isOpeningContainers
 
 local push = function(bagSlot, slot)
@@ -114,6 +115,56 @@ local isContainerItem = function(text)
   return containers[itemName] == true
 end
 
+local shouldSkipOpening = function()
+  spellName = UnitCastingInfo('player')
+  channelName = UnitChannelInfo('player')
+
+  return InCombatLockdown() == true or spellName ~= nil or channelName ~= nil
+end
+
+local handleBagUpdateDelayed = function()
+  if not haveContainer then -- No containers to open
+    return
+  end
+
+  if _G['LootFrame']:IsVisible() then -- Not yet done with looting all the items
+    return
+  end
+
+  if isOpeningContainers then -- Just finished looting the contents of a container
+    openNextContainer()
+    return
+  end
+
+  if shouldSkipOpening() then
+    isWaitingCombatEnd = true
+    return
+  end
+
+  -- There is now a delay between receiving this event and the container actually appearing in the inventory
+  C_Timer.After(0.6, startOpeningContainers)
+end
+
+local openAfterSkip = function()
+  isWaitingCombatEnd = false
+
+  if _G['LootFrame']:IsVisible() then
+    -- This is for the edge case of the player getting out of combat while still looting
+    isWaitingLootClose = true
+  else
+    startOpeningContainers()
+  end
+end
+
+-- This is specifically for the events which might signal that we can start opening after having skipped
+local handleCombatEvent = function()
+  if not isWaitingCombatEnd or shouldSkipOpening() then
+    return
+  end
+
+  openAfterSkip()
+end
+
 local checkIfDoneReceivingContainerInfo = function()
   if containerInfoCount == CONTAINERS_TOTAL then
     mainFrame:UnregisterEvent('GET_ITEM_INFO_RECEIVED')
@@ -163,7 +214,7 @@ EVENTS['LOOT_CLOSED'] = function()
   if isWaitingLootClose then
     isWaitingLootClose = false
 
-    if InCombatLockdown() then
+    if shouldSkipOpening() then
       isWaitingCombatEnd = true
     else
       startOpeningContainers()
@@ -172,41 +223,15 @@ EVENTS['LOOT_CLOSED'] = function()
 end
 
 EVENTS['PLAYER_REGEN_ENABLED'] = function()
-  if not isWaitingCombatEnd then
-    return
-  end
+  handleCombatEvent()
+end
 
-  isWaitingCombatEnd = false
-
-  if _G['LootFrame']:IsVisible() then
-    -- This is for the edge case of the player getting out of combat while still looting
-    isWaitingLootClose = true
-  else
-    startOpeningContainers()
-  end
+EVENTS['CURRENT_SPELL_CAST_CHANGED'] = function()
+  handleCombatEvent()
 end
 
 EVENTS['BAG_UPDATE_DELAYED'] = function()
-  if not haveContainer then -- No containers to open
-    return
-  end
-
-  if _G['LootFrame']:IsVisible() then -- Not yet done with looting all the items
-    return
-  end
-
-  if isOpeningContainers then -- Just finished looting the contents of a container
-    openNextContainer()
-    return
-  end
-
-  if InCombatLockdown() then
-    isWaitingCombatEnd = true
-    return
-  end
-
-  -- There is now a delay between receiving this event and the container actually appearing in the inventory
-  C_Timer.After(0.6, startOpeningContainers)
+  handleBagUpdateDelayed()
 end
 
 EVENTS['CHAT_MSG_LOOT'] = function(text)

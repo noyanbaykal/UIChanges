@@ -21,7 +21,7 @@ Buyout warning: Whenever you select an item from the Browse Tab results, this mo
 Quick search: Clicking on an item in your bags with the mouse MiddleButton while the AH Browse tab is visible will initiate a search with that item's name.
 
 **Bag Utilities**
-Opens looted bags & clams for convenience and avoiding inventory congestion. Note that opening a container will cancel ongoing spell casts! UseContainerItem is protected in WOTLK & onwards so this feature is classic era only.
+Opens looted bags & clams for convenience and avoiding inventory congestion. Note that once in a while, in certain scenarios, the opening action may fail and you'll end up with an unopened container. The lingering container will be opened when you loot another container. UseContainerItem is protected in WOTLK & onwards so this feature is classic era only.
 
 **Critical Reminders**
 This module makes the selected types of events / failures more noticeable by displaying an error icon and optionally playing a sound.

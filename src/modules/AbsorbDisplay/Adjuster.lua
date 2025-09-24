@@ -30,10 +30,10 @@ local C = addonTable.C
 -- The data & lookup tables may be altered in adjustDataTables based on expansion.
 -- Data read from tooltips will be stored the data tables with the 'current' key.
 
--- Spell ranks go away with Cataclysm.
+-- Spell ranks go away with Cataclysm (and onwards).
 -- The spell tooltips in the Cataclysm client seem to take into account all factors and display the final
 -- amounts so we can solely rely on the tooltips for selfcast spells. Unlike in previous expansions,
--- the SPELL_AURA_APPLIED event in Cataclysm provides the amount value. This is only base amount but we'll
+-- the SPELL_AURA_APPLIED event in Cataclysm provides the amount value. This is only the base amount but we'll
 -- use it for PWS casts by others.
 
 -- In TBC and WOTLK the PWS shield amount formula is different and I can't test them at this time so
@@ -90,8 +90,16 @@ local ITEM_SET_230 = {51177, 51176, 51175, 51179, 51178} -- https://www.wowhead.
 local ITEM_SET_841 = {50769, 50768, 50767, 50766, 50765} -- https://www.wowhead.com/wotlk/item-set=-841/crimson-acolytes-raiment
 local ITEM_SET_885 = {51732, 51733, 51734, 51735, 51736} -- https://www.wowhead.com/wotlk/item-set=885/crimson-acolytes-raiment
 
+-- https://www.wowhead.com/classic/item=19594/the-all-seeing-eye-of-zuldazar
+local PRIEST_ZG_NECK = 19594
+
 -- https://www.wowhead.com/wotlk/spell=70798/item-priest-t10-healer-4p-bonus
 local PRIEST_T10_SETS = {ITEM_SET_249, ITEM_SET_230, ITEM_SET_841, ITEM_SET_885}
+
+-- MOP introduces the following shield effects which would need to be accounted for, for full compatibility.
+-- https://www.wowhead.com/mop-classic/spell=108946/angelic-bulwark
+-- https://www.wowhead.com/mop-classic/spell=109964/spirit-shell
+-- https://www.wowhead.com/mop-classic/spell=47753/divine-aegis
 
 local playerName, playerLevel
 
@@ -102,6 +110,7 @@ local spellpowerCoefficientPWS = 0.1 -- May be adjusted in adjustDataForExpansio
 -- TBC coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient?oldid=1492745
 -- WOTLK coefficients: https://wowwiki-archive.fandom.com/wiki/Spell_power_coefficient
 
+local zgBonusPWS = 0 -- The 35 point bonus from the ZG Neck is added on top of the final amount
 local setBonusModifierPWS = 1 -- Item - Priest T10 Healer 4P Bonus, 70798, only in WOTLK
 local talentModifierIPWS = 1 -- Improved Power Word: Shield
 local talentCoefficientBonusBT = 0 -- Borrowed Time, only in WOTLK
@@ -174,6 +183,17 @@ local adjustDataForExpansion = function()
     DATA_SACRIFICE[1].level = 1
 
     DATA_SPELLSTONE = nil
+  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_MISTS_OF_PANDARIA then
+    maxLevel = 90
+    spellpowerCoefficientPWS = 1.871
+
+    removeSpellRanks(DATA_PWS)
+    removeSpellRanks(DATA_SACRIFICE)
+
+    DATA_PWS[1].level = 5
+    DATA_SACRIFICE[1].level = 1
+
+    DATA_SPELLSTONE = nil
   end
 end
 
@@ -193,13 +213,19 @@ local getEquippedItemId = function(slot)
   return string.sub(itemLink, payloadStart, payloadEnd)
 end
 
+local checkZgNeckBonus = function()
+  local equippedNeck = getEquippedItemId(INVSLOT_NECK)
+
+  return equippedNeck == PRIEST_ZG_NECK and 35 or 0
+end
+
 local hasT10Bonus = function()
   local equippedItems = {
-    getEquippedItemId(7), -- legs
-    getEquippedItemId(5), -- chest
-    getEquippedItemId(3), -- shoulder
-    getEquippedItemId(10), -- hand
-    getEquippedItemId(1), -- head
+    getEquippedItemId(INVSLOT_LEGS),
+    getEquippedItemId(INVSLOT_CHEST),
+    getEquippedItemId(INVSLOT_SHOULDER),
+    getEquippedItemId(INVSLOT_HAND),
+    getEquippedItemId(INVSLOT_HEAD),
   }
 
   local neededPieceCount = 4
@@ -280,7 +306,7 @@ local selfcastHelperPwsExpansion = function(dataTable, buffEntry)
   local coefficient = spellpowerCoefficientPWS + talentCoefficientBonusBT
 
   local finalAmount = (baseAmount + (spellpower * coefficient)) * talentModifierIPWS * setBonusModifierPWS
-  return math.ceil(finalAmount)
+  return math.ceil(finalAmount + zgBonusPWS)
 end
 
 local checkTalentIpws = function(columnIndex)
@@ -290,6 +316,7 @@ end
 
 local checkItemBonusesPriestPreWotlk = function()
   spellpower = GetSpellBonusHealing() or 0
+  zgBonusPWS = checkZgNeckBonus()
 end
 
 local adjustPriest = function()
@@ -297,7 +324,8 @@ local adjustPriest = function()
     local selfCastHelper = function(_, buffEntry)
       -- talentModifierIPWS is baked into buffEntry.current
       local baseAmount = buffEntry.current or buffEntry.amount -- Have a fallback
-      return math.ceil(baseAmount + (spellpower * spellpowerCoefficientPWS))
+      local finalAmount = baseAmount + (spellpower * spellpowerCoefficientPWS)
+      return math.ceil(finalAmount + zgBonusPWS)
     end
 
     DATA_PWS.calculateAmount = calculateAmountPwsPriest(selfCastHelper)
@@ -332,8 +360,9 @@ local adjustPriest = function()
     checkItemBonuses = function()
       spellpower = GetSpellBonusDamage(2) or 0
       setBonusModifierPWS = hasT10Bonus() and 1.05 or 1
+      zgBonusPWS = checkZgNeckBonus()
     end
-  elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CATACLYSM then
+  elseif LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA then
     DATA_PWS.calculateAmount = function(dataTable, buffEntry, sourceName, baseAmount)
       if sourceName == playerName then
         return buffEntry.current
@@ -368,7 +397,7 @@ local adjustWarlock = function()
       checkTooltipsHelper(DATA_SACRIFICE)
       checkTooltipsHelper(DATA_SPELLSTONE)
     end
-  elseif LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM then
+  elseif LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA then
     checkTooltips = checkTooltipsWarlockExpansion
   end
 end

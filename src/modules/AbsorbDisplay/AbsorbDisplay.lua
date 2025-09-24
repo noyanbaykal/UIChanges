@@ -165,12 +165,17 @@ local checkShieldsOnEnable = function()
   updateDisplay()
 end
 
+local anchorToCastingBarFrame = function()
+  shieldFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, BASE_OFFSET_Y)
+end
+
 local resetDisplayLocation = function()
   UIChanges_Profile['UIC_AD_FrameInfo'] = {}
 
   shieldFrame:SetUserPlaced(false)
   shieldFrame:ClearAllPoints()
-  shieldFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, BASE_OFFSET_Y)
+  
+  anchorToCastingBarFrame()
 end
 
 local initializeSecondaryFrames = function(parentFrame, parentName, shieldColor)
@@ -210,10 +215,6 @@ local initializeSpellShieldFrame = function()
   spellShieldFrame:Hide()
 
   initializeSecondaryFrames(spellShieldFrame, 'SpellShield', SPELL_SHIELD_COLOR)
-end
-
-local anchorToCastingBarFrame = function()
-  shieldFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, BASE_OFFSET_Y)
 end
 
 local initializeShieldFrame = function()

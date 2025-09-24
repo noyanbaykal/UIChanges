@@ -284,7 +284,7 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'CR',
       ['title'] = 'Critical Reminders',
       ['description'] = L.CR,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM end,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA end,
       ['subsettings'] = {
         ['separator'] = { -- To draw a straight line in the middle of all the subsetting checkboxes
           ['topFrame'] = 3, -- These are hardcoded indices for the frames the line will be drawn relative to
@@ -342,7 +342,7 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'PPF',
       ['title'] = 'Party Pet Frames',
       ['description'] = L.PPF,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM end,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA end,
       -- If a module's state is tied to a console variable, that must be declared here. Such modules must be toggled outside of combat.
       ['consoleVariableName'] = 'showPartyPets', -- This is the name of the cVar that will be modified when this module's state is modified
     },
@@ -361,6 +361,26 @@ C.DEFINE_MODULES = function()
           buildCheckboxEntry('UIC_PA_Battleground', false, BATTLEGROUND),
           buildCheckboxEntry('UIC_PA_Party', true, PARTY),
         }
+      },
+    },
+    {
+      ['moduleName'] = 'SpellTargetDisplay',
+      ['moduleKey'] = 'UIC_STD_IsEnabled',
+      ['defaultValue'] = true,
+      ['frameName'] = 'STD',
+      ['title'] = 'Spell Target Display',
+      ['description'] = L.STD,
+      ['checkCompatibility'] = function() return true end,
+      ['subsettings'] = {
+        ['entries'] = {
+          {
+            ['entryKey'] = 'UIC_STD_FrameInfo',
+            ['entryType'] = 'button',
+            ['defaultValue'] = {},
+            ['title'] = RESET_POSITION,
+            ['updateCallback'] = function() addonTable.SpellTargetDisplay:ResetTargetNameFrameLocation() end,
+          },
+        },
       },
     },
   }

@@ -108,3 +108,7 @@ locale.WEST = 'West'
 locale.NORTH = 'North'
 locale.SOUTH = 'South'
 -- ~PingAnnouncer
+
+-- SpellTargetDisplay
+locale.STD = {'Displays the target\'s name under the cast bar when casting a spell. '..locale.ABSORB_DISPLAY_2}
+-- ~SpellTargetDisplay

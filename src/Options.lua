@@ -348,10 +348,12 @@ local createModuleOptions = function(moduleEntry)
   settingsTable[key]['frame'] = moduleCheckbox
 
   -- Module description
+  lastFrameTop = moduleCheckbox.Text
+
   for i = 1, #description do
     local descriptionText = moduleCheckbox:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
     descriptionText:SetPoint('LEFT', moduleCheckbox.Text, 'LEFT', 2, 0)
-    descriptionText:SetPoint('TOP', moduleCheckbox, 'BOTTOM', 0, (i - 1) * -16)
+    descriptionText:SetPoint('TOP', lastFrameTop, 'BOTTOM', 0, -8)
     descriptionText:SetPoint('RIGHT', _G['SettingsPanel'].Container, 'RIGHT', -28, 0)
 
     descriptionText:SetTextColor(1, 1, 1)
@@ -580,8 +582,9 @@ UIC_Options.Initialize = function()
     end
   end
 
-  local category = Settings.RegisterCanvasLayoutCategory(optionsPanel, "UI Changes")
+  local category = Settings.RegisterCanvasLayoutCategory(optionsPanel, 'UIChanges')
   Settings.RegisterAddOnCategory(category)
+  optionsPanel.categoryID = category:GetID() -- Storing here so the panel can be opened with a macro
 end
 
 addonTable.UIC_Options = UIC_Options

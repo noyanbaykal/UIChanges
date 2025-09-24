@@ -37,6 +37,9 @@ Back in vanilla the default party frames used to show party pet frames as well. 
 **Ping Announcer**
 Listens to the player pinging in the mini-map on a marker with text and sends a message to chat mentioning the player's name, marker text and direction (in relation to the player). The module defaults to party chat, but if Control (CTRL) is pressed while the mini-map ping is sent out, the instance chat channel will be used instead. The instance chat channel only exists when in a battleground, arena or instance.
 
+**Spell Target Display**
+Displays the target's name under the cast bar when casting a spell. This comes in handy during hectic pvp fights where you need to keep different allies alive and a mistargeting with a long cast spell has disastrous consequences. The target name will have a different color based on the type of spell being cast: Yellow for self-casts, green for beneficial spells, red for harmful spells and white for others. The name display can be moved with a CTRL click.
+
 Please let me know if you encounter any issues.
 
 Support UI Changes Development

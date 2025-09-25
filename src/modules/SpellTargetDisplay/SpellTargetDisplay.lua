@@ -88,10 +88,10 @@ end
 
 local handleSent = function(unit, target, castGUID, spellID)
   if unit == 'player' then
-    local spellName = UnitCastingInfo('player') -- This returns a value only if there is an ongoing hardcast
+    local spellName = UnitCastingInfo('player')
 
-    if spellName then
-      return -- Trying to cast another spell will not interrupt an ongoing hardcast
+    if spellName then -- Trying to cast another spell will not interrupt an ongoing hardcast
+      return
     end
 
     local spellInfo = C_Spell.GetSpellInfo(spellID)
@@ -111,14 +111,14 @@ local handleSent = function(unit, target, castGUID, spellID)
 end
 
 -- The 'unitTarget' arguments here refer to the casting unit, not the targeted unit
-local handleChannelStart = function(unitTarget, castGUID, spellID)
+local handleChannelStart = function(unitTarget, _, spellID)
   if unitTarget == 'player' then
     isChanneling = true
     isNoCastTime = false
   end
 end
 
-local handleChannelStop = function(unitTarget, castGUID, spellID)
+local handleChannelStop = function(unitTarget, _, spellID)
   if unitTarget == 'player' then
     isChanneling = false
 
@@ -141,6 +141,12 @@ end
 
 local handleStop = function(unitTarget)
   if unitTarget == 'player' then
+    local spellName = UnitCastingInfo('player')
+
+    if spellName then -- The event was fired for a subsequent cast that did not go through
+      return
+    end
+
     isNoCastTime = false
     lastCastGuid = nil
     lastTargetName = nil
@@ -194,15 +200,8 @@ local resetTargetNameFrameLocation = function()
 end
 
 local initializeTargetNameFrame = function()
-  local frameInfoKey = 'UIC_STD_FrameInfo'
-  local anchoringCallback = anchorTargetNameFrame
-  local width = 120
-  local height = 20
-  local edgeSize = 8
-  local backdropColorTable = {0, 0, 0}
-
   targetNameFrame = CreateFrame('Frame', 'UIC_STD_TargetNameFrame', UIParent, 'BackdropTemplate')
-  C.InitializeMoveableFrame(targetNameFrame, frameInfoKey, anchoringCallback, width, height, edgeSize, backdropColorTable)
+  C.InitializeMoveableFrame(targetNameFrame, 'UIC_STD_FrameInfo', anchorTargetNameFrame, 120, 20, 8, {0, 0, 0})
 
   targetNameFrame.text = targetNameFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal')
   targetNameFrame.text:SetPoint('CENTER', targetNameFrame, 'CENTER', 0, 1)

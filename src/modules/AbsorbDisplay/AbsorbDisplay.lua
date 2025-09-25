@@ -218,15 +218,8 @@ local initializeSpellShieldFrame = function()
 end
 
 local initializeShieldFrame = function()
-  local frameInfoKey = 'UIC_AD_FrameInfo'
-  local anchoringCallback = anchorToCastingBarFrame
-  local width = SHIELD_WIDTH_MAX
-  local height = 25
-  local edgeSize = 2
-  local backdropColorTable = SHIELD_COLOR_EXPENDED
-
   shieldFrame = CreateFrame('Frame', 'UIC_AD_Shield_Frame', UIParent, 'BackdropTemplate')
-  C.InitializeMoveableFrame(shieldFrame, frameInfoKey, anchoringCallback, width, height, edgeSize, backdropColorTable)
+  C.InitializeMoveableFrame(shieldFrame, 'UIC_AD_FrameInfo', anchorToCastingBarFrame, SHIELD_WIDTH_MAX, 25, 2, SHIELD_COLOR_EXPENDED)
 
   initializeSecondaryFrames(shieldFrame, 'Shield', SHIELD_COLOR)
 end

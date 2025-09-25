@@ -259,47 +259,7 @@ local anchorErrorFrame = function()
   errorFrame:ClearAllPoints()
 
   if anchorDirection == nil then
-    errorFrame:EnableMouse(true)
-    errorFrame:SetMovable(true)
-
-    errorFrame:SetScript('OnMouseDown', function(frame)
-      if IsControlKeyDown() == true then
-        frame:StartMoving()
-      end
-    end)
-
-    errorFrame:SetScript('OnMouseUp', function(frame)
-      frame:StopMovingOrSizing()
-
-      local point, relativeTo, relativePoint, offsetX, offsetY = frame:GetPoint()
-
-      UIChanges_Profile['UIC_CR_ErrorFrameInfo'] = {
-        point = point,
-        relativeTo = relativeTo,
-        relativePoint = relativePoint,
-        offsetX = math.floor(offsetX),
-        offsetY = math.floor(offsetY),
-      }
-    end)
-
-    local errorFrameInfo = UIChanges_Profile['UIC_CR_ErrorFrameInfo']
-
-    if errorFrameInfo and errorFrameInfo.point ~= nil then
-      local point = errorFrameInfo.point
-      local relativeTo = errorFrameInfo.relativeTo
-      local relativePoint = errorFrameInfo.relativePoint
-      local offsetX = errorFrameInfo.offsetX
-      local offsetY = errorFrameInfo.offsetY
-
-      local status, _ = pcall(function () errorFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY) end)
-      if status == false then
-        UIChanges_Profile['UIC_CR_ErrorFrameInfo'] = {}
-
-        anchorToUIErrorsFrame()
-      end
-    else
-      anchorToUIErrorsFrame()
-    end
+    C.SetupMoveableFrame(errorFrame, 'UIC_CR_ErrorFrameInfo', anchorToUIErrorsFrame)
   else
     errorFrame:EnableMouse(false)
     errorFrame:SetMovable(false)

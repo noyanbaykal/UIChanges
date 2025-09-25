@@ -218,53 +218,15 @@ local initializeSpellShieldFrame = function()
 end
 
 local initializeShieldFrame = function()
+  local frameInfoKey = 'UIC_AD_FrameInfo'
+  local anchoringCallback = anchorToCastingBarFrame
+  local width = SHIELD_WIDTH_MAX
+  local height = 25
+  local edgeSize = 2
+  local backdropColorTable = SHIELD_COLOR_EXPENDED
+
   shieldFrame = CreateFrame('Frame', 'UIC_AD_Shield_Frame', UIParent, 'BackdropTemplate')
-  shieldFrame:EnableMouse(true)
-  shieldFrame:SetMovable(true)
-  shieldFrame:SetClampedToScreen(true)
-  shieldFrame:Hide()
-
-  local frameInfo = UIChanges_Profile['UIC_AD_FrameInfo']
-
-  if frameInfo and frameInfo.point ~= nil then
-    local point = frameInfo.point
-    local relativeTo = frameInfo.relativeTo
-    local relativePoint = frameInfo.relativePoint
-    local offsetX = frameInfo.offsetX
-    local offsetY = frameInfo.offsetY
-
-    local status, _ = pcall(function () shieldFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY) end)
-    if status == false then
-      UIChanges_Profile['UIC_AD_FrameInfo'] = {}
-
-      anchorToCastingBarFrame()
-    end
-  else
-    anchorToCastingBarFrame()
-  end
-
-  shieldFrame:SetBackdrop(C.BACKDROP_INFO(2, 1))
-  shieldFrame:SetBackdropColor(unpack(SHIELD_COLOR_EXPENDED))
-  shieldFrame:SetSize(SHIELD_WIDTH_MAX, 25)
-  shieldFrame:SetScript('OnMouseDown', function(frame)
-    if IsControlKeyDown() == true then
-      frame:StartMoving()
-    end
-  end)
-
-  shieldFrame:SetScript('OnMouseUp', function(frame)
-    frame:StopMovingOrSizing()
-
-    local point, relativeTo, relativePoint, offsetX, offsetY = frame:GetPoint()
-
-    UIChanges_Profile['UIC_AD_FrameInfo'] = {
-      point = point,
-      relativeTo = relativeTo,
-      relativePoint = relativePoint,
-      offsetX = math.floor(offsetX),
-      offsetY = math.floor(offsetY),
-    }
-  end)
+  C.InitializeMoveableFrame(shieldFrame, frameInfoKey, anchoringCallback, width, height, edgeSize, backdropColorTable)
 
   initializeSecondaryFrames(shieldFrame, 'Shield', SHIELD_COLOR)
 end

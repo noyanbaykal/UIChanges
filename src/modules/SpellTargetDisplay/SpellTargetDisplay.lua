@@ -194,61 +194,21 @@ local resetTargetNameFrameLocation = function()
 end
 
 local initializeTargetNameFrame = function()
+  local frameInfoKey = 'UIC_STD_FrameInfo'
+  local anchoringCallback = anchorTargetNameFrame
+  local width = 120
+  local height = 20
+  local edgeSize = 8
+  local backdropColorTable = {0, 0, 0}
+
   targetNameFrame = CreateFrame('Frame', 'UIC_STD_TargetNameFrame', UIParent, 'BackdropTemplate')
-  targetNameFrame:EnableMouse(true)
-  targetNameFrame:SetMovable(true)
-  targetNameFrame:SetClampedToScreen(true)
-  targetNameFrame:Hide()
+  C.InitializeMoveableFrame(targetNameFrame, frameInfoKey, anchoringCallback, width, height, edgeSize, backdropColorTable)
 
   targetNameFrame.text = targetNameFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal')
   targetNameFrame.text:SetPoint('CENTER', targetNameFrame, 'CENTER', 0, 1)
   targetNameFrame.text:SetTextColor(1, 1, 1, 1)
   targetNameFrame.text:SetScale(1)
   targetNameFrame.text:SetText('')
-
-  local frameInfo = UIChanges_Profile['UIC_STD_FrameInfo']
-
-  if frameInfo and frameInfo.point ~= nil then
-    local point = frameInfo.point
-    local relativeTo = frameInfo.relativeTo
-    local relativePoint = frameInfo.relativePoint
-    local offsetX = frameInfo.offsetX
-    local offsetY = frameInfo.offsetY
-
-    local status, _ = pcall(function () targetNameFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY) end)
-    if status == false then
-      UIChanges_Profile['UIC_STD_FrameInfo'] = {}
-
-      anchorTargetNameFrame()
-    end
-  else
-    anchorTargetNameFrame()
-  end
-
-  targetNameFrame:SetSize(120, 20)
-  targetNameFrame:SetFrameStrata('DIALOG')
-  targetNameFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
-  targetNameFrame:SetBackdropColor(0, 0, 0)
-
-  targetNameFrame:SetScript('OnMouseDown', function(frame)
-    if IsControlKeyDown() == true then
-      frame:StartMoving()
-    end
-  end)
-
-  targetNameFrame:SetScript('OnMouseUp', function(frame)
-    frame:StopMovingOrSizing()
-
-    local point, relativeTo, relativePoint, offsetX, offsetY = frame:GetPoint()
-
-    UIChanges_Profile['UIC_STD_FrameInfo'] = {
-      point = point,
-      relativeTo = relativeTo,
-      relativePoint = relativePoint,
-      offsetX = math.floor(offsetX),
-      offsetY = math.floor(offsetY),
-    }
-  end)
 end
 
 local SpellTargetDisplay = {}

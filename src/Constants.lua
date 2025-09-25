@@ -68,6 +68,60 @@ C.RoundToPixelCount = function(count)
   end
 end
 
+C.SetupMoveableFrame = function(moveableFrame, frameInfoKey, anchoringCallback)
+  moveableFrame:EnableMouse(true)
+  moveableFrame:SetMovable(true)
+
+  local frameInfo = UIChanges_Profile[frameInfoKey]
+
+  if frameInfo and frameInfo.point ~= nil then
+    local point = frameInfo.point
+    local relativeTo = frameInfo.relativeTo
+    local relativePoint = frameInfo.relativePoint
+    local offsetX = frameInfo.offsetX
+    local offsetY = frameInfo.offsetY
+
+    local status, _ = pcall(function () moveableFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY) end)
+    if status == false then
+      UIChanges_Profile[frameInfoKey] = {}
+
+      anchoringCallback()
+    end
+  else
+    anchoringCallback()
+  end
+
+  moveableFrame:SetScript('OnMouseDown', function(frame)
+    if IsControlKeyDown() == true then
+      frame:StartMoving()
+    end
+  end)
+
+  moveableFrame:SetScript('OnMouseUp', function(frame)
+    frame:StopMovingOrSizing()
+
+    local point, relativeTo, relativePoint, offsetX, offsetY = frame:GetPoint()
+
+    UIChanges_Profile[frameInfoKey] = {
+      point = point,
+      relativeTo = relativeTo,
+      relativePoint = relativePoint,
+      offsetX = math.floor(offsetX),
+      offsetY = math.floor(offsetY),
+    }
+  end)
+end
+
+C.InitializeMoveableFrame = function(moveableFrame, frameInfoKey, anchoringCallback, width, height, edgeSize, backdropColorTable)
+  moveableFrame:SetSize(width, height)
+  moveableFrame:SetBackdrop(C.BACKDROP_INFO(edgeSize, 1))
+  moveableFrame:SetBackdropColor(unpack(backdropColorTable))
+  moveableFrame:SetClampedToScreen(true)
+  moveableFrame:Hide()
+
+  C.SetupMoveableFrame(moveableFrame, frameInfoKey, anchoringCallback)
+end
+
 -- Injects the strings that need additional work. The work here is needed regardless of the language being used
 -- by the client. Having this function here prevents code duplication in locale files.
 local buildCommonStrings = function (L)

@@ -3,15 +3,18 @@
 UI Changes consists of modules that improve parts of the default UI. The modules and their features can be individually toggled and not all are enabled by default. Please check out the in-game addon options page to see everything UI Changes has to offer.
 
 **General**
+
 Minimap quick zoom in / out: Shift click the minimap plus / negative buttons to set the zoom level to max in / out.
 
-Hide the minimap worldMap button in classic era so it won't overlap with the tracking icon.
+Fix the minimap tracking icon disappearing after a ui reload in classic era / anniversary.
 
 **Absorb Display**
+
 Displays the approximate amount of damage absorption the player has from active Power Word: Shield, Sacrifice and Spellstone effects.
 It is not feasible to determine other player's talents or item bonuses so the display for Power Word: Shield cast by others will start off with a base amount and then show a residual sign for any remaining amounts. The shield display can be moved with a CTRL click.
 
 **Auction House Tools**
+
 Provides utilities for the AH browse tab.
 
 Calculator: A simple calculator to help with determining the total cost of a bunch.
@@ -21,36 +24,50 @@ Buyout warning: Whenever you select an item from the Browse Tab results, this mo
 Quick search: Clicking on an item in your bags with the mouse MiddleButton while the AH Browse tab is visible will initiate a search with that item's name.
 
 **Bag Utilities**
+
 Opens looted bags & clams for convenience and avoiding inventory congestion. Note that once in a while, in certain scenarios, the opening action may fail and you'll end up with an unopened container. The lingering container will be opened when you loot another container. UseContainerItem is protected in WOTLK & onwards so this feature is classic era only.
 
 **Critical Reminders**
+
 This module makes the selected types of events / failures more noticeable by displaying an error icon and optionally playing a sound.
 The 'Breath Warning' reminder displays a numeric timer next to the standard breath meter and the 'BW Sound' option will play various alarm sounds when the remaining breath time is 30, 15 and 5 seconds.
 The reminders that are turned on by default are breath timer with sound, enter combat event, ability / spell failed due to lack of line of sight and gathering failure. Many other reminders for combat events can be enabled. The error display can be moved with a CTRL click or anchored to the TargetFrame.
 
 **Druid Mana Bar**
+
 Displays a mana bar underneath the player frame when shapeshifted into a druid form that does not use mana. This feature exists in WOTLK & onwards so this is for classic era only. The mana bar obeys the "Status Text Display" preference under the Interface options.
 
 **Party Pet Frames**
+
 Back in vanilla the default party frames used to show party pet frames as well. This feature seems to have been hidden behind a console variable and the pet power frames dropped somewhere around patch 7.0.3. This module enables the console variable and implements the missing power bars. The visibility provided might come in handy when you are in a dungeon with a pet class and notice through the pet frame the pet getting two shotted even though you don't expect anyone to be in combat or when you are forced to make a last stand and a clutch heal to a pet might make all the difference.
 
 **Ping Announcer**
+
 Listens to the player pinging in the mini-map on a marker with text and sends a message to chat mentioning the player's name, marker text and direction (in relation to the player). The module defaults to party chat, but if Control (CTRL) is pressed while the mini-map ping is sent out, the instance chat channel will be used instead. The instance chat channel only exists when in a battleground, arena or instance.
 
 **Spell Target Display**
+
 Displays the target's name under the cast bar when casting a spell. This comes in handy during hectic pvp fights where you need to keep different allies alive and a mistargeting with a long cast spell has disastrous consequences. The target name will have a different color based on the type of spell being cast: Yellow for self-casts, green for beneficial spells, red for harmful spells and white for others. The name display can be moved with a CTRL click.
 
 Please let me know if you encounter any issues.
 
-Support UI Changes Development
-PayPal[https://www.paypal.com/donate/?hosted_button_id=A5SZGXCWNP32A]
+### Support UI Changes Development ###
 
-More of my content
+[PayPal](https://www.paypal.com/donate/?hosted_button_id=A5SZGXCWNP32A)
+
+### More of my content ###
+
 https://www.noyanbaykal.com/
+
+### Disclaimers ###
 
 UIChanges makes use of LibStub and LibUIDropDownMenu.
 
-### How to Install
+Thank you for the translations:
+
+- ZamestoTV - Russian
+
+## How to Install
 
 1. Download the code as a zip file from: <https://github.com/noyanbaykal/UIChanges/archive/refs/heads/master.zip>.
 2. The zip file has a folder called "UIChanges-master" at the root.
@@ -73,7 +90,7 @@ For the classic client:
 For the classic era client:
 `C:\Program Files (x86)\World of Warcraft\_classic_era_\Interface\AddOns`
 
-### License
+## License
 UIChanges
 
 Copyright (C) 2019 - 2025 Melik Noyan Baykal

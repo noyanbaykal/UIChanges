@@ -170,7 +170,8 @@ local buildCommonStrings = function (L)
       local shortName = ''
 
       for word in string.gmatch(value, '[^%s]+') do -- Tokenize on spaces
-        shortName = shortName .. string.sub(word, 1, 1) -- Get the first character
+        -- Get the first character. Avoid string.sub in case we have non-ascii characters.
+        shortName = shortName .. word:gmatch(".[\128-\191]*")()
       end
 
       local soundText = shortName .. ' ' ..SOUND

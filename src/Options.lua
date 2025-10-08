@@ -163,7 +163,7 @@ local createCheckBox = function(frameName, text, key, tooltipText, isSubsetting)
     checkbox.Text:SetWidth(maxTextWidth)
     checkbox.Text:SetNonSpaceWrap(true)
     checkbox.Text:SetWordWrap(true)
-    checkbox.Text:SetMaxLines(2)
+    checkbox.Text:SetMaxLines(3)
     checkbox.Text:SetJustifyH('LEFT')
 
     -- Not using the built-in tooltipText attribute because that gets truncated too if the text

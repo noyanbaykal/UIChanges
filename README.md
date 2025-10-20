@@ -54,6 +54,7 @@ Please let me know if you encounter any issues.
 ### Support UI Changes Development ###
 
 [PayPal](https://www.paypal.com/paypalme/meliknoyanbaykal)
+
 [Ko-fi](https://ko-fi.com/noyanbaykal)
 
 ### More of my content ###

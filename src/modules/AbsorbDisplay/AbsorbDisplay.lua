@@ -34,7 +34,6 @@ local SPELL_SHIELD_COLOR = {0, 0, 1, 1}
 
 local SPELL_SHIELD_COLOR_EXPENDED = {0, 0, 1, 0.5}
 
-local BASE_OFFSET_Y = 150
 local SHIELD_WIDTH_MAX = 120
 local SHIELD_WIDTH_RESIDUAL = 12
 
@@ -165,17 +164,22 @@ local checkShieldsOnEnable = function()
   updateDisplay()
 end
 
-local anchorToCastingBarFrame = function()
-  shieldFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, BASE_OFFSET_Y)
+local anchorToDefaultPosition = function()
+  shieldFrame:SetUserPlaced(false)
+
+  if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+    shieldFrame:SetPoint('CENTER', UI, 'CENTER', 0, -225)
+  else
+    shieldFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, 150)
+  end
 end
 
 local resetDisplayLocation = function()
   UIChanges_Profile['UIC_AD_FrameInfo'] = {}
 
-  shieldFrame:SetUserPlaced(false)
   shieldFrame:ClearAllPoints()
   
-  anchorToCastingBarFrame()
+  anchorToDefaultPosition()
 end
 
 local initializeSecondaryFrames = function(parentFrame, parentName, shieldColor)
@@ -219,7 +223,7 @@ end
 
 local initializeShieldFrame = function()
   shieldFrame = CreateFrame('Frame', 'UIC_AD_Shield_Frame', UIParent, 'BackdropTemplate')
-  C.InitializeMoveableFrame(shieldFrame, 'UIC_AD_FrameInfo', anchorToCastingBarFrame, SHIELD_WIDTH_MAX, 25, 2, SHIELD_COLOR_EXPENDED)
+  C.InitializeMoveableFrame(shieldFrame, 'UIC_AD_FrameInfo', anchorToDefaultPosition, SHIELD_WIDTH_MAX, 25, 2, SHIELD_COLOR_EXPENDED)
 
   initializeSecondaryFrames(shieldFrame, 'Shield', SHIELD_COLOR)
 end
@@ -285,7 +289,7 @@ local handleAbsorb = function(destName, info)
   if spellName and amount and SpellLookup[spellName] then
     local shieldIndex = SpellLookup[spellName].index
 
-    shields[shieldIndex].left = math.ceil(shields[shieldIndex].left - amount)
+    shields[shieldIndex].left = math.floor(shields[shieldIndex].left - amount)
   
     updateDisplay()
   end
@@ -323,7 +327,7 @@ local onCLEU = function()
     return
   end
 
-  local baseAmount = type(info[16]) == 'number' and math.ceil(info[16]) or nil -- Cataclysm only!
+  local baseAmount = type(info[16]) == 'number' and math.floor(info[16]) or nil -- Cataclysm only!
   
   handleAuraChange(dataTable, isAuraApplied, sourceName, spellId, baseAmount)
 end

@@ -32,16 +32,47 @@ local REF_PARTY = {
 	['partypet4'] = 4,
 }
 
-local mainFrame, petFrames
+local mainFrame, petFrames, isInitialized
 
 local onUpdate = function(unitTarget)
+  if not isInitialized then
+    return
+  end
+
   local index = REF_PARTY[unitTarget]
+
   if index ~= nil and petFrames[index]['frame']:IsVisible() then
     petFrames[index]['powerBar']:Update()
   end
 end
 
+local getPetFrame = function(i)
+  if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+    return _G['PartyFrame']['MemberFrame'..i].PetFrame
+  end
+
+  return _G['PartyMemberFrame'..i..'PetFrame']
+end
+
+local setupPowerFrames = function()
+  for i = 1, 4 do
+    local petFrame = getPetFrame(i)
+    local petPowerBar = addonTable.PetPowerBar.new(i)
+
+    petFrames[i] = {
+      ['frame'] = petFrame,
+      ['powerBar'] = petPowerBar,
+    }
+  end
+
+  isInitialized = true
+end
+
 local onUpdateAll = function()
+  if not isInitialized and IsInGroup() and _G['PartyFrame']:IsVisible() then
+    setupPowerFrames()
+  end
+
   for i = 1, #petFrames do
     if petFrames[i]['frame']:IsVisible() then
       petFrames[i]['powerBar']:Update()
@@ -93,15 +124,6 @@ PartyPetFrames.Initialize = function()
   mainFrame:Hide()
 
   petFrames = {}
-  for i = 1, 4 do
-    local petFrame = _G['PartyMemberFrame'..i..'PetFrame']
-    local petPowerBar = addonTable.PetPowerBar.new(i)
-
-    petFrames[i] = {
-      ['frame'] = petFrame,
-      ['powerBar'] = petPowerBar,
-    }
-  end
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)
     EVENTS[event](...)

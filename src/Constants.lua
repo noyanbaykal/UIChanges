@@ -86,6 +86,8 @@ C.SetupMoveableFrame = function(moveableFrame, frameInfoKey, anchoringCallback)
       UIChanges_Profile[frameInfoKey] = {}
 
       anchoringCallback()
+    else
+      moveableFrame:SetUserPlaced(true)
     end
   else
     anchoringCallback()

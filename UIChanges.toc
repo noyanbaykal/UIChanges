@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-## Interface: 11507, 20504, 30403, 40402, 50501
+## Interface: 11507, 20505, 30403, 40402, 50501
 ## Title: UIChanges
-## Version: 1.3.2
+## Version: 1.3.3
 ## Notes: Simple additions to the classic UI to make it nicer.
 ## SavedVariablesPerCharacter: UIChanges_Profile
 

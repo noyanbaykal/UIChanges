@@ -23,16 +23,26 @@ local C = addonTable.C
 
 local PetPowerBar = {}
 
+local getHealthBar = function(index)
+  if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+    return _G['PartyFrame']['MemberFrame'..index].PetFrame.HealthBar
+  end
+
+  return _G['PartyMemberFrame'..index..'PetFrameHealthBar']
+end
+
 -- This class isn't a singleton, things need to be defined within new
 PetPowerBar.new = function(index)
   local self = {}
 
   -- Initialization
   local petReference = 'partypet'..index
-  local healthBar = _G['PartyMemberFrame'..index..'PetFrameHealthBar']
+  local healthBar = getHealthBar(index)
+
+  local strata = WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and 'BACKGROUND' or 'LOW' 
 
   local powerFrame = CreateFrame('Frame', 'PartyMemberFrame'..index..'PetFramePowerBar', healthBar)
-  powerFrame:SetFrameStrata('LOW')
+  powerFrame:SetFrameStrata(strata)
   powerFrame:SetPoint('TOP', healthBar, 'BOTTOM', 0, -0.3)
   powerFrame:SetPoint('LEFT', healthBar, 'LEFT', 0, 0)
   powerFrame.texture = powerFrame:CreateTexture(nil, 'BACKGROUND')

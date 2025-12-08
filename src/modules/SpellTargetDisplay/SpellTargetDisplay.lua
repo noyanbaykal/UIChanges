@@ -21,20 +21,12 @@ local _, addonTable = ...
 
 local C = addonTable.C
 
-local mainFrame, targetNameFrame, playerName, castBarFrame, targetNameFrameOffsetY
+local mainFrame, targetNameFrame, playerName, uiChangeTimer
 
 local lastCastGuid = nil
 local lastTargetName = nil
 local isChanneling = false
 local isNoCastTime = false
-
-if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
-  castBarFrame = _G['PlayerCastingBarFrame']
-  targetNameFrameOffsetY = 20
-else
-  castBarFrame = _G['CastingBarFrame']
-  targetNameFrameOffsetY = -24
-end
 
 local gameFontColor = {} -- Yellow
 gameFontColor[1], gameFontColor[2], gameFontColor[3], gameFontColor[4] = _G['GameFontNormal']:GetTextColor()
@@ -84,6 +76,24 @@ local showTargetNameFrame = function(target, spellID)
   targetNameFrame.text:SetTextColor(colors[1], colors[2], colors[3], colors[4])
 
   targetNameFrame:Show()
+end
+
+-- The retail UI frames can no longer be anchored to right away like they used to and the visibility
+-- behaviour of frames anchored to them have changed. Will anchor to the UI instead.
+local anchorTargetNameFrame = function()
+  targetNameFrame:SetUserPlaced(false)
+  targetNameFrame:ClearAllPoints()
+
+  if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+    targetNameFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, -24)
+    return
+  end
+
+  if _G['MultiBarBottomLeft']:IsVisible() or _G['MultiBarBottomRight']:IsVisible() then
+    targetNameFrame:SetPoint('CENTER', UI, 'CENTER', 0, -274)
+  else
+    targetNameFrame:SetPoint('CENTER', UI, 'CENTER', 0, -323)
+  end
 end
 
 local handleSent = function(unit, target, castGUID, spellID)
@@ -166,6 +176,26 @@ local handleSuccess = function(unitTarget)
   end
 end
 
+-- The default position will be altered based on the visiblity of the bottom left and bottom right actions bars.
+-- Re-anchor whenever the action bar settings are changed.
+local handleUIChange = function(cvarName)
+  if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and not targetNameFrame:IsUserPlaced() and cvarName == 'enableMultiActionBars' then
+    if uiChangeTimer and not uiChangeTimer:IsCancelled() then
+      uiChangeTimer:Cancel()
+    end
+
+    uiChangeTimer = C_Timer.NewTimer(1, anchorTargetNameFrame)
+  end
+end
+
+-- In TBC classic and onwards, the initial anchoring might fail because the default ui frames might not be loaded yet.
+-- This will do a second pass once we know the default ui frames are ready so we can check the presence of the bottom actionbars.
+local handleDelayedSetup = function()
+  if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and not targetNameFrame:IsUserPlaced() then
+    anchorTargetNameFrame()
+  end
+end
+
 local EVENTS = {}
 
 EVENTS['UNIT_SPELLCAST_SENT'] = handleSent
@@ -186,14 +216,13 @@ EVENTS['UNIT_SPELLCAST_INTERRUPTED'] = handleStop
 
 EVENTS['UNIT_SPELLCAST_SUCCEEDED'] = handleSuccess
 
-local anchorTargetNameFrame = function()
-  targetNameFrame:SetPoint('CENTER', castBarFrame, 'CENTER', 0, targetNameFrameOffsetY)
-end
+EVENTS['CVAR_UPDATE'] = handleUIChange
+
+EVENTS['PLAYER_ENTERING_WORLD'] = handleDelayedSetup
 
 local resetTargetNameFrameLocation = function()
   UIChanges_Profile['UIC_STD_FrameInfo'] = {}
 
-  targetNameFrame:SetUserPlaced(false)
   targetNameFrame:ClearAllPoints()
   
   anchorTargetNameFrame()
@@ -232,10 +261,6 @@ end
 SpellTargetDisplay.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
   hideTargetNameFrame()
-end
-
-SpellTargetDisplay.Update = function()
-  anchorTargetNameFrame()
 end
 
 SpellTargetDisplay.ResetTargetNameFrameLocation = function()

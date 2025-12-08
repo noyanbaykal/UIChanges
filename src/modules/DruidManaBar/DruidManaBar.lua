@@ -67,7 +67,7 @@ local setManaBarValue = function()
 
   manaBar:SetValue(percentage)
   manaBar.value:SetText(mana)
-  manaBar.percentage:SetText(math.ceil(100 * percentage)..'%')
+  manaBar.percentage:SetText(math.floor(100 * percentage)..'%')
   manaBar.numeric:SetText(mana..' / '..manaMax)
 end
 

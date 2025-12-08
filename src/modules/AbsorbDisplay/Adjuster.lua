@@ -23,12 +23,16 @@ local C = addonTable.C
 
 -- Spells scale with the caster's level, resulting in a range from amount to amountMax. There isn't a
 -- clean way of accounting for this except when the player is the one casting.
--- In that case we can read the spell tooltip which includes the correct base value, including
+-- In classic era, for this case we can read the spell tooltip which includes the correct base value, including
 -- any talent modifiers. Spell power from gear will be added on top of this base value.
--- Spells cast by others will default to amount as an approximation. Unless the player is at max level
--- in which case we'll assume they are playing with other max level players and we'll use amountMax.
--- The data & lookup tables may be altered in adjustDataTables based on expansion.
 -- Data read from tooltips will be stored the data tables with the 'current' key.
+
+-- In TBC and WOTLK, the improved pws talent's modifier applies AFTER the bonus from spell power. This is
+-- why we cannot read from the tooltips!
+
+-- Spells cast by others will default to the amount value as an approximation. Unless the player is at
+-- max level in which case we'll assume they are playing with other max level players and we'll use amountMax.
+-- The data & lookup tables may be altered in adjustDataTables based on expansion.
 
 -- Spell ranks go away with Cataclysm (and onwards).
 -- The spell tooltips in the Cataclysm client seem to take into account all factors and display the final
@@ -36,20 +40,18 @@ local C = addonTable.C
 -- the SPELL_AURA_APPLIED event in Cataclysm provides the amount value. This is only the base amount but we'll
 -- use it for PWS casts by others.
 
--- In TBC and WOTLK the PWS shield amount formula is different and I can't test them at this time so
--- we'll read PWS tooltips only in vanilla for now.
 local DATA_PWS = { -- Power Word: Shield
   {level = 6,  rank = 1,  spellId = 17,    amount = 44,   amountMax = 48},
   {level = 12, rank = 2,  spellId = 592,   amount = 88,   amountMax = 94},
   {level = 18, rank = 3,  spellId = 600,   amount = 158,  amountMax = 166},
   {level = 24, rank = 4,  spellId = 3747,  amount = 234,  amountMax = 244},
-  {level = 30, rank = 5,  spellId = 6065,  amount = 301,  amountMax = 313},
+  {level = 30, rank = 5,  spellId = 6065,  amount = 301,  amountMax = 312},
   {level = 36, rank = 6,  spellId = 6066,  amount = 381,  amountMax = 394},
   {level = 42, rank = 7,  spellId = 10898, amount = 484,  amountMax = 499},
   {level = 48, rank = 8,  spellId = 10899, amount = 605,  amountMax = 622},
-  {level = 54, rank = 9,  spellId = 10900, amount = 763,  amountMax = 783},
-  {level = 60, rank = 10, spellId = 10901, amount = 942,  amountMax = 964},
-  {level = 65, rank = 11, spellId = 25217, amount = 1125, amountMax = 1144},
+  {level = 54, rank = 9,  spellId = 10900, amount = 763,  amountMax = 782},
+  {level = 60, rank = 10, spellId = 10901, amount = 942,  amountMax = 963},
+  {level = 65, rank = 11, spellId = 25217, amount = 1125, amountMax = 1143},
   {level = 70, rank = 12, spellId = 25218, amount = 1265, amountMax = 1286},
   {level = 75, rank = 13, spellId = 48065, amount = 1920, amountMax = 1951},
   {level = 80, rank = 14, spellId = 48066, amount = 2230, amountMax = 2230},
@@ -300,13 +302,49 @@ local getSelfcastApproximateAmount = function(dataTable, buffEntry)
   return buffEntry.amount
 end
 
+-- In classic Era only sub level 20 spells get a coefficient penalty.
+-- Historical data suggests that in TBC and onwards, both the sub level 20 spell penalty and the downranking penalty
+-- should be accounted for. But this is currently not the case in the TBC PTR.
+local calculateSub20Penalty = function(dataTable, buffEntry)
+  local spellLevel = dataTable[buffEntry.rank].level
+
+  if spellLevel >= 20 then
+    return 1
+  end
+
+  return 1 - ((20 - spellLevel) * 0.0375)
+end
+
+local selfcastHelperPwsEra = function(dataTable, buffEntry)
+  -- talentModifierIPWS is baked into buffEntry.current
+  local baseAmount = buffEntry.current or buffEntry.amount -- Have a fallback
+
+  local finalCoefficient = spellpowerCoefficientPWS * calculateSub20Penalty(dataTable, buffEntry)
+
+  local finalAmount = baseAmount + (spellpower * finalCoefficient)
+
+  return math.floor(finalAmount + zgBonusPWS)
+end
+
+-- TBC and onwards
+local calculateDownrankingPenalty = function(dataTable, buffEntry)
+  local spellLevel = dataTable[buffEntry.rank].level
+
+  local downrankingMultiplier = (spellLevel + 11) / UnitLevel('player')
+
+  return math.min(1, downrankingMultiplier)
+end
+
 local selfcastHelperPwsExpansion = function(dataTable, buffEntry)
   local baseAmount = getSelfcastApproximateAmount(dataTable, buffEntry)
 
-  local coefficient = spellpowerCoefficientPWS + talentCoefficientBonusBT
+  local coefficient = spellpowerCoefficientPWS * calculateDownrankingPenalty(dataTable, buffEntry)
 
-  local finalAmount = (baseAmount + (spellpower * coefficient)) * talentModifierIPWS * setBonusModifierPWS
-  return math.ceil(finalAmount + zgBonusPWS)
+  local finalCoefficient = coefficient + talentCoefficientBonusBT
+
+  local finalAmount = (baseAmount + (spellpower * finalCoefficient)) * talentModifierIPWS * setBonusModifierPWS
+
+  return math.floor(finalAmount + zgBonusPWS)
 end
 
 local checkTalentIpws = function(columnIndex)
@@ -321,14 +359,7 @@ end
 
 local adjustPriest = function()
   if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
-    local selfCastHelper = function(_, buffEntry)
-      -- talentModifierIPWS is baked into buffEntry.current
-      local baseAmount = buffEntry.current or buffEntry.amount -- Have a fallback
-      local finalAmount = baseAmount + (spellpower * spellpowerCoefficientPWS)
-      return math.ceil(finalAmount + zgBonusPWS)
-    end
-
-    DATA_PWS.calculateAmount = calculateAmountPwsPriest(selfCastHelper)
+    DATA_PWS.calculateAmount = calculateAmountPwsPriest(selfcastHelperPwsEra)
 
     checkTooltips = function()
       checkTooltipsHelper(DATA_PWS)
@@ -339,6 +370,7 @@ local adjustPriest = function()
     end
 
     checkItemBonuses = checkItemBonusesPriestPreWotlk
+
   elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_BURNING_CRUSADE then
     DATA_PWS.calculateAmount = calculateAmountPwsPriest(selfcastHelperPwsExpansion)
 
@@ -347,6 +379,7 @@ local adjustPriest = function()
     end
 
     checkItemBonuses = checkItemBonusesPriestPreWotlk
+
   elseif LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING then
     DATA_PWS.calculateAmount = calculateAmountPwsPriest(selfcastHelperPwsExpansion)
 
@@ -362,6 +395,7 @@ local adjustPriest = function()
       setBonusModifierPWS = hasT10Bonus() and 1.05 or 1
       zgBonusPWS = checkZgNeckBonus()
     end
+
   elseif LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA then
     DATA_PWS.calculateAmount = function(dataTable, buffEntry, sourceName, baseAmount)
       if sourceName == playerName then
@@ -384,13 +418,13 @@ end
 local adjustWarlock = function()
   DATA_SACRIFICE.calculateAmount = function(_, buffEntry)
     --talentModifierSacrifice is baked into buffEntry.current
-    return math.ceil(buffEntry.current or buffEntry.amount) -- Have a fallback
+    return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
   end
 
   if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC then
     DATA_SPELLSTONE.calculateAmount = function(_, buffEntry)
       --talentModifierSpellstone is baked into buffEntry.current
-      return math.ceil(buffEntry.current or buffEntry.amount) -- Have a fallback
+      return math.floor(buffEntry.current or buffEntry.amount) -- Have a fallback
     end
 
     checkTooltips = function()

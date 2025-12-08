@@ -109,7 +109,7 @@ local initializeFrames = function()
   multiplierFrame:SetPoint('RIGHT', equalsFrame, 'LEFT', -6, 0)
   multiplierFrame:SetPoint('TOP', equalsFrame, 'TOP', 0, -2)
   multiplierFrame:SetAutoFocus(false)
-  multiplierFrame:SetNumeric(true);
+  multiplierFrame:SetNumeric(true)
   multiplierFrame:SetMaxLetters(3)
 
   timesFrame = calculatorFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')

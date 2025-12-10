@@ -97,10 +97,6 @@ end
 
 -- The addon entry is right here
 
-if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
-  DEFAULT_CHAT_FRAME:AddMessage(L.TXT_NOT_CLASSIC)
-end
-
 local mainFrame = CreateFrame('Frame', 'UIC_Main', UIParent)
 mainFrame:Hide()
 

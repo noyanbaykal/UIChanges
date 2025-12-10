@@ -141,8 +141,7 @@ local buildCommonStrings = function (L)
 
     return list .. table.concat(C.INCOMPATIBLE_MODULE_NAMES, ', ') .. colorEscape
   end
-
-  L.TXT_NOT_CLASSIC = colorRed .. L.TXT_NOT_CLASSIC_1 .. colorEscape
+  
   L.OPTIONS_INFO = colorRed .. L.OPTIONS_INFO_1 .. colorEscape
 
   L.PPF = {L.PPF_1, colorRed .. L.PPF_2 ..colorEscape}

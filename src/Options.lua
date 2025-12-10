@@ -497,12 +497,8 @@ local setupOptionsPanel = function()
   local infoText = optionsPanel:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
   infoText:SetJustifyH('LEFT')
   infoText:SetSpacing(2)
-
-  if isClassic then
-    infoText:SetText(L.OPTIONS_INFO)
-  else
-    infoText:SetText(L.TXT_NOT_CLASSIC)
-  end
+  
+  infoText:SetText(L.OPTIONS_INFO)
 
   infoText:SetPoint('LEFT', optionsPanel, 'LEFT', 16, 0)
   infoText:SetPoint('RIGHT', optionsPanel, 'RIGHT', -28, 0)

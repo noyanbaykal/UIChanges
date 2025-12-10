@@ -47,7 +47,7 @@ local onUpdate = function(unitTarget)
 end
 
 local getPetFrame = function(i)
-  if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+  if WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
     return _G['PartyFrame']['MemberFrame'..i].PetFrame
   end
 
@@ -69,8 +69,10 @@ local setupPowerFrames = function()
 end
 
 local onUpdateAll = function()
-  if not isInitialized and IsInGroup() and _G['PartyFrame']:IsVisible() then
-    setupPowerFrames()
+  if not isInitialized and IsInGroup() then
+    if (_G['PartyMemberFrame1'] and _G['PartyMemberFrame1']:IsVisible()) or (_G['PartyFrame'] and _G['PartyFrame']:IsVisible()) then
+      setupPowerFrames()
+    end
   end
 
   for i = 1, #petFrames do

@@ -167,10 +167,10 @@ end
 local anchorToDefaultPosition = function()
   shieldFrame:SetUserPlaced(false)
 
-  if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
-    shieldFrame:SetPoint('CENTER', UI, 'CENTER', 0, -225)
-  else
+  if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
     shieldFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, 150)
+  elseif WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
+    shieldFrame:SetPoint('CENTER', UI, 'CENTER', 0, -205)
   end
 end
 

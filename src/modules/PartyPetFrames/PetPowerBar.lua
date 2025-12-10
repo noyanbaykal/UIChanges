@@ -24,7 +24,7 @@ local C = addonTable.C
 local PetPowerBar = {}
 
 local getHealthBar = function(index)
-  if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+  if WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
     return _G['PartyFrame']['MemberFrame'..index].PetFrame.HealthBar
   end
 

@@ -89,10 +89,19 @@ local anchorTargetNameFrame = function()
     return
   end
 
+  local offsetY = 0
+  if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE or WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC then
+    if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_MIDNIGHT then
+      offsetY = -142
+    else
+      offsetY = -8 
+    end
+  end
+
   if _G['MultiBarBottomLeft']:IsVisible() or _G['MultiBarBottomRight']:IsVisible() then
-    targetNameFrame:SetPoint('CENTER', UI, 'CENTER', 0, -274)
+    targetNameFrame:SetPoint('CENTER', UI, 'CENTER', 0, -284 + offsetY)
   else
-    targetNameFrame:SetPoint('CENTER', UI, 'CENTER', 0, -323)
+    targetNameFrame:SetPoint('CENTER', UI, 'CENTER', 0, -332)
   end
 end
 

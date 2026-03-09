@@ -409,7 +409,7 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'PA',
       ['title'] = 'Ping Announcer',
       ['description'] = L.PA,
-      ['checkCompatibility'] = function() return true end,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA end,
       ['subsettings'] = {
         ['entries'] = {
           buildCheckboxEntry('UIC_PA_Raid', false, RAID),
@@ -426,7 +426,7 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'STD',
       ['title'] = 'Spell Target Display',
       ['description'] = L.STD,
-      ['checkCompatibility'] = function() return true end,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA end,
       ['subsettings'] = {
         ['entries'] = {
           {

@@ -1,7 +1,7 @@
 --[[
 UIChanges
 
-Copyright (C) 2019 - 2025 Melik Noyan Baykal
+Copyright (C) 2019 - 2026 Melik Noyan Baykal
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -409,7 +409,8 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'PA',
       ['title'] = 'Ping Announcer',
       ['description'] = L.PA,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA end,
+      ['checkCompatibility'] = function() return false end, -- Disabling this module due to MINIMAP_PING being accidentally restricted in classic
+      --['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA end,
       ['subsettings'] = {
         ['entries'] = {
           buildCheckboxEntry('UIC_PA_Raid', false, RAID),

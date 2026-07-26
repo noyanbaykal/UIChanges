@@ -1,7 +1,7 @@
 --[[
 UIChanges
 
-Copyright (C) 2019 - 2025 Melik Noyan Baykal
+Copyright (C) 2019 - 2026 Melik Noyan Baykal
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local _, addonTable = ...
+local addonName, addonTable = ...
 
 local L = addonTable.L
 local C = addonTable.C
@@ -447,7 +447,7 @@ end
 
 local setupOptionsPanel = function()
   local optionsPanel = CreateFrame('Frame', 'UIC_Options', defaultOptionsFrame.NineSlice)
-  optionsPanel.name = 'UIChanges'
+  optionsPanel.name = addonName
   optionsPanel:Hide()
 
   local setSubsettingValues = function(moduleEntry)
@@ -490,7 +490,7 @@ local setupOptionsPanel = function()
 
   -- Header text
   local headerText = optionsPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormalLarge')
-  headerText:SetText('UIChanges')
+  headerText:SetText(addonName)
   headerText:SetPoint('TOPLEFT', optionsPanel, 12, -16)
 
   -- Informational text
@@ -578,7 +578,7 @@ UIC_Options.Initialize = function()
     end
   end
 
-  local category = Settings.RegisterCanvasLayoutCategory(optionsPanel, 'UIChanges')
+  local category = Settings.RegisterCanvasLayoutCategory(optionsPanel, addonName)
   Settings.RegisterAddOnCategory(category)
   optionsPanel.categoryID = category:GetID() -- Storing here so the panel can be opened with a macro
 end

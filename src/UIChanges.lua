@@ -1,7 +1,7 @@
 --[[
 UIChanges
 
-Copyright (C) 2019 - 2025 Melik Noyan Baykal
+Copyright (C) 2019 - 2026 Melik Noyan Baykal
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -71,7 +71,6 @@ local fixMissingTrackingIcon = function()
   border:Show()
   icon:Show()
 end
-
 
 local initialize = function()
   C.DEFINE_MODULES()

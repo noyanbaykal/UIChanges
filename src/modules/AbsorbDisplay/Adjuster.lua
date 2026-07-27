@@ -119,9 +119,11 @@ local talentCoefficientBonusBT = 0 -- Borrowed Time, only in WOTLK
 
 local spellpower = 0
 
-local checkTooltips = C.DUMMY_FUNCTION -- These will be set differently based on expansion
-local checkTalents = C.DUMMY_FUNCTION
-local checkItemBonuses = C.DUMMY_FUNCTION
+local dummyFunction = function() end -- Will re-use this single function when we need a dummy function.
+
+local checkTooltips = dummyFunction -- These will be set differently based on expansion
+local checkTalents = dummyFunction
+local checkItemBonuses = dummyFunction
 
 -- This is a lookup table for direct access to data table entries by spellId, or the dataTables by spellName.
 local spellLookup
@@ -259,7 +261,7 @@ local checkTooltipsHelper = function(dataTable)
     local sourceId = dataTable[i].sourceId
 
     if IsSpellKnown(spellId) or IsSpellKnown(spellId, true) or (sourceId and IsSpellKnown(sourceId)) then
-      local text = C.GET_SPELL_DESCRIPTION(spellId)
+      local text = C_Spell.GetSpellDescription(spellId)
       local firstNumber = string.match(text, '%d+%.?%,?%d+') -- May include a comma or dot
 
       if firstNumber then
@@ -444,7 +446,7 @@ local addLookupEntries = function(dataTable, timerCallback)
   spellLookup.activeTables[#spellLookup.activeTables + 1] = dataTable
 
   -- We'll need to reference the data tables too. Use the spell name for that.
-  local spellName = C.GET_SPELL_NAME(dataTable[1].spellId)
+  local spellName = C_Spell.GetSpellName(dataTable[1].spellId)
   spellLookup[spellName] = dataTable
   dataTable.spellName = spellName
 
@@ -456,7 +458,7 @@ local addLookupEntries = function(dataTable, timerCallback)
   for _, entry in ipairs(dataTable) do
     spellLookup[entry.spellId] = entry
 
-    local currentSpellName = C.GET_SPELL_NAME(entry.spellId)
+    local currentSpellName = C_Spell.GetSpellName(entry.spellId)
     if currentSpellName ~= spellName then -- For spells that have different names per rank
       spellLookup[currentSpellName] = dataTable
     end

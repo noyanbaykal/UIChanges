@@ -96,7 +96,7 @@ end
 
 -- The addon entry is right here
 
-local mainFrame = CreateFrame('Frame', 'UIC_Main', UIParent)
+local mainFrame = CreateFrame('Frame', C.MAIN_FRAME_NAME, UIParent)
 mainFrame:Hide()
 
 mainFrame:RegisterEvent('PLAYER_LOGIN')

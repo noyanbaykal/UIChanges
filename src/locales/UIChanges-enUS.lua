@@ -24,12 +24,11 @@ local locale = {}
 -- Localization files should set a reference to themselves in the addonTable with their locale code as the key
 addonTable.enUS = locale
 
-locale.OPTIONS_INFO_1 = 'Settings that modify console variables have to be toggled when not in combat and require a UI reload afterwards to take effect. Then you need to log off for the game to save the changed console variable.'
+locale.MODULE_AVAILABILITY_TEXT = 'Module availability depends on the game version and character class!'
+locale.CVAR_INFO = 'Settings that modify console variables have to be toggled when not in combat and require a UI reload afterwards to take effect. Then you need to log off for the game to save the changed console variable.'
 locale.FIRST_TIME = 'UI Changes encountered new variables with this character! Please check out the Interface Options/AddOns/UIChanges page to see the available options.'
 locale.CVAR_CHANGED = 'UI Changes: Console variable changed, please reload your UI!'
-locale.CANT_CHANGE_IN_COMBAT = 'UI Changes: Unable to change setting while in combat! Please check the options page again after combat.' 
-locale.PLAY_SOUND = 'Play '..SOUND..' for'
-locale.INCOMPATIBLE_MODULES_TEXT = 'Modules not compatible with this version of the game and the current character:'
+locale.CANT_CHANGE_IN_COMBAT = 'UI Changes: Unable to change setting while in combat! Please re-open the options page again after combat.' 
 
 locale.ANCHOR_TOPLEFT = 'Top Left'
 locale.ANCHOR_TOP = 'Top'
@@ -41,7 +40,7 @@ locale.ANCHOR_BOTTOMLEFT = 'Bottom Left'
 locale.ANCHOR_LEFT = 'Left'
 
 -- Base Options
-locale.MINIMAP_QUICK_ZOOM = 'Minimap quick zoom'
+locale.MINIMAP_QUICK_ZOOM = 'Minimap Quick Zoom'
 locale.TOOLTIP_MINIMAP_QUICK_ZOOM = 'Shift click the minimap + / - buttons for max zoom in / out.'
 -- ~Base Options
 
@@ -51,40 +50,33 @@ locale.ABSORB_DISPLAY_2 = 'You can drag the display while holding CTRL.'
 -- ~AbsorbDisplay
 
 -- AHTools
-locale.AHT = {
-  'Provides a simple stack price calculator and displays a warning sign for possible scams.',
-  'Also allows you to MiddleMouse click an item in your bags to initiate a search with the item\'s name.'
-}
+locale.AHT = 'Provides a simple stack price calculator and displays a warning sign for possible scams.\nAlso allows you to MiddleMouse click an item in your bags to initiate a search with the item\'s name.'
 -- ~AHTools
 
 -- BagUtilities
-locale.BU = {'Opens bag & clams after picking them up.'}
+locale.BU = 'Opens bag & clams after picking them up.'
 -- ~BagUtilities
 
 -- CriticalReminders
-locale.CR = {
-  'Makes the selected warnings more noticeable by displaying an error icon and optionally playing a sound.',
-  'When the anchor option is set to Off, the display can be dragged while holding CTRL or reset with the button.'
-}
+locale.CR = 'Makes the selected warnings more noticeable by displaying an error icon and optionally playing a sound.\nWhen the anchor option is set to "Disabled", the display can be dragged while holding CTRL or reset with the button.'
 
-locale.ERROR_FRAME_ANCHOR_DROPDOWN = 'Anchor to TargetFrame'
+locale.ERROR_FRAME_ANCHOR_DROPDOWN = 'Anchor To TargetFrame'
+locale.ERROR_FRAME_ANCHOR_DROPDOWN_TOOLTIP = 'The "' .. RESET_POSITION .. '" button does not override an anchoring enabled here.'
 
-locale.CR_SUBSETTING_STRINGS = {
-  ['BREATH_WARNING']      = 'Breath Warning',
-  ['COMBAT_WARNING']      = 'Combat Warning',
-  ['GATHERING_FAILURE']   = 'Gathering Failure',
-  ['COMBAT_LOS']          = 'Combat LOS',
-  ['COMBAT_DIRECTION']    = 'Combat Direction',
-  ['COMBAT_RANGE']        = 'Combat Range',
-  ['COMBAT_INTERRUPTED']  = 'Combat Interrupted',
-  ['COMBAT_COOLDOWN']     = 'Combat Cooldown',
-  ['COMBAT_NO_RESOURCE']  = 'Combat No Resource',
-  ['INTERACTION_RANGE']   = 'Interaction Range',
-}
+locale.BREATH_WARNING      = 'Breath Warning'
+locale.COMBAT_WARNING      = 'Combat Warning'
+locale.GATHERING_FAILURE   = 'Gathering Failure'
+locale.COMBAT_LOS          = 'Combat Line Of Sight'
+locale.COMBAT_DIRECTION    = 'Combat Direction'
+locale.COMBAT_RANGE        = 'Combat Range'
+locale.COMBAT_INTERRUPTED  = 'Combat Interrupted'
+locale.COMBAT_COOLDOWN     = 'Combat Cooldown'
+locale.COMBAT_NO_RESOURCE  = 'Combat No Resource'
+locale.INTERACTION_RANGE   = 'Interaction Range'
 -- ~CriticalReminders
 
 -- DruidManaBar
-locale.DMB = {'Shows the mana bar while shapeshifted into a druid form that does not use mana.'}
+locale.DMB = 'Shows the mana bar while shapeshifted into a druid form that does not use mana.'
 -- ~DruidManaBar
 
 -- PartyPetFrames
@@ -93,10 +85,12 @@ locale.PPF_2 = 'This modifies a console variable! If you\'re going to remove the
 -- ~PartyPetFrames
 
 -- PingAnnouncer
-locale.PA = {
-  'Sends a party message when you click on a minimap object to alert your party members.',
-  'Hold down CTRL when clicking to send the message to all raid or battleground members instead.'
-}
+locale.PA = 'Sends a party message when you click on a minimap object to alert your party members.\nHold down CTRL when clicking to send the message to all raid or battleground members instead.'
+locale.PA_TOOLTIP_PREFIX = 'Enabled when in a'
+locale.PA_TOOLTIP_PARTY = locale.PA_TOOLTIP_PREFIX .. ' ' .. PARTY
+locale.PA_TOOLTIP_RAID = locale.PA_TOOLTIP_PREFIX .. ' ' .. RAID
+locale.PA_TOOLTIP_BATTLEGROUND = locale.PA_TOOLTIP_PREFIX .. ' ' .. BATTLEGROUND
+locale.PA_TOOLTIP_ARENA = locale.PA_TOOLTIP_PREFIX .. 'n ' .. ARENA
 
 locale.PINGED = 'Pinged'
 locale.NEARBY = 'in the immediate vicinity!'
@@ -109,5 +103,5 @@ locale.SOUTH = 'South'
 -- ~PingAnnouncer
 
 -- SpellTargetDisplay
-locale.STD = {'Displays the target\'s name under the cast bar when casting a spell. '..locale.ABSORB_DISPLAY_2}
+locale.STD = 'Displays the target\'s name under the cast bar when casting a spell.\n' .. locale.ABSORB_DISPLAY_2
 -- ~SpellTargetDisplay

@@ -24,11 +24,7 @@ local C = addonTable.C
 local PetPowerBar = {}
 
 local getHealthBar = function(index)
-  if WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
-    return _G['PartyFrame']['MemberFrame'..index].PetFrame.HealthBar
-  end
-
-  return _G['PartyMemberFrame'..index..'PetFrameHealthBar']
+  return _G['PartyFrame']['MemberFrame'..index].PetFrame.HealthBar
 end
 
 -- This class isn't a singleton, things need to be defined within new
@@ -43,7 +39,7 @@ PetPowerBar.new = function(index)
 
   local powerFrame = CreateFrame('Frame', 'PartyMemberFrame'..index..'PetFramePowerBar', healthBar)
   powerFrame:SetFrameStrata(strata)
-  powerFrame:SetPoint('TOP', healthBar, 'BOTTOM', 0, -0.3)
+  powerFrame:SetPoint('TOP', healthBar, 'BOTTOM', 0, -0.5)
   powerFrame:SetPoint('LEFT', healthBar, 'LEFT', 0, 0)
   powerFrame.texture = powerFrame:CreateTexture(nil, 'BACKGROUND')
   powerFrame.texture:SetAllPoints(powerFrame)
@@ -75,7 +71,7 @@ PetPowerBar.new = function(index)
       percentage = 100
     end
 
-    local width = healthBar:GetWidth()
+    local width = healthBar:GetWidth() + 1
     local offset = width * 0.04 -- The bar offset is used to better position the power bar inside the existing StatusBar texture
   
     return C.RoundToPixelCount((width - offset) * percentage / 100)

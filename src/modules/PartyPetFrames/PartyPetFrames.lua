@@ -47,11 +47,7 @@ local onUpdate = function(unitTarget)
 end
 
 local getPetFrame = function(i)
-  if WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
-    return _G['PartyFrame']['MemberFrame'..i].PetFrame
-  end
-
-  return _G['PartyMemberFrame'..i..'PetFrame']
+  return _G['PartyFrame']['MemberFrame'..i].PetFrame
 end
 
 local setupPowerFrames = function()

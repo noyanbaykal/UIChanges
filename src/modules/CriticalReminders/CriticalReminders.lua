@@ -26,56 +26,20 @@ local mainFrame, errorFrame, breathFrame, errorTimer, breathTimer, breathValues
 local TIMER_INTERVAL = 4 -- Seconds
 local BREATH_TIMER_INTERVAL = 1 -- Seconds
 
-local showCombatWarning = function()
-  return UIChanges_Profile['UIC_CR_CombatWarning']
-end
-
-local showGatheringFailure = function()
-  return UIChanges_Profile['UIC_CR_GatheringFailure']
-end
-
-local showNoLos = function()
-  return UIChanges_Profile['UIC_CR_CombatLos']
-end
-
-local showCombatDirection = function()
-  return UIChanges_Profile['UIC_CR_CombatDirection']
-end
-
-local showCombatRange = function()
-  return UIChanges_Profile['UIC_CR_CombatRange']
-end
-
-local showCombatInterrupted = function()
-  return UIChanges_Profile['UIC_CR_CombatInterrupted']
-end
-
-local showCombatCooldown = function()
-  return UIChanges_Profile['UIC_CR_CombatCooldown']
-end
-
-local showNoResource = function()
-  return UIChanges_Profile['UIC_CR_CombatNoResource']
-end
-
-local showInteractionRange = function()
-  return UIChanges_Profile['UIC_CR_InteractionRange']
-end
-
 local ErrorMap = {
-  ['PLAYER_REGEN_DISABLED'] =               {showCombatWarning,     'Interface\\ICONS\\Ability_DualWield',                  'UIC_CR_CombatWarning_Sound'},
-  [ERR_BADATTACKPOS] =                      {showCombatRange,       'Interface\\CURSOR\\UnableAttack',                      'UIC_CR_CombatRange_Sound'},
-  [ERR_BADATTACKFACING] =                   {showCombatDirection,   'Interface\\GLUES\\CharacterSelect\\CharacterUndelete', 'UIC_CR_CombatDirection_Sound', 52},
-  [ERR_OUT_OF_RANGE] =                      {showCombatRange,       'Interface\\CURSOR\\UnableCrosshairs',                  'UIC_CR_CombatRange_Sound'},
-  [ERR_SPELL_COOLDOWN] =                    {showCombatCooldown,    'Interface\\ICONS\\INV_Misc_PocketWatch_01',            'UIC_CR_CombatCooldown_Sound'},
-  [ERR_SPELL_FAILED_ANOTHER_IN_PROGRESS] =  {showCombatInterrupted, 'Interface\\CURSOR\\UnableCast',                        'UIC_CR_CombatInterrupted_Sound', nil, 1, -2},
-  [ERR_OUT_OF_MANA] =                       {showNoResource,        'Interface\\ICONS\\Spell_Shadow_ManaBurn',              'UIC_CR_CombatNoResource_Sound'},
-  [ERR_OUT_OF_RAGE] =                       {showNoResource,        'Interface\\ICONS\\Ability_Racial_BloodRage',           'UIC_CR_CombatNoResource_Sound'},
-  [ERR_OUT_OF_ENERGY] =                     {showNoResource,        'Interface\\ICONS\\ClassIcon_Rogue',                    'UIC_CR_CombatNoResource_Sound'},
-  [ERR_TOO_FAR_TO_INTERACT] =               {showInteractionRange,  'Interface\\CURSOR\\UnableInteract',                    'UIC_CR_InteractionRange_Sound', nil, 1, -2},
-  [SPELL_FAILED_TRY_AGAIN] =                {showGatheringFailure,  'Interface\\CURSOR\\UnableGatherHerbs',                 'UIC_CR_GatheringFailure_Sound'},
-  [SPELL_FAILED_LINE_OF_SIGHT] =            {showNoLos,             'Interface\\ICONS\\INV_Misc_Eye_01',                    'UIC_CR_CombatLos_Sound'},
-  [INTERRUPTED] =                           {showCombatInterrupted, 'Interface\\CURSOR\\UnableUI-Cursor-Move',              'UIC_CR_CombatInterrupted_Sound'},
+  ['PLAYER_REGEN_DISABLED'] =               {'UIC_CR_CombatWarning',          'Interface\\ICONS\\Ability_DualWield'},
+  [ERR_BADATTACKPOS] =                      {'UIC_CR_CombatRange',            'Interface\\CURSOR\\UnableAttack'},
+  [ERR_BADATTACKFACING] =                   {'UIC_CR_CombatDirection',        'Interface\\GLUES\\CharacterSelect\\CharacterUndelete', 52},
+  [ERR_OUT_OF_RANGE] =                      {'UIC_CR_CombatRange',            'Interface\\CURSOR\\UnableCrosshairs'},
+  [ERR_SPELL_COOLDOWN] =                    {'UIC_CR_CombatCooldown',         'Interface\\ICONS\\INV_Misc_PocketWatch_01'},
+  [ERR_SPELL_FAILED_ANOTHER_IN_PROGRESS] =  {'UIC_CR_CombatInterrupted',      'Interface\\CURSOR\\UnableCast', nil, 1, -2},
+  [ERR_OUT_OF_MANA] =                       {'UIC_CR_CombatNoResource',       'Interface\\ICONS\\Spell_Shadow_ManaBurn'},
+  [ERR_OUT_OF_RAGE] =                       {'UIC_CR_CombatNoResource',       'Interface\\ICONS\\Ability_Racial_BloodRage'},
+  [ERR_OUT_OF_ENERGY] =                     {'UIC_CR_CombatNoResource',       'Interface\\ICONS\\ClassIcon_Rogue'},
+  [ERR_TOO_FAR_TO_INTERACT] =               {'UIC_CR_InteractionRange',       'Interface\\CURSOR\\UnableInteract', nil, 1, -2},
+  [SPELL_FAILED_TRY_AGAIN] =                {'UIC_CR_GatheringFailure',       'Interface\\CURSOR\\UnableGatherHerbs'},
+  [SPELL_FAILED_LINE_OF_SIGHT] =            {'UIC_CR_CombatLos',              'Interface\\ICONS\\INV_Misc_Eye_01'},
+  [INTERRUPTED] =                           {'UIC_CR_CombatInterrupted',      'Interface\\CURSOR\\UnableUI-Cursor-Move'},
 }
 
 ErrorMap[SPELL_FAILED_UNIT_NOT_INFRONT] =             ErrorMap[ERR_BADATTACKFACING]
@@ -143,7 +107,7 @@ local updateBreathFrame = function()
 
   breathFrame:Show()
 
-  if UIChanges_Profile['UIC_CR_BreathWarning_Sound'] == true then
+  if UIChanges_Profile['UIC_CR_BreathWarning'] == 3 then
     local soundId
 
     if secondsLeft == 30 then
@@ -206,39 +170,40 @@ local targetFramePortrait = _G['TargetFramePortrait']
 local targetFrameTextureFrame = _G['TargetFrameTextureFrame']
 
 local errorFrameAnchoringTable = {}
-errorFrameAnchoringTable['TOPLEFT'] = function()
-  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', 2, 0)
+-- These have to be in the same order as in the ENUM_ANCHOR_OPTIONS. Skipping 1.
+errorFrameAnchoringTable[2] = function() -- 'Top Left'
+  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', 0, 0)
   errorFrame:SetPoint('BOTTOM', targetFramePortrait, 'TOP', 0, 5)
 end
-errorFrameAnchoringTable['TOP'] = function()
-  local x = (targetFrameTextureFrame:GetRight() - targetFrameTextureFrame:GetLeft()) / 4
+errorFrameAnchoringTable[3] = function() -- 'Top'
+  local x = (targetFrameTextureFrame:GetRight() - targetFrameTextureFrame:GetLeft()) / 3
 
   errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', x, 0)
   errorFrame:SetPoint('BOTTOM', targetFramePortrait, 'TOP', 0, 5)
 end
-errorFrameAnchoringTable['TOPRIGHT'] = function()
-  errorFrame:SetPoint('RIGHT', targetFramePortrait, 'RIGHT', 0)
+errorFrameAnchoringTable[4] = function() -- 'Top Right'
+  errorFrame:SetPoint('RIGHT', targetFramePortrait, 'RIGHT', 30, 0)
   errorFrame:SetPoint('BOTTOM', targetFramePortrait, 'TOP', 0, 5)
 end
-errorFrameAnchoringTable['RIGHT'] = function()
-  errorFrame:SetPoint('LEFT', targetFrame, 'RIGHT', -10, 0)
+errorFrameAnchoringTable[5] = function() -- 'Right'
+  errorFrame:SetPoint('LEFT', targetFrame, 'RIGHT', 5, 0)
 end
-errorFrameAnchoringTable['BOTTOMRIGHT'] = function()
-  errorFrame:SetPoint('RIGHT', targetFramePortrait, 'RIGHT', 0)
+errorFrameAnchoringTable[6] = function() -- 'Bottom Right'
+  errorFrame:SetPoint('RIGHT', targetFramePortrait, 'RIGHT', 30, 0)
   errorFrame:SetPoint('TOP', targetFramePortrait, 'BOTTOM', 0, -5)
 end
-errorFrameAnchoringTable['BOTTOM'] = function()
-  local x = (targetFrameTextureFrame:GetRight() - targetFrameTextureFrame:GetLeft()) / 4
+errorFrameAnchoringTable[7] = function() -- 'Bottom'
+  local x = (targetFrameTextureFrame:GetRight() - targetFrameTextureFrame:GetLeft()) / 3
 
-  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', x, 0)
+  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', x, 0, 0)
   errorFrame:SetPoint('TOP', targetFramePortrait, 'BOTTOM', 0, -5)
 end
-errorFrameAnchoringTable['BOTTOMLEFT'] = function()
-  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', 2, 0)
+errorFrameAnchoringTable[8] = function() -- 'Bottom Left'
+  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', 0, 0)
   errorFrame:SetPoint('TOP', targetFramePortrait, 'BOTTOM', 0, -5)
 end
-errorFrameAnchoringTable['LEFT'] = function()
-  errorFrame:SetPoint('RIGHT', targetFrame, 'LEFT', -10, 6)
+errorFrameAnchoringTable[9] = function() -- 'Left'
+  errorFrame:SetPoint('RIGHT', targetFrame, 'LEFT', 0, 3)
 end
 
 local anchorToUIErrorsFrame = function()
@@ -254,11 +219,11 @@ local anchorErrorFrame = function()
     return
   end
 
-  local anchorDirection = C.ENUM_ANCHOR_OPTIONS[UIChanges_Profile['UIC_CR_ErrorFrameAnchor']][2]
+  local anchorDirection = UIChanges_Profile['UIC_CR_ErrorFrameAnchor']
 
   errorFrame:ClearAllPoints()
 
-  if anchorDirection == nil then
+  if anchorDirection == 1 then
     C.SetupMoveableFrame(errorFrame, 'UIC_CR_ErrorFrameInfo', anchorToUIErrorsFrame)
   else
     errorFrame:EnableMouse(false)
@@ -312,13 +277,14 @@ local handleErrorMessage = function(_, message)
   if ErrorMap[message] == nil then
     return
   end
-
-  local shouldShow, textureName, soundVariableName, size, offsetX, offsetY = unpack(ErrorMap[message])
-  if shouldShow() ~= true or not textureName then
+  
+  local subsettingVariableName, textureName, size, offsetX, offsetY = unpack(ErrorMap[message])
+  
+  if UIChanges_Profile[subsettingVariableName] == 1 or not textureName then
     return
   end
 
-  local playSound = UIChanges_Profile[soundVariableName] == true
+  local playSound = UIChanges_Profile[subsettingVariableName] == 3
 
   showUIErrorMessage(textureName, playSound, size, offsetX, offsetY)
 end
@@ -337,7 +303,7 @@ EVENTS['PLAYER_REGEN_ENABLED'] = function()
 end
 
 EVENTS['MIRROR_TIMER_START'] = function(timerName, value, maxValue, scale, paused, timerLabel)
-  if timerName == 'BREATH' and UIChanges_Profile['UIC_CR_BreathWarning'] == true then
+  if timerName == 'BREATH' and UIChanges_Profile['UIC_CR_BreathWarning'] > 1 then
     breathStart(value, maxValue, scale, paused)
   end
 end

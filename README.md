@@ -63,8 +63,6 @@ https://www.noyanbaykal.com/
 
 ### Disclaimers ###
 
-UIChanges makes use of LibStub and LibUIDropDownMenu.
-
 Thank you for the translations:
 
 - ZamestoTV - Russian

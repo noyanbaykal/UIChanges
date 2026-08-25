@@ -28,6 +28,7 @@ local onSettingChanged = function(setting, newValue)
   local key = setting['variableKey']
   local entry = settingsTable[key]
   local consoleVariable = entry['consoleVariableName']
+  local updateCallback = entry['updateCallback']
 
   if consoleVariable then
     local success = false
@@ -44,10 +45,8 @@ local onSettingChanged = function(setting, newValue)
     end
   end
 
-  UIChanges_Profile[key] = newValue
-
-  if entry['updateCallback'] then
-    entry['updateCallback'](newValue)
+  if updateCallback then
+    updateCallback(newValue)
   end
 end
 

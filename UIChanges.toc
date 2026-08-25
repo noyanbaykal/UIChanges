@@ -1,8 +1,8 @@
 ## Interface: 11509, 20506, 30403, 40402, 50504, 110207, 120007
 ## Title: UIChanges
-## Version: 1.4.0
+## Version: 1.4.1
 ## Author: Melik Noyan Baykal
-## Notes: Simple additions to the classic UI to make it nicer.
+## Notes: Simple improvements to the classic UI.
 ## Category: User Interface
 ## IconTexture: Interface\Icons\Inv_diablostone
 ## SavedVariablesPerCharacter: UIChanges_Profile

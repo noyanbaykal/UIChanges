@@ -23,26 +23,26 @@ local C = addonTable.C
 
 local PetPowerBar = {}
 
-local getHealthBar = function(index)
-  return _G['PartyFrame']['MemberFrame'..index].PetFrame.HealthBar
-end
-
 -- This class isn't a singleton, things need to be defined within new
 PetPowerBar.new = function(index)
   local self = {}
 
   -- Initialization
   local petReference = 'partypet'..index
-  local healthBar = getHealthBar(index)
+  local healthBar = _G['PartyFrame']['MemberFrame'..index].PetFrame.HealthBar
 
-  local strata = WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and 'BACKGROUND' or 'LOW' 
+  local powerFrame = CreateFrame('StatusBar', 'PartyMemberFrame'..index..'PetFramePowerBar', healthBar)
+  powerFrame:SetStatusBarTexture('Interface/TargetingFrame/UI-StatusBar')
+  powerFrame:SetPoint('TOP', healthBar, 'BOTTOM', 0, -1)
+  powerFrame:SetPoint('LEFT', healthBar, 'LEFT', 1, 0)
+  powerFrame:SetFrameStrata('MEDIUM')
+  powerFrame:SetAlpha(1)
 
-  local powerFrame = CreateFrame('Frame', 'PartyMemberFrame'..index..'PetFramePowerBar', healthBar)
-  powerFrame:SetFrameStrata(strata)
-  powerFrame:SetPoint('TOP', healthBar, 'BOTTOM', 0, -0.5)
-  powerFrame:SetPoint('LEFT', healthBar, 'LEFT', 0, 0)
-  powerFrame.texture = powerFrame:CreateTexture(nil, 'BACKGROUND')
-  powerFrame.texture:SetAllPoints(powerFrame)
+  local width = healthBar:GetWidth() - 2
+  local height = healthBar:GetHeight()
+  powerFrame:SetSize(width, height)
+
+  powerFrame:Hide()
   -- ~Initialization
 
   -- Helper functions for displaying the power bar
@@ -55,42 +55,24 @@ PetPowerBar.new = function(index)
   
     return colors.r, colors.g, colors.b
   end
-  
-  local function getPowerBarDrawWidth()
-    local power = UnitPower(petReference)
-    local powerMax = UnitPowerMax(petReference)
-    
-    if powerMax == nil or powerMax <= 0 or power == nil then
-      return nil
-    end
-  
-    local percentage = power * 100 / powerMax
-    if percentage < 0 then
-      percentage = 0
-    elseif percentage > 100 then
-      percentage = 100
-    end
-
-    local width = healthBar:GetWidth() + 1
-    local offset = width * 0.04 -- The bar offset is used to better position the power bar inside the existing StatusBar texture
-  
-    return C.RoundToPixelCount((width - offset) * percentage / 100)
-  end
   -- ~Helper functions for displaying the power bar
 
   function self.Update()
-    local drawWidth = getPowerBarDrawWidth()
-
-    if drawWidth == nil then
-      powerFrame.texture:SetAlpha(0)
-      return
-    end
-
     local r, g, b = getPowerRGB()
+
+    powerFrame:SetStatusBarColor(r, g, b)
     
-    powerFrame:SetSize(drawWidth, healthBar:GetHeight())
-    powerFrame.texture:SetColorTexture(r, g, b)
-    powerFrame.texture:SetAlpha(1)
+    local power = UnitPower(petReference)
+    local powerMax = UnitPowerMax(petReference)
+
+    powerFrame:SetMinMaxValues(0, powerMax)
+    powerFrame:SetValue(power)
+
+    powerFrame:Show()
+  end
+
+  function self.Hide()
+    powerFrame:Hide()
   end
 
   return self

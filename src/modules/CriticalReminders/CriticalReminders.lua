@@ -21,10 +21,9 @@ local _, addonTable = ...
 
 local C = addonTable.C
 
-local mainFrame, errorFrame, breathFrame, errorTimer, breathTimer, breathValues
+local mainFrame, errorFrame, errorTimer
 
 local TIMER_INTERVAL = 4 -- Seconds
-local BREATH_TIMER_INTERVAL = 1 -- Seconds
 
 local ErrorMap = {
   ['PLAYER_REGEN_DISABLED'] =               {'UIC_CR_CombatWarning',          'Interface\\ICONS\\Ability_DualWield'},
@@ -68,86 +67,6 @@ local setErrorFrame = function(textureName, playSound, size, offsetX, offsetY)
 
   if playSound == true then
     PlaySound(12889) -- AlarmClockWarning3
-  end
-end
-
-local updateBreathFrame = function()
-  if not breathValues or breathValues[3] > 0 then
-    breathFrame:Hide()
-    return
-  elseif breathValues[3] == 0 then
-    return
-  end
-
-  local maxSeconds = breathValues[2]
-  local secondsLeft = math.max(breathValues[1] + breathValues[3], 0)
-
-  breathValues[1] = secondsLeft
-
-  local index = 1
-  for i = 1, 3 do
-    if _G['MirrorTimer'..i..'Text']:GetText() == BREATH_LABEL then
-      index = i
-      break
-    end
-  end
-
-  local r, g, b = 1, 1, 1
-  if secondsLeft <= 10 then
-    r, g, b = 1, 0, 0
-  elseif (maxSeconds / secondsLeft) > 2 then
-    r, g, b = 1, 1, 0
-  end
-
-  breathFrame:SetPoint('LEFT', _G['MirrorTimer'..index], 'LEFT', -45, 0)
-  breathFrame:SetPoint('TOP', _G['MirrorTimer'..index], 'TOP', 0, 8)
-
-  breathFrame.title:SetTextColor(r, g, b)
-  breathFrame.title:SetText(secondsLeft)
-
-  breathFrame:Show()
-
-  if UIChanges_Profile['UIC_CR_BreathWarning'] == 3 then
-    local soundId
-
-    if secondsLeft == 30 then
-      soundId = 7256 -- NsabbeyBell
-    elseif secondsLeft == 15 then
-      soundId = 12867 -- AlarmClockWarning2
-    elseif secondsLeft == 10 or secondsLeft == 5 then
-      soundId = 8959 -- RaidWarning
-    end
-
-    if soundId then
-      PlaySound(soundId)
-    end
-  end
-end
-
-local breathStop = function()
-  if breathTimer and not breathTimer:IsCancelled() then
-    breathTimer:Cancel()
-  end
-
-  breathValues = nil
-
-  updateBreathFrame()
-end
-
-local breathStart = function(value, maxValue, scale, paused)
-  if breathTimer and not breathTimer:IsCancelled() then
-    breathTimer:Cancel()
-  end
-
-  local secondsleft = math.floor((value / 1000) / math.abs(scale))
-  local maxSeconds = math.floor(maxValue / 1000)
-
-  breathValues = {secondsleft - scale, maxSeconds, scale} -- The initial secondsleft value needs to be padded with 1 scale
-
-  updateBreathFrame()
-
-  if paused ~= 1 then
-    breathTimer = C_Timer.NewTicker(BREATH_TIMER_INTERVAL, updateBreathFrame)
   end
 end
 
@@ -235,20 +154,6 @@ local anchorErrorFrame = function()
   end
 end
 
-local initializeBreathFrame = function()
-  breathFrame = CreateFrame('Frame', 'UIC_AFR_BREATH', _G['MirrorTimer1'], 'BackdropTemplate')
-  breathFrame:SetSize(32, 32)
-  breathFrame:SetFrameStrata('TOOLTIP')
-  breathFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
-  breathFrame:SetBackdropColor(0, 0, 0, 1)
-
-  breathFrame.title = breathFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
-  breathFrame.title:SetPoint('CENTER', 0, 0)
-  breathFrame.title:SetJustifyH('RIGHT')
-
-  breathFrame:Hide()
-end
-
 local resetErrorFrameLocation = function()
   UIChanges_Profile['UIC_CR_ErrorFrameInfo'] = {}
 
@@ -302,18 +207,6 @@ EVENTS['PLAYER_REGEN_ENABLED'] = function()
   end
 end
 
-EVENTS['MIRROR_TIMER_START'] = function(timerName, value, maxValue, scale, paused, timerLabel)
-  if timerName == 'BREATH' and UIChanges_Profile['UIC_CR_BreathWarning'] > 1 then
-    breathStart(value, maxValue, scale, paused)
-  end
-end
-
-EVENTS['MIRROR_TIMER_STOP'] = function(timerName)
-  if timerName == 'BREATH' then
-    breathStop()
-  end
-end
-
 local CriticalReminders = {}
 
 CriticalReminders.Initialize = function()
@@ -321,7 +214,6 @@ CriticalReminders.Initialize = function()
   mainFrame:Hide()
 
   initializeErrorFrame()
-  initializeBreathFrame()
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)
     EVENTS[event](...)
@@ -335,7 +227,6 @@ end
 CriticalReminders.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
   stopErrorTimer()
-  breathStop()
 end
 
 CriticalReminders.Update = function()

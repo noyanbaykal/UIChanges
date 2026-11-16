@@ -22,7 +22,7 @@ local _, addonTable = ...
 local L = addonTable.L
 local C = addonTable.C
 
-local CONTAINERS_TOTAL = 7
+local CONTAINERS_TOTAL = 9
 local CONTAINER_IDS = {
   [5523] = true, -- Small Barnacled Clam
   [5524] = true, -- Thick-shelled Clam
@@ -31,6 +31,8 @@ local CONTAINER_IDS = {
   [20766] = true, -- Slimy Bag
   [20767] = true, -- Scum Covered Bag
   [20768] = true, -- Oozing Bag
+  [6356] = true, -- Battered Chest
+  [21113] = true, -- Watertight Trunk
 }
 
 if LE_EXPANSION_LEVEL_CURRENT > LE_EXPANSION_CLASSIC then

@@ -141,7 +141,7 @@ UIC_Options.Initialize = function()
   local optionsCategory, optionsLayout = Settings.RegisterVerticalLayoutCategory(addonName)
 
   local disclaimerText = { name = '|cFFFF8000' .. L.MODULE_AVAILABILITY_TEXT .. '|r' }
-  local modulesDisclaimer = Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", disclaimerText)
+  local modulesDisclaimer = Settings.CreateElementInitializer('SettingsListSectionHeaderTemplate', disclaimerText)
   optionsLayout:AddInitializer(modulesDisclaimer)
 
   for _, moduleEntry in ipairs(C.MODULES) do

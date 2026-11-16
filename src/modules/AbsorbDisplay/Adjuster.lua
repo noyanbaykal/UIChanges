@@ -21,6 +21,11 @@ local _, addonTable = ...
 
 local C = addonTable.C
 
+-- Avoid unnecessary work if this version won't be used anyway
+if LE_EXPANSION_LEVEL_CURRENT >= LE_EXPANSION_MISTS_OF_PANDARIA or WOW_PROJECT_ID == WOW_PROJECT_CAMELOT then
+  return
+end
+
 -- Spells scale with the caster's level, resulting in a range from amount to amountMax. There isn't a
 -- clean way of accounting for this except when the player is the one casting.
 -- In classic era, for this case we can read the spell tooltip which includes the correct base value, including

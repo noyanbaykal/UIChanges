@@ -218,8 +218,7 @@ C.DEFINE_MODULES = function()
 
   local allModules = {
     {
-      ['frameName'] = 'BM', -- This is the base module to store base settings. It does not have a moduleKey.
-      ['checkCompatibility'] = function() return true end,
+      ['frameName'] = 'BaseModule', -- This is the base module to store base settings. It does not have a moduleKey.
       ['subsettings'] = {
         buildCheckboxEntry('UIC_Toggle_Quick_Zoom', true, L.MINIMAP_QUICK_ZOOM, L.TOOLTIP_MINIMAP_QUICK_ZOOM),
       },
@@ -231,7 +230,6 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'AD', -- Used in subframe names
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM end,
       ['moduleButton'] = { -- If this entry is present, the module checkbox will have a button next to it
         ['entryKey'] = 'UIC_AD_FrameInfo', -- Matches the entry in UIChanges_Profile
         ['title'] = RESET_POSITION,
@@ -245,7 +243,6 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'AHT',
       ['title'] = 'Auction House Tools',
       ['description'] = L.AHT,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM end,
     },
     {
       ['moduleName'] = 'BagUtilities',
@@ -254,7 +251,18 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'BU',
       ['title'] = 'Bag Utilities',
       ['description'] = L.BU,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_BURNING_CRUSADE end,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_BURNING_CRUSADE and WOW_PROJECT_ID ~= WOW_PROJECT_CAMELOT end,
+    },
+    {
+      ['moduleName'] = 'BreathWarning',
+      ['moduleKey'] = 'UIC_BW_IsEnabled',
+      ['defaultValue'] = true,
+      ['frameName'] = 'BW',
+      ['title'] = 'Breath Warning',
+      ['description'] = L.BW,
+      ['subsettings'] = {
+        buildCheckboxEntry('UIC_BW_Sound', true, L.BW_SOUND, L.TOOLTIP_BW_SOUND),
+      }
     },
     {
       ['moduleName'] = 'CriticalReminders',
@@ -263,7 +271,7 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'CR',
       ['title'] = 'Critical Reminders',
       ['description'] = L.CR,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA end,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA and WOW_PROJECT_ID ~= WOW_PROJECT_CAMELOT end,
       ['moduleButton'] = {
         ['entryKey'] = 'UIC_CR_ErrorFrameInfo',
         ['title'] = RESET_POSITION,
@@ -278,13 +286,6 @@ C.DEFINE_MODULES = function()
           ['tooltipText'] = L.ERROR_FRAME_ANCHOR_DROPDOWN_TOOLTIP,
           ['dropdownEnum'] = C.ENUM_ANCHOR_OPTIONS, -- The dropdown options will be populated from this enum
           ['updateCallback'] = function() addonTable.CriticalReminders:Update() end,
-        },
-        {
-          ['entryKey'] = 'UIC_CR_BreathWarning',
-          ['entryType'] = 'dropdown',
-          ['defaultValue'] = 3,
-          ['title'] = L.BREATH_WARNING,
-          ['dropdownEnum'] = C.CR_SUBSETTING_STATES,
         },
         {
           ['entryKey'] = 'UIC_CR_CombatWarning',
@@ -369,25 +370,8 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'PPF',
       ['title'] = 'Party Pet Frames',
       ['description'] = L.PPF,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA end,
       -- If a module's state is tied to a console variable, that must be declared here. Such modules must be toggled outside of combat.
       ['consoleVariableName'] = 'showPartyPets', -- This is the name of the cVar that will be modified when this module's state is modified
-    },
-    {
-      ['moduleName'] = 'PingAnnouncer',
-      ['moduleKey'] = 'UIC_PA_IsEnabled',
-      ['defaultValue'] = true,
-      ['frameName'] = 'PA',
-      ['title'] = 'Ping Announcer',
-      ['description'] = L.PA,
-      ['checkCompatibility'] = function() return false end, -- Disabling this module due to MINIMAP_PING being accidentally restricted in classic
-      --['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA end,
-      ['subsettings'] = {
-        buildCheckboxEntry('UIC_PA_Party', true, PARTY, L.PA_TOOLTIP_PARTY),
-        buildCheckboxEntry('UIC_PA_Raid', false, RAID, L.PA_TOOLTIP_RAID),
-        buildCheckboxEntry('UIC_PA_Battleground', false, BATTLEGROUND, L.PA_TOOLTIP_BATTLEGROUND),
-        buildCheckboxEntry('UIC_PA_Arena', false, ARENA, L.PA_TOOLTIP_ARENA),
-      },
     },
     {
       ['moduleName'] = 'SpellTargetDisplay',
@@ -396,7 +380,6 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'STD',
       ['title'] = 'Spell Target Display',
       ['description'] = L.STD,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA end,
       ['moduleButton'] = {
           ['entryKey'] = 'UIC_STD_FrameInfo',
           ['title'] = RESET_POSITION,
@@ -417,18 +400,27 @@ C.DEFINE_MODULES = function()
     subsettingEntry['frameName'] = ('UIC_Subsetting_'..parentName..'_'..title):gsub('%s+', '_') -- Remove spaces
   end
 
+  -- Any keys that should be kept in the UIChanges_Profile savedVariable should be added to the C.SETTINGS_TABLE here.
+  -- Otherwise they will be removed by C.INITIALIZE_PROFILE!
   local addModuleToggle = function(moduleEntry)
-    local className = moduleEntry['moduleName'] -- The base module doesn't have this attribute
+    local moduleName = moduleEntry['moduleName'] -- The base module doesn't have this attribute
 
-    if className then
+    if moduleName then
       -- Add the module toggle to the settings and defaults tables
       local moduleKey = moduleEntry['moduleKey']
 
       C.SETTINGS_TABLE[moduleKey] = moduleEntry
 
-      -- Module states will be altered when their option frames are clicked on
+      -- Add the moduleButton entryKey if it's present
+      local moduleButtonEntry = moduleEntry['moduleButton']
+
+      if moduleButtonEntry and moduleButtonEntry['entryKey'] then
+        C.SETTINGS_TABLE[moduleButtonEntry['entryKey']] = moduleButtonEntry
+      end
+
+      -- Modules will be toggled when their module checboxes are clicked on
       moduleEntry['updateCallback'] = function(newValue)
-        local module = addonTable[className]
+        local module = addonTable[moduleName]
         
         if newValue then
           module:Enable()
@@ -456,7 +448,7 @@ C.DEFINE_MODULES = function()
 
   -- Check each module for compatibility
   for _, moduleEntry in ipairs(allModules) do
-    if moduleEntry['checkCompatibility']() then
+    if moduleEntry['checkCompatibility'] == nil or moduleEntry['checkCompatibility']() then
       C.MODULES[#C.MODULES + 1] = moduleEntry
     end
   end
@@ -485,10 +477,13 @@ C.INITIALIZE_PROFILE = function()
 
     keysToBeDeleted[settingName] = nil -- Remove this from the set of keys to be deleted
 
-    if UIChanges_Profile[settingName] == nil or type(UIChanges_Profile[settingName]) ~= type(defaultValue) then
-      hasUnexpectedChanges = true
+    -- moduleButton entries do not have defaultValues but can be used to store data. They should neither be deleted nor set here.
+    if defaultValue ~= nil then 
+      if UIChanges_Profile[settingName] == nil or type(UIChanges_Profile[settingName]) ~= type(defaultValue) then
+        hasUnexpectedChanges = true
 
-      UIChanges_Profile[settingName] = defaultValue
+        UIChanges_Profile[settingName] = defaultValue
+      end
     end
   end
 

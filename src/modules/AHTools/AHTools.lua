@@ -25,6 +25,9 @@ local C = addonTable.C
 local mainFrame, buyoutWarning, calculator
 
 local AH_SEARCH_INTERVAL = 0.3 -- Seconds
+local oldAH = LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM and WOW_PROJECT_ID ~= WOW_PROJECT_CAMELOT
+local oldContainers = WOW_PROJECT_ID ~= WOW_PROJECT_CAMELOT and WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE
+local hookedContainerButtons = {} -- The new bag frames cannot be accessed directly like the old ones, so we need to keep track of them.
 local loadedAH = false
 local lastAHSearchTime
 
@@ -45,9 +48,12 @@ local function onClosed()
 end
 
 local EVENTS = {}
-EVENTS['AUCTION_HOUSE_SHOW'] = onShow
 
-EVENTS['AUCTION_HOUSE_CLOSED'] = onClosed
+if oldAH then
+  EVENTS['AUCTION_HOUSE_SHOW'] = onShow
+
+  EVENTS['AUCTION_HOUSE_CLOSED'] = onClosed
+end
 
 local function searchItemInAH(bagID, slotID)
   -- It is possible for this call to return nil and then result in an GET_ITEM_INFO_RECEIVED event but
@@ -57,30 +63,47 @@ local function searchItemInAH(bagID, slotID)
   if item then
     local itemName = '"'..select(1, C_Item.GetItemInfo(item))..'"'
 
-    BrowseName:SetText(itemName)
-    BrowseSearchButton:Click()
+    if oldAH then
+      BrowseName:SetText(itemName)
+      BrowseSearchButton:Click()
+    else
+      AuctionHouseFrame.SearchBar.SearchBox:SetText(itemName)
+      AuctionHouseFrame.SearchBar.SearchButton:Click()
+    end
   end
 end
 
-local function quickAHSearch(containerFrame, itemFrameIndex)
-  -- Throttle if needed
-  local currentTime = time()
-  if currentTime - lastAHSearchTime < AH_SEARCH_INTERVAL then
-    return
-  else
-    lastAHSearchTime = currentTime
-  end
+local function onMouseUpCallback(button, bagID, slotID)
+  local shouldAct = UIChanges_Profile['UIC_AHT_IsEnabled'] and button == 'MiddleButton'
 
-  local bagID = containerFrame:GetID()
-  local capacity = C_Container.GetContainerNumSlots(bagID)
-  local slotID = 1 + (capacity - itemFrameIndex)
+  local oldFramesVisible = AuctionFrame and AuctionFrame:IsShown() and BrowseName:IsVisible()
+  local newFramesVisible = AuctionHouseFrame and AuctionHouseFrame.BrowseResultsFrame:IsShown()
 
-  if slotID >= 0 then
+  if shouldAct and (oldFramesVisible or newFramesVisible) then
+    -- Throttle if needed
+    local currentTime = time()
+    if currentTime - lastAHSearchTime < AH_SEARCH_INTERVAL then
+      return
+    else
+      lastAHSearchTime = currentTime
+    end
+
     searchItemInAH(bagID, slotID)
   end
 end
 
-local function hookContainerFrames()
+local function hookNewContainers()
+  hooksecurefunc(ContainerFrameItemButtonMixin, 'OnLoad', function(outerSelf)
+    outerSelf:HookScript('OnMouseUp', function(innerSelf, button)
+      local bagID = innerSelf:GetBagID()
+      local slotID = innerSelf:GetID()
+
+      onMouseUpCallback(button, bagID, slotID)
+    end)
+  end)
+end
+
+local function hookOldContainers()
   for container = 1, 5 do
     local containerFrame = _G['ContainerFrame'..container]
 
@@ -89,10 +112,12 @@ local function hookContainerFrames()
 
       if buttonFrame then
         buttonFrame:HookScript('OnMouseUp', function(self, button)
-          if UIChanges_Profile['UIC_AHT_IsEnabled'] and button == 'MiddleButton'
-            and _G['AuctionFrame'] and _G['AuctionFrame']:IsShown() and BrowseName:IsVisible()
-          then
-            quickAHSearch(containerFrame, slot)
+          local bagID = containerFrame:GetID()
+          local capacity = C_Container.GetContainerNumSlots(bagID)
+          local slotID = 1 + (capacity - slot)
+
+          if slotID >= 0 then
+            onMouseUpCallback(button, bagID, slotID)
           end
         end)
       end
@@ -106,12 +131,18 @@ AHTools.Initialize = function()
   mainFrame = CreateFrame('Frame', 'UIC_AHTools', UIParent)
   mainFrame:Hide()
 
-  buyoutWarning = addonTable.BuyoutWarning.new()
-  calculator = addonTable.Calculator.new()
+  if oldAH then
+    buyoutWarning = addonTable.BuyoutWarning.new()
+    calculator = addonTable.Calculator.new()
+  end
 
   lastAHSearchTime = time()
 
-  hookContainerFrames()
+  if oldContainers then
+    hookOldContainers()
+  else
+    hookNewContainers()
+  end
 
   mainFrame:SetScript('OnEvent', function(self, event, ...)
     EVENTS[event](...)
@@ -121,14 +152,19 @@ end
 AHTools.Enable = function()
   C.REGISTER_EVENTS(mainFrame, EVENTS)
 
-  if _G['AuctionFrame'] and _G['AuctionFrame']:IsShown() then
-    onShow()
+  if oldAH then
+    if _G['AuctionFrame'] and _G['AuctionFrame']:IsShown() then
+      onShow()
+    end
   end
 end
 
 AHTools.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
-  onClosed()
+
+  if oldAH then
+    onClosed()
+  end
 end
 
 addonTable.AHTools = AHTools

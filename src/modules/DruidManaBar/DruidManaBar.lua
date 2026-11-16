@@ -63,54 +63,60 @@ end
 local setManaBarValue = function()
   local mana = UnitPower('player', Enum.PowerType.Mana)
   local manaMax = UnitPowerMax('player', Enum.PowerType.Mana)
-  local percentage = manaMax > 0 and (mana / manaMax) or 0
+  local percentage = UnitPowerPercent('player', Enum.PowerType.Mana, false, CurveConstants.ScaleTo100)
 
   manaBar:SetValue(percentage)
   manaBar.value:SetText(mana)
-  manaBar.percentage:SetText(math.floor(100 * percentage)..'%')
-  manaBar.numeric:SetText(mana..' / '..manaMax)
-end
-
-local EVENTS = {}
-EVENTS['CVAR_UPDATE'] = function(eventName, value)
-  if eventName == 'STATUS_TEXT_DISPLAY' then
-    updateStatusTextStyle(value)
-  end
-end
-EVENTS['UNIT_DISPLAYPOWER'] = function(unitTarget)
-  if unitTarget == 'player' then
-    setManaBarDisplay()
-  end
-end
-EVENTS['UNIT_POWER_UPDATE'] = function(unitTarget, powerType)
-  if unitTarget == 'player' and powerType == 'MANA' then
-    setManaBarValue()
-  end
+  manaBar.percentage:SetText(string.format("%.0f%%", percentage))
+  manaBar.numeric:SetText(mana .. ' / ' .. manaMax)
 end
 
 local updateManaBar = function()
   local style = GetCVar('statusTextDisplay')
+
   setManaBarDisplay()
   updateStatusTextStyle(style)
   setManaBarValue()
 end
 
 local initializeManaBar = function()
-  manaBarBorder = CreateFrame('Frame', 'UIC_DMB_MANA_BAR_BORDER', _G['PlayerFrameManaBar'], 'BackdropTemplate')
+  local isForever = WOW_PROJECT_ID == WOW_PROJECT_CAMELOT
+
+  local parentFrame
+  local width
+  local height
+
+  if isForever then
+    parentFrame = PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.ManaBarArea.ManaBar
+    width = 124
+    height = 14
+  else
+    parentFrame = PlayerFrameManaBar
+    width = 122
+    height = 16
+  end
+
+  manaBarBorder = CreateFrame('Frame', 'UIC_DMB_MANA_BAR_BORDER', parentFrame, 'BackdropTemplate')
   manaBarBorder:SetBackdrop(C.BACKDROP_INFO(8, 1))
   manaBarBorder:SetBackdropColor(0, 0, 0, 1)
-  manaBarBorder:SetSize(122, 16)
-  manaBarBorder:SetPoint('LEFT', _G['PlayerFrameManaBar'], 'LEFT', 0, 0)
-  manaBarBorder:SetPoint('TOP', _G['PlayerFrameManaBar'], 'BOTTOM', 0, 0)
+  manaBarBorder:SetSize(width, height)
+  manaBarBorder:SetPoint('LEFT', parentFrame, 'LEFT', 0, 0)
 
   manaBar = CreateFrame('StatusBar', 'UIC_DMB_MANA_BAR', manaBarBorder)
-  manaBar:SetSize(117, 12)
+  manaBar:SetSize(width - 5, height - 4)
   manaBar:SetFrameStrata('HIGH')
-  manaBar:SetMinMaxValues(0, 1.0)
-  manaBar:SetPoint('LEFT', _G['PlayerFrameManaBar'], 'LEFT', 2, 0)
-  manaBar:SetPoint('TOP', _G['PlayerFrameManaBar'], 'BOTTOM', 0, -2)
+  manaBar:SetMinMaxValues(0, 100)
+  manaBar:SetPoint('LEFT', parentFrame, 'LEFT', 2, 0)
   manaBar:SetStatusBarTexture('Interface/TargetingFrame/UI-StatusBar')
   manaBar:SetStatusBarColor(0, 0, 1, 1)
+
+  if isForever then
+    manaBarBorder:SetPoint('BOTTOM', PlayerName, 'TOP', 0, 5)
+    manaBar:SetPoint('BOTTOM', PlayerName, 'TOP', 0, 7)
+  else
+    manaBarBorder:SetPoint('TOP', parentFrame, 'BOTTOM', 0, 0)
+    manaBar:SetPoint('TOP', parentFrame, 'BOTTOM', 0, -2)
+  end
 
   manaBar.value = manaBar:CreateFontString('UIC_DMB_VALUE', 'OVERLAY', 'TextStatusBarText')
   manaBar.value:SetPoint('RIGHT', -2, 0)
@@ -127,10 +133,10 @@ local initializeManaBar = function()
   manaBar.percentage:SetPoint('CENTER', 0, 0)
   manaBar.percentage:Hide()
 
+  updateManaBar()
+
   manaBarBorder:Hide()
   manaBar:Hide()
-
-  updateManaBar()
 end
 
 local hideManaBar = function()
@@ -140,6 +146,29 @@ local hideManaBar = function()
   manaBar.numeric:Hide()
   manaBar.percentage:Hide()
 end
+
+local function checkPowerUpdate(unitTarget, powerType)
+  if unitTarget == 'player' and powerType == 'MANA' then
+    setManaBarValue()
+  end
+end
+
+local EVENTS = {}
+EVENTS['CVAR_UPDATE'] = function(eventName, value)
+  if eventName == 'statusTextDisplay' then
+    updateStatusTextStyle(value)
+  end
+end
+
+EVENTS['UNIT_DISPLAYPOWER'] = function(unitTarget)
+  if unitTarget == 'player' then
+    setManaBarDisplay()
+  end
+end
+
+EVENTS['UNIT_POWER_UPDATE'] = checkPowerUpdate
+
+EVENTS['UNIT_POWER_FREQUENT'] = checkPowerUpdate
 
 local DruidManaBar = {}
 

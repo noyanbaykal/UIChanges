@@ -10,44 +10,43 @@ Fix the minimap tracking icon disappearing after a ui reload in classic era / an
 
 **Absorb Display**
 
-Displays the approximate amount of damage absorption the player has from active Power Word: Shield, Sacrifice and Spellstone effects.
-It is not feasible to determine other player's talents or item bonuses so the display for Power Word: Shield cast by others will start off with a base amount and then show a residual sign for any remaining amounts. The shield display can be moved with a CTRL click.
+Displays the amount of damage absorption the player has. In pre-MoP clients, the amount can be approximate as it is not feasible to determine other player's talents or item bonuses. In these cases the display will start off with a base amount and then show a residual sign for any remaining amounts. The shield display can be moved with a CTRL click.
 
 **Auction House Tools**
 
 Provides utilities for the AH browse tab.
 
-Calculator: A simple calculator to help with determining the total cost of a bunch.
-
-Buyout warning: Whenever you select an item from the Browse Tab results, this module will calculate the ratio of buyout / bid amounts and might display a warning under the buyout button for suspected scam entries (for example, 40s bid and 311g buyout). The module does not track AH prices to give smart suggestions. It blindly compares the ratios to show a yellow sign if the ratio is 2 >= x < 8, or a red one if x >= 8 so false positives are possible!
-
 Quick search: Clicking on an item in your bags with the mouse MiddleButton while the AH Browse tab is visible will initiate a search with that item's name.
+
+Calculator (Old AH UI only): A simple calculator to help with determining the total cost of a bunch.
+
+Buyout warning (Old AH UI only): Whenever you select an item from the Browse Tab results, this module will calculate the ratio of buyout / bid amounts and might display a warning under the buyout button for suspected scam entries (for example, 40s bid and 311g buyout). The module does not track AH prices to give smart suggestions. It blindly compares the ratios to show a yellow sign if the ratio is 2 >= x < 8, or a red one if x >= 8 so false positives are possible!
 
 **Bag Utilities**
 
 Opens looted bags & clams for convenience and avoiding inventory congestion. Note that once in a while, in certain scenarios, the opening action may fail and you'll end up with an unopened container. The lingering container will be opened when you loot another container. UseContainerItem is protected in WOTLK & onwards so this feature is classic era only.
 
+**Breath Warning**
+
+Displays a numeric timer next to the breath meter and if the 'Sound' option is enabled, will play various alarm sounds when the remaining breath time is 30, 15 and 5 seconds.
+
 **Critical Reminders**
 
-This module makes the selected types of events / failures more noticeable by displaying an error icon and optionally playing a sound.
-The 'Breath Warning' reminder displays a numeric timer next to the standard breath meter and the 'BW Sound' option will play various alarm sounds when the remaining breath time is 30, 15 and 5 seconds.
-The reminders that are turned on by default are breath timer with sound, enter combat event, ability / spell failed due to lack of line of sight and gathering failure. Many other reminders for combat events can be enabled. The error display can be moved with a CTRL click or anchored to the TargetFrame.
+This Classic-only module makes the selected types of events / failures more noticeable by displaying an error icon and optionally playing a sound.
+
+The reminders that are turned on by default are: enter combat event, ability / spell failed due to lack of line of sight and gathering failure. Many other reminders for combat events can be enabled. The error display can be moved with a CTRL click or anchored to the TargetFrame.
 
 **Druid Mana Bar**
 
-Displays a mana bar underneath the player frame when shapeshifted into a druid form that does not use mana. This feature exists in WOTLK & onwards so this is for classic era only. The mana bar obeys the "Status Text Display" preference under the Interface options.
+Displays a mana bar underneath the player frame when shapeshifted into a druid form that does not use mana. This feature exists in WOTLK & onwards so this is for classic era and Forever only. The mana bar obeys the "Status Text Display" preference under the Interface options.
 
 **Party Pet Frames**
 
 Back in vanilla the default party frames used to show party pet frames as well. This feature seems to have been hidden behind a console variable and the pet power frames dropped somewhere around patch 7.0.3. This module enables the console variable and implements the missing power bars. The visibility provided might come in handy when you are in a dungeon with a pet class and notice through the pet frame the pet getting two shotted even though you don't expect anyone to be in combat or when you are forced to make a last stand and a clutch heal to a pet might make all the difference.
 
-**Ping Announcer**
-
-Listens to the player pinging in the mini-map on a marker with text and sends a message to chat mentioning the player's name, marker text and direction (in relation to the player). The module defaults to party chat, but if Control (CTRL) is pressed while the mini-map ping is sent out, the instance chat channel will be used instead. The instance chat channel only exists when in a battleground, arena or instance.
-
 **Spell Target Display**
 
-Displays the target's name under the cast bar when casting a spell. This comes in handy during hectic pvp fights where you need to keep different allies alive and a mistargeting with a long cast spell has disastrous consequences. The target name will have a different color based on the type of spell being cast: Yellow for self-casts, green for beneficial spells, red for harmful spells and white for others. The name display can be moved with a CTRL click.
+Displays the target's name under the cast bar when casting a spell. This comes in handy during hectic pvp fights where you need to keep different allies alive and a mistargeting with a long cast spell has disastrous consequences. The target name will have a different color based on the type of spell being cast: Green for beneficial spells, red for harmful spells and white for others. The name display can be moved with a CTRL click.
 
 Please let me know if you encounter any issues.
 

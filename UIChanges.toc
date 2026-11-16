@@ -1,8 +1,8 @@
-## Interface: 11509, 20506, 30403, 40402, 50504, 110207, 120007
+## Interface: 11509, 16001, 20506, 30403, 40402, 50504, 110207, 120007
 ## Title: UIChanges
-## Version: 1.4.1
+## Version: 1.5.0
 ## Author: Melik Noyan Baykal
-## Notes: Simple improvements to the classic UI.
+## Notes: Simple improvements to the UI.
 ## Category: User Interface
 ## IconTexture: Interface\Icons\Inv_diablostone
 ## SavedVariablesPerCharacter: UIChanges_Profile
@@ -12,16 +12,17 @@ src\locales\UIChanges-ruRU.lua
 src\Constants.lua
 src\Options.lua
 src\modules\AbsorbDisplay\Adjuster.lua
+src\modules\AbsorbDisplay\AbsorbDisplayBeforeMop.lua
 src\modules\AbsorbDisplay\AbsorbDisplay.lua
 src\modules\AHTools\AHTools.lua
 src\modules\AHTools\BuyoutWarning.lua
 src\modules\AHTools\Calculator.lua
 src\modules\BagUtilities\BagUtilities.lua
+src\modules\BreathWarning\BreathWarning.lua
 src\modules\CriticalReminders\CriticalReminders.lua
 src\modules\DruidManaBar\DruidManaBar.lua
 src\modules\PartyPetFrames\PetPowerBar.lua
 src\modules\PartyPetFrames\PartyPetFrames.lua
-src\modules\PingAnnouncer\PingAnnouncer.lua
 src\modules\SpellTargetDisplay\SpellTargetDisplay.lua
 src\UIChanges.lua
 

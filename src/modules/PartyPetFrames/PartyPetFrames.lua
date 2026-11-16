@@ -66,7 +66,7 @@ end
 
 local onUpdateAll = function()
   if not isInitialized and IsInGroup() then
-    if (_G['PartyMemberFrame1'] and _G['PartyMemberFrame1']:IsVisible()) or (_G['PartyFrame'] and _G['PartyFrame']:IsVisible()) then
+    if _G['PartyFrame'] and _G['PartyFrame']:IsVisible() then
       setupPowerFrames()
     end
   end
@@ -74,6 +74,8 @@ local onUpdateAll = function()
   for i = 1, #petFrames do
     if petFrames[i]['frame']:IsVisible() then
       petFrames[i]['powerBar']:Update()
+    else
+      petFrames[i]['powerBar']:Hide()
     end
   end
 end

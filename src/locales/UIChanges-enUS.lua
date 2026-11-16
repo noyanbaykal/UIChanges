@@ -57,13 +57,18 @@ locale.AHT = 'Provides a simple stack price calculator and displays a warning si
 locale.BU = 'Opens bag & clams after picking them up.'
 -- ~BagUtilities
 
+-- BreathWarning
+locale.BW = 'Displays a numerical timer when underwater and plays warning sounds.'
+locale.BW_SOUND = SOUND
+locale.TOOLTIP_BW_SOUND = 'Play warning sounds.'
+-- ~BreathWarning
+
 -- CriticalReminders
 locale.CR = 'Makes the selected warnings more noticeable by displaying an error icon and optionally playing a sound.\nWhen the anchor option is set to "Disabled", the display can be dragged while holding CTRL or reset with the button.'
 
 locale.ERROR_FRAME_ANCHOR_DROPDOWN = 'Anchor To TargetFrame'
 locale.ERROR_FRAME_ANCHOR_DROPDOWN_TOOLTIP = 'The "' .. RESET_POSITION .. '" button does not override an anchoring enabled here.'
 
-locale.BREATH_WARNING      = 'Breath Warning'
 locale.COMBAT_WARNING      = 'Combat Warning'
 locale.GATHERING_FAILURE   = 'Gathering Failure'
 locale.COMBAT_LOS          = 'Combat Line Of Sight'
@@ -83,24 +88,6 @@ locale.DMB = 'Shows the mana bar while shapeshifted into a druid form that does 
 locale.PPF_1 = 'Re-enables the hidden pet frames and adds their missing power bars when using default party frames.'
 locale.PPF_2 = 'This modifies a console variable! If you\'re going to remove the addon, disable this and log off first.'
 -- ~PartyPetFrames
-
--- PingAnnouncer
-locale.PA = 'Sends a party message when you click on a minimap object to alert your party members.\nHold down CTRL when clicking to send the message to all raid or battleground members instead.'
-locale.PA_TOOLTIP_PREFIX = 'Enabled when in a'
-locale.PA_TOOLTIP_PARTY = locale.PA_TOOLTIP_PREFIX .. ' ' .. PARTY
-locale.PA_TOOLTIP_RAID = locale.PA_TOOLTIP_PREFIX .. ' ' .. RAID
-locale.PA_TOOLTIP_BATTLEGROUND = locale.PA_TOOLTIP_PREFIX .. ' ' .. BATTLEGROUND
-locale.PA_TOOLTIP_ARENA = locale.PA_TOOLTIP_PREFIX .. 'n ' .. ARENA
-
-locale.PINGED = 'Pinged'
-locale.NEARBY = 'in the immediate vicinity!'
-locale.DIRECTION = 'to the'
-
-locale.EAST = 'East'
-locale.WEST = 'West'
-locale.NORTH = 'North'
-locale.SOUTH = 'South'
--- ~PingAnnouncer
 
 -- SpellTargetDisplay
 locale.STD = 'Displays the target\'s name under the cast bar when casting a spell.\n' .. locale.ABSORB_DISPLAY_2

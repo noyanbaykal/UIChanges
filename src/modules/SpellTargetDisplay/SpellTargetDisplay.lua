@@ -23,6 +23,11 @@ local C = addonTable.C
 
 local mainFrame, targetNameFrame, playerName, uiChangeTimer
 
+local offsetY = -4
+if WOW_PROJECT_ID == WOW_PROJECT_CAMELOT or WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+  offsetY = -14
+end
+
 local lastCastGuid = nil
 local lastTargetName = nil
 local isChanneling = false
@@ -46,10 +51,6 @@ local hideTargetNameFrame = function()
 end
 
 local determineTargetNameColor = function(target, spellID)
-  if target == playerName then
-    return gameFontColor
-  end
-
   local isHelpful = C_Spell.IsSpellHelpful(spellID)
   local isHarmful = C_Spell.IsSpellHarmful(spellID)
 
@@ -69,40 +70,17 @@ local showTargetNameFrame = function(target, spellID)
 
   targetNameFrame.text:SetText(target)
 
-  local newWidth = math.ceil(targetNameFrame.text:GetWidth()) + 12
-  targetNameFrame:SetWidth(newWidth)
-
   local colors = determineTargetNameColor(target, spellID)
   targetNameFrame.text:SetTextColor(colors[1], colors[2], colors[3], colors[4])
 
   targetNameFrame:Show()
 end
 
--- The retail UI frames can no longer be anchored to right away like they used to and the visibility
--- behaviour of frames anchored to them have changed. Will anchor to the UI instead.
 local anchorTargetNameFrame = function()
   targetNameFrame:SetUserPlaced(false)
   targetNameFrame:ClearAllPoints()
 
-  if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-    targetNameFrame:SetPoint('CENTER', _G['CastingBarFrame'], 'CENTER', 0, -24)
-    return
-  end
-
-  local offsetY = 0
-  if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE or WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC then
-    if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_MIDNIGHT then
-      offsetY = -142
-    else
-      offsetY = -8 
-    end
-  end
-
-  if _G['MultiBarBottomLeft']:IsVisible() or _G['MultiBarBottomRight']:IsVisible() then
-    targetNameFrame:SetPoint('CENTER', UI, 'CENTER', 0, -284 + offsetY)
-  else
-    targetNameFrame:SetPoint('CENTER', UI, 'CENTER', 0, -332)
-  end
+  targetNameFrame:SetPoint('TOP', PlayerCastingBarFrame, 'BOTTOM', 0, offsetY)
 end
 
 local handleSent = function(unit, target, castGUID, spellID)
@@ -239,7 +217,7 @@ end
 
 local initializeTargetNameFrame = function()
   targetNameFrame = CreateFrame('Frame', 'UIC_STD_TargetNameFrame', UIParent, 'BackdropTemplate')
-  C.InitializeMoveableFrame(targetNameFrame, 'UIC_STD_FrameInfo', anchorTargetNameFrame, 120, 20, 8, {0, 0, 0})
+  C.InitializeMoveableFrame(targetNameFrame, 'UIC_STD_FrameInfo', anchorTargetNameFrame, 210, 20, 8, {0, 0, 0})
 
   targetNameFrame.text = targetNameFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal')
   targetNameFrame.text:SetPoint('CENTER', targetNameFrame, 'CENTER', 0, 1)

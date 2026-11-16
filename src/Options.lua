@@ -155,7 +155,8 @@ UIC_Options.Initialize = function()
 
   Settings.RegisterAddOnCategory(optionsCategory)
 
-  _G[C.MAIN_FRAME_NAME].optionsCategoryID = optionsCategory:GetID() -- We'll use this variable to open the panel with a macro
+  _G[C.MAIN_FRAME_NAME].optionsCategoryID = optionsCategory:GetID() -- We'll use this variable to open the panel with the following macro:
+  -- /run Settings.OpenToCategory(_G['UIC_Main'].optionsCategoryID);
 end
 
 addonTable.UIC_Options = UIC_Options

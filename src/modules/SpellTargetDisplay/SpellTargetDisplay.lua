@@ -220,7 +220,7 @@ local initializeTargetNameFrame = function()
   C.InitializeMoveableFrame(targetNameFrame, 'UIC_STD_FrameInfo', anchorTargetNameFrame, 210, 20, 8, {0, 0, 0})
 
   targetNameFrame.text = targetNameFrame:CreateFontString(nil, 'OVERLAY', 'GameFontNormal')
-  targetNameFrame.text:SetPoint('CENTER', targetNameFrame, 'CENTER', 0, 1)
+  targetNameFrame.text:SetPoint('CENTER', targetNameFrame, 'CENTER', 0, 0)
   targetNameFrame.text:SetTextColor(1, 1, 1, 1)
   targetNameFrame.text:SetScale(1)
   targetNameFrame.text:SetText('')

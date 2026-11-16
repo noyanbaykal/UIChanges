@@ -477,8 +477,8 @@ C.INITIALIZE_PROFILE = function()
 
     keysToBeDeleted[settingName] = nil -- Remove this from the set of keys to be deleted
 
-    -- moduleButton entries do not have defaultValues but can be used to store data. They should neither be deleted nor set here.
-    if defaultValue ~= nil then 
+    -- Button entryKeys do not have defaultValues but can be used to store data. They should be neither deleted nor set here.
+    if defaultValue ~= nil then
       if UIChanges_Profile[settingName] == nil or type(UIChanges_Profile[settingName]) ~= type(defaultValue) then
         hasUnexpectedChanges = true
 

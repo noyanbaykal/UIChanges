@@ -40,8 +40,16 @@ end
 local anchorToDefaultPosition = function()
   shieldFrame:SetUserPlaced(false)
 
-  shieldFrame:SetPoint('BOTTOM', PlayerName, 'BOTTOM', 0, -2)
-  shieldFrame:SetPoint('LEFT', PlayerName, 'RIGHT', 7, 0)
+  local anchor = PlayerLevelText
+  local offsetY = -5
+
+  if WOW_PROJECT_ID == WOW_PROJECT_CAMELOT then
+    anchor = PlayerName
+    offsetY = -2
+  end
+
+  shieldFrame:SetPoint('BOTTOM', anchor, 'BOTTOM', 0, offsetY)
+  shieldFrame:SetPoint('LEFT', anchor, 'RIGHT', 7, 0)
 end
 
 local resetDisplayLocation = function()

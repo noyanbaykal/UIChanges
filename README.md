@@ -6,7 +6,9 @@ UI Changes consists of modules that improve parts of the default UI. The modules
 
 Minimap quick zoom in / out: Shift click the minimap plus / negative buttons to set the zoom level to max in / out.
 
-Fix the minimap tracking icon disappearing after a ui reload in classic era / anniversary.
+Quick Merchant Transactions (Forever and Retail only): Allows you to click the "sell junk" button, accept the popup, repair all, and then click the "Clean Up Bags" buttons when talking to a vendor. If the vendor window is not open but your bags are, it will only click the "Clean Up Bags" button. The order of operations cannot be changed. You need to create a macro and use it to access this function: /run _G['UIC_Main'].QuickMerchantTransactions();
+
+Fix the minimap tracking icon disappearing after a ui reload in Classic Era.
 
 **Absorb Display**
 
@@ -24,7 +26,7 @@ Buyout warning (Old AH UI only): Whenever you select an item from the Browse Tab
 
 **Bag Utilities**
 
-Opens looted bags & clams for convenience and avoiding inventory congestion. Note that once in a while, in certain scenarios, the opening action may fail and you'll end up with an unopened container. The lingering container will be opened when you loot another container. UseContainerItem is protected in WOTLK & onwards so this feature is classic era only.
+Opens looted bags & clams for convenience and avoiding inventory congestion. Note that once in a while, in certain scenarios, the opening action may fail and you'll end up with an unopened container. The lingering container will be opened when you loot another container. UseContainerItem is protected in WOTLK & onwards so this feature is Classic Era only.
 
 **Breath Warning**
 
@@ -38,11 +40,11 @@ The reminders that are turned on by default are: enter combat event, ability / s
 
 **Druid Mana Bar**
 
-Displays a mana bar underneath the player frame when shapeshifted into a druid form that does not use mana. This feature exists in WOTLK & onwards so this is for classic era and Forever only. The mana bar obeys the "Status Text Display" preference under the Interface options.
+Displays a mana bar underneath the player frame when shapeshifted into a druid form that does not use mana. This feature exists in WOTLK & onwards so this is for Classic Era and Forever only. The mana bar obeys the "Status Text Display" preference under the Interface options.
 
 **Party Pet Frames**
 
-Back in vanilla the default party frames used to show party pet frames as well. This feature seems to have been hidden behind a console variable and the pet power frames dropped somewhere around patch 7.0.3. This module enables the console variable and implements the missing power bars. The visibility provided might come in handy when you are in a dungeon with a pet class and notice through the pet frame the pet getting two shotted even though you don't expect anyone to be in combat or when you are forced to make a last stand and a clutch heal to a pet might make all the difference.
+Back in Vanilla the default party frames used to show party pet frames as well. This feature seems to have been hidden behind a console variable and the pet power frames dropped somewhere around patch 7.0.3. This module enables the console variable and implements the missing power bars. The visibility provided might come in handy when you are in a dungeon with a pet class and notice through the pet frame the pet getting two shotted even though you don't expect anyone to be in combat or when you are forced to make a last stand and a clutch heal to a pet might make all the difference.
 
 **Spell Target Display**
 
@@ -70,7 +72,7 @@ Thank you for the translations:
 
 1. Download the code as a zip file from: <https://github.com/noyanbaykal/UIChanges/archive/refs/heads/master.zip>.
 2. The zip file has a folder called "UIChanges-master" at the root.
-Extract this folder & all it's contents into the AddOns folder of the WoW classic client you're targeting.
+Extract this folder & all it's contents into the AddOns folder of the WoW Classic client you're targeting.
 3. Rename the extracted folder to "UIChanges".
 
 The default installation path for WoW on Windows is:
@@ -83,10 +85,10 @@ on Mac:
 
 Inside the WoW directory you will find the AddOns folder.
 
-For the classic client:
+For the Classic client:
 `C:\Program Files (x86)\World of Warcraft\_classic_\Interface\AddOns`
 
-For the classic era client:
+For the Classic era client:
 `C:\Program Files (x86)\World of Warcraft\_classic_era_\Interface\AddOns`
 
 ## License

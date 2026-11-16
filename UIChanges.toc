@@ -1,6 +1,6 @@
-## Interface: 11509, 16001, 20506, 30403, 40402, 50504, 110207, 120007
+## Interface: 11509, 16001, 20506, 30403, 40402, 50504, 120105
 ## Title: UIChanges
-## Version: 1.5.0
+## Version: 1.5.1
 ## Author: Melik Noyan Baykal
 ## Notes: Simple improvements to the UI.
 ## Category: User Interface

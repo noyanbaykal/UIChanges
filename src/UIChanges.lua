@@ -48,7 +48,7 @@ local setupMinimapQuickZoom = function()
   end)
 end
 
--- The minimap tracking icon disappears after a ui reload
+-- The minimap tracking icon disappears after a ui reload in classic era
 local fixMissingTrackingIcon = function()
   local tracking = _G['MiniMapTracking']
   local border = _G['MiniMapTrackingBorder']
@@ -107,8 +107,34 @@ mainFrame:SetScript('OnEvent', function(self, event, ...)
   end
 end)
 
+-- Base module features
 setupMinimapQuickZoom()
 
 if LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CLASSIC and WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
   fixMissingTrackingIcon()
+end
+
+if WOW_PROJECT_ID == WOW_PROJECT_CAMELOT or WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+  local quickMerchantTransactions = function()
+    local popupButton1 = StaticPopup1Button1
+    local repairAll = MerchantRepairAllButton
+    local sellAll = MerchantSellAllJunkButton
+    local autoSort = BagItemAutoSortButton
+
+    if popupButton1 and popupButton1:IsVisible() then
+      popupButton1:Click()
+    elseif repairAll and repairAll:IsVisible() and repairAll:IsEnabled() then
+      repairAll:Click()
+    elseif sellAll and sellAll:IsVisible() and sellAll:IsEnabled() then
+      sellAll:Click()
+    elseif autoSort and autoSort:IsVisible() and autoSort:IsEnabled() then
+      autoSort:Click()
+    end
+  end
+
+  _G[C.MAIN_FRAME_NAME].QuickMerchantTransactions = quickMerchantTransactions -- Run with the following macro:
+  -- /run _G['UIC_Main'].QuickMerchantTransactions();
+else
+  -- Assigning a dummy function to avoid ui errors in case people use this macro in classic.
+  _G[C.MAIN_FRAME_NAME].QuickMerchantTransactions = function() end
 end

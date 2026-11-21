@@ -16,9 +16,11 @@ Displays the amount of damage absorption the player has. In pre-MoP clients, the
 
 **Auction House Tools**
 
-Provides utilities for the AH browse tab.
+Provides utilities for the AH.
 
 Quick search: Clicking on an item in your bags with the mouse MiddleButton while the AH Browse tab is visible will initiate a search with that item's name.
+
+Sell price display and quick listing (New AH UI only): Displays the vendor price of the selected item in the AH Sell tab and pressing the , key will list the item.
 
 Calculator (Old AH UI only): A simple calculator to help with determining the total cost of a bunch.
 

@@ -21,8 +21,13 @@ local _, addonTable = ...
 
 local C = addonTable.C
 
+local SELL_FRAME_NAMES = {
+  'ItemSellFrame',
+  'CommoditiesSellFrame',
+}
+
 -- Forward declaring components
-local mainFrame, buyoutWarning, calculator
+local mainFrame, buyoutWarning, calculator, vendorPriceFrame
 
 local AH_SEARCH_INTERVAL = 0.3 -- Seconds
 local oldAH = LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_CATACLYSM and WOW_PROJECT_ID ~= WOW_PROJECT_CAMELOT
@@ -31,29 +36,123 @@ local hookedContainerButtons = {} -- The new bag frames cannot be accessed direc
 local loadedAH = false
 local lastAHSearchTime
 
+local function updateVendorPrice(sellFrame)
+  local item = sellFrame and sellFrame:GetItem()
+
+  if not (item and item:IsValid() and sellFrame:IsShown()) then
+    vendorPriceFrame:Hide()
+    return
+  end
+
+  local itemLink = C_Item.GetItemLink(item)
+  if not itemLink then
+    vendorPriceFrame:Hide()
+    return
+  end
+
+  local sellPrice = select(11, C_Item.GetItemInfo(itemLink))
+
+  vendorPriceFrame:ClearAllPoints()
+  vendorPriceFrame:SetPoint('TOP', sellFrame.ItemDisplay, 'BOTTOM', 8, 0)
+
+  local newText = ITEM_UNSELLABLE
+
+  if sellPrice and sellPrice > 0 then
+    newText = SELL_PRICE .. ': ' .. C_CurrencyInfo.GetCoinTextureString(sellPrice)
+  end
+
+  vendorPriceFrame.priceText:SetText(newText)
+
+  vendorPriceFrame:Show()
+end
+
+local function setupSellPriceDisplay()
+  vendorPriceFrame = CreateFrame('Frame', 'UIC_AHT_VENDOR_PRICE_FRAME', AuctionHouseFrame, 'BackdropTemplate')
+  vendorPriceFrame:SetSize(180, 24)
+  vendorPriceFrame:SetBackdrop(C.BACKDROP_INFO(8, 1))
+  vendorPriceFrame:SetBackdropColor(0, 0, 0)
+  vendorPriceFrame:Hide()
+
+  vendorPriceFrame.priceText = vendorPriceFrame:CreateFontString(nil, 'OVERLAY', 'GameFontHighlightSmall')
+  vendorPriceFrame.priceText:SetPoint('CENTER')
+
+  for _, sellFrameName in ipairs(SELL_FRAME_NAMES) do
+    local sellFrame = AuctionHouseFrame[sellFrameName]
+
+    hooksecurefunc(sellFrame, 'SetItem', function(self)
+        updateVendorPrice(self)
+    end)
+
+    -- To handle switches between the sell frames
+    sellFrame:HookScript('OnShow', function(self)
+        updateVendorPrice(self)
+    end)
+
+    sellFrame:HookScript('OnHide', function()
+        vendorPriceFrame:Hide()
+    end)
+  end
+end
+
+-- Use the , key to quickly list an item in the new AH
+local function hookKeys()
+  mainFrame:EnableKeyboard(true)
+  mainFrame:SetPropagateKeyboardInput(true)
+
+  mainFrame:SetScript('OnKeyDown', function(self, key)
+    if key == ',' and AuctionHouseFrame then
+      for _, sellFrameName in ipairs(SELL_FRAME_NAMES) do
+        local sellFrame = AuctionHouseFrame[sellFrameName]
+
+        if sellFrame then
+          local postButton = sellFrame.PostButton
+
+          if postButton and postButton:IsVisible() and postButton:IsEnabled() and not InCombatLockdown() then
+            postButton:Click()
+          end
+        end
+      end
+    end
+  end)
+
+  mainFrame:Show()
+end
+
+local function hookClicks()
+  if oldAH then
+    buyoutWarning.LoadedAH()
+    calculator.LoadedAH()
+  else
+    hookKeys()
+    setupSellPriceDisplay()
+  end
+
+  loadedAH = true
+end
+
 local function onShow()
   -- The first time the AH is shown, we'll hook into the button onClicks
   if loadedAH == false then
-    buyoutWarning.LoadedAH()
-    calculator.LoadedAH()
-    loadedAH = true
+    hookClicks()
   end
 
-  calculator.Show()
+  if oldAH and AuctionFrame and AuctionFrame:IsShown() then
+    calculator.Show()
+  end
 end
 
 local function onClosed()
-  calculator.Hide()
-  buyoutWarning.Hide()
+  if oldAH then
+    calculator.Hide()
+    buyoutWarning.Hide()
+  end
 end
 
 local EVENTS = {}
 
-if oldAH then
-  EVENTS['AUCTION_HOUSE_SHOW'] = onShow
+EVENTS['AUCTION_HOUSE_SHOW'] = onShow
 
-  EVENTS['AUCTION_HOUSE_CLOSED'] = onClosed
-end
+EVENTS['AUCTION_HOUSE_CLOSED'] = onClosed
 
 local function searchItemInAH(bagID, slotID)
   -- It is possible for this call to return nil and then result in an GET_ITEM_INFO_RECEIVED event but
@@ -151,20 +250,11 @@ end
 
 AHTools.Enable = function()
   C.REGISTER_EVENTS(mainFrame, EVENTS)
-
-  if oldAH then
-    if _G['AuctionFrame'] and _G['AuctionFrame']:IsShown() then
-      onShow()
-    end
-  end
 end
 
 AHTools.Disable = function()
   C.UNREGISTER_EVENTS(mainFrame, EVENTS)
-
-  if oldAH then
-    onClosed()
-  end
+  onClosed()
 end
 
 addonTable.AHTools = AHTools

@@ -8,7 +8,7 @@ Minimap quick zoom in / out: Shift click the minimap plus / negative buttons to 
 
 Quick Merchant Transactions (Forever and Retail only): Allows you to click the "sell junk" button, accept the popup, repair all, and then click the "Clean Up Bags" buttons when talking to a vendor. If the vendor window is not open but your bags are, it will only click the "Clean Up Bags" button. The order of operations cannot be changed. You need to create a macro and use it to access this function: `/run _G['UIC_Main'].QuickMerchantTransactions();`
 
-Fix the minimap tracking icon disappearing after a ui reload in Classic Era.
+Fixes the minimap tracking icon disappearing after a ui reload in Classic Era.
 
 **Absorb Display**
 

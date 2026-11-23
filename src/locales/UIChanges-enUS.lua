@@ -24,11 +24,11 @@ local locale = {}
 -- Localization files should set a reference to themselves in the addonTable with their locale code as the key
 addonTable.enUS = locale
 
-locale.MODULE_AVAILABILITY_TEXT = 'Module availability depends on the game version and character class!'
 locale.CVAR_INFO = 'Settings that modify console variables have to be toggled when not in combat and require a UI reload afterwards to take effect. Then you need to log off for the game to save the changed console variable.'
 locale.FIRST_TIME = 'UI Changes encountered new variables with this character! Please check out the Interface Options/AddOns/UIChanges page to see the available options.'
 locale.CVAR_CHANGED = 'UI Changes: Console variable changed, please reload your UI!'
-locale.CANT_CHANGE_IN_COMBAT = 'UI Changes: Unable to change setting while in combat! Please re-open the options page again after combat.' 
+locale.CANT_CHANGE_IN_COMBAT = 'UI Changes: Unable to change setting while in combat! Please re-open the options page again after combat.'
+locale.FRAME_RESET_POSITION = 'Reset the position of this module\'s frame if it has been moved.'
 
 locale.ANCHOR_TOPLEFT = 'Top Left'
 locale.ANCHOR_TOP = 'Top'
@@ -50,7 +50,7 @@ locale.ABSORB_DISPLAY_2 = 'You can drag the display while holding CTRL.'
 -- ~AbsorbDisplay
 
 -- AHTools
-locale.AHT = 'Provides a simple stack price calculator and displays a warning sign for possible scams.\nAlso allows you to MiddleMouse click an item in your bags to initiate a search with the item\'s name.'
+locale.AHT = 'Allows you to MiddleMouse click an item in your bags to initiate a search with the item\'s name.\nNew AH: Displays the vendor price of selected items in the Sell tab, and allows quick listing with the "," button.\nOld AH: Provides a simple stack price calculator and a warning sign for possible scams.'
 -- ~AHTools
 
 -- BagUtilities
@@ -66,8 +66,8 @@ locale.TOOLTIP_BW_SOUND = 'Play warning sounds.'
 -- CriticalReminders
 locale.CR = 'Makes the selected warnings more noticeable by displaying an error icon and optionally playing a sound.\nWhen the anchor option is set to "Disabled", the display can be dragged while holding CTRL or reset with the button.'
 
-locale.ERROR_FRAME_ANCHOR_DROPDOWN = 'Anchor To TargetFrame'
-locale.ERROR_FRAME_ANCHOR_DROPDOWN_TOOLTIP = 'The "' .. RESET_POSITION .. '" button does not override an anchoring enabled here.'
+locale.ERROR_FRAME_ANCHOR_SLIDER = 'Anchor To TargetFrame'
+locale.ERROR_FRAME_ANCHOR_SLIDER_TOOLTIP = 'The "' .. RESET_POSITION .. '" button does not override an anchoring enabled here.'
 
 locale.COMBAT_WARNING      = 'Combat Warning'
 locale.GATHERING_FAILURE   = 'Gathering Failure'

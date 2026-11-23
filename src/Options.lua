@@ -24,6 +24,8 @@ local C = addonTable.C
 
 local settingsTable = C.SETTINGS_TABLE -- We'll be able to reference entries by their keys through the settingsTable
 
+local textEnabled = ENABLE or SCREEN_NARRATOR_DIALOG_ENABLE or SHOW_PETBATTLE_COMBAT_TEXT
+
 local onSettingChanged = function(setting, newValue)
   local key = setting['variableKey']
   local entry = settingsTable[key]
@@ -50,11 +52,7 @@ local onSettingChanged = function(setting, newValue)
   end
 end
 
-local isSubsettingModifiable = function(parentInitializer)
-  return parentInitializer:GetData().setting:GetValue()
-end
-
-local createSubsettingOptions = function(category, layout, parentInitializer, subsettings)
+local createSubsettingOptions = function(category, layout, subsettings)
   if subsettings then
     for i = 1, #subsettings do
       local entry = subsettings[i]
@@ -68,39 +66,34 @@ local createSubsettingOptions = function(category, layout, parentInitializer, su
 
       local subsettingInitializer
 
-      if entryType == 'dropdown' then
-        local enumTable = settingsTable[key]['dropdownEnum']
+      if entryType == 'slider' then
+        local enumTable = settingsTable[key]['sliderEnum']
         local selectedIndex = UIChanges_Profile[key]
 
-        local function getOptions()
-            local container = Settings.CreateControlTextContainer()
+        local subsetting = Settings.RegisterAddOnSetting(category, frameName, key, UIChanges_Profile, Settings.VarType.Number, title, selectedIndex)
+        subsetting:SetValueChangedCallback(onSettingChanged)
 
-            for i, enum in ipairs(enumTable) do
-              container:Add(i, enum)
-            end
+        local sliderOptions = Settings.CreateSliderOptions(1, #enumTable, 1)
 
-            return container:GetData()
-        end
+        sliderOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+            return enumTable[value]
+        end)
 
-        local dropdown = Settings.RegisterAddOnSetting(category, frameName, key, UIChanges_Profile, Settings.VarType.Number, title, selectedIndex)
-        dropdown:SetValueChangedCallback(onSettingChanged)
+        subsettingInitializer = Settings.CreateSlider(category, subsetting, sliderOptions, tooltipText)
 
-        subsettingInitializer = Settings.CreateDropdown(category, dropdown, getOptions, tooltipText)
       elseif entryType == 'button' then
-        subsettingInitializer = CreateSettingsButtonInitializer(frameName, title, updateCallback, tooltipText, true, nil, nil)
+        local buttonText = entry['buttonText']
+
+        subsettingInitializer = CreateSettingsButtonInitializer(title, buttonText, updateCallback, tooltipText, false, nil, nil)
 
         layout:AddInitializer(subsettingInitializer)
       else
         local selectedState = UIChanges_Profile[key]
 
-        local checkbox = Settings.RegisterAddOnSetting(category, frameName, key, UIChanges_Profile, Settings.VarType.Boolean, title, selectedState)
-        checkbox:SetValueChangedCallback(onSettingChanged)
+        local subsetting = Settings.RegisterAddOnSetting(category, frameName, key, UIChanges_Profile, Settings.VarType.Boolean, title, selectedState)
+        subsetting:SetValueChangedCallback(onSettingChanged)
 
-        subsettingInitializer = Settings.CreateCheckbox(category, checkbox, tooltipText)
-      end
-
-      if parentInitializer then
-        subsettingInitializer:SetParentInitializer(parentInitializer, GenerateClosure(isSubsettingModifiable, parentInitializer));
+        subsettingInitializer = Settings.CreateCheckbox(category, subsetting, tooltipText)
       end
     end
   end
@@ -111,28 +104,19 @@ local createModuleOptions = function(category, layout, moduleEntry)
   local frameName = moduleEntry['frameName']
   local title = moduleEntry['title']
   local description = moduleEntry['description']
-  local moduleButtonEntry = moduleEntry['moduleButton']
   local subsettings = moduleEntry['subsettings']
 
   local parentInitializer
   local selectedState = UIChanges_Profile[key]
 
-  local moduleSetting = Settings.RegisterAddOnSetting(category, frameName, key, UIChanges_Profile, Settings.VarType.Boolean, title, selectedState)
+  layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(title))
+
+  local moduleSetting = Settings.RegisterAddOnSetting(category, frameName, key, UIChanges_Profile, Settings.VarType.Boolean, textEnabled, selectedState)
   moduleSetting:SetValueChangedCallback(onSettingChanged)
 
-  if moduleButtonEntry then
-    local mbTitle = moduleButtonEntry['title']
-    local mbCallback = moduleButtonEntry['updateCallback']
+  parentInitializer = Settings.CreateCheckbox(category, moduleSetting, description)
 
-    parentInitializer = CreateSettingsCheckboxWithButtonInitializer(moduleSetting, mbTitle, mbCallback, nil, true, description)
-
-    parentInitializer:AddSearchTags(title, mbTitle);
-    layout:AddInitializer(parentInitializer);
-  else
-    parentInitializer = Settings.CreateCheckbox(category, moduleSetting, description)
-  end
-
-  createSubsettingOptions(category, layout, parentInitializer, subsettings)
+  createSubsettingOptions(category, layout, subsettings)
 end
 
 local UIC_Options = {}
@@ -140,14 +124,10 @@ local UIC_Options = {}
 UIC_Options.Initialize = function()
   local optionsCategory, optionsLayout = Settings.RegisterVerticalLayoutCategory(addonName)
 
-  local disclaimerText = { name = '|cFFFF8000' .. L.MODULE_AVAILABILITY_TEXT .. '|r' }
-  local modulesDisclaimer = Settings.CreateElementInitializer('SettingsListSectionHeaderTemplate', disclaimerText)
-  optionsLayout:AddInitializer(modulesDisclaimer)
-
   for _, moduleEntry in ipairs(C.MODULES) do
     if not moduleEntry['moduleKey'] then
       -- The base module cannot be toggled and only has subsettings.
-      createSubsettingOptions(optionsCategory, optionsLayout, nil, moduleEntry['subsettings'])
+      createSubsettingOptions(optionsCategory, optionsLayout, moduleEntry['subsettings'])
     else
       createModuleOptions(optionsCategory, optionsLayout, moduleEntry)
     end

@@ -118,7 +118,7 @@ local function hookKeys()
   mainFrame:Show()
 end
 
-local function hookClicks()
+local function onLoaded()
   if oldAH then
     buyoutWarning.LoadedAH()
     calculator.LoadedAH()
@@ -133,7 +133,7 @@ end
 local function onShow()
   -- The first time the AH is shown, we'll hook into the button onClicks
   if loadedAH == false then
-    hookClicks()
+    onLoaded()
   end
 
   if oldAH and AuctionFrame and AuctionFrame:IsShown() then

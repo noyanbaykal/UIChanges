@@ -21,9 +21,14 @@ local _, addonTable = ...
 
 local C = addonTable.C
 
-local mainFrame, errorFrame, errorTimer
-
 local TIMER_INTERVAL = 4 -- Seconds
+
+local mirrorTimer = MirrorTimer1
+if LE_EXPANSION_LEVEL_CURRENT > LE_EXPANSION_MISTS_OF_PANDARIA or WOW_PROJECT_ID == WOW_PROJECT_CAMELOT then
+  mirrorTimer = MirrorTimerContainer
+end
+
+local mainFrame, errorFrame, errorTimer
 
 local ErrorMap = {
   ['PLAYER_REGEN_DISABLED'] =               {'UIC_CR_CombatWarning',          'Interface\\ICONS\\Ability_DualWield'},
@@ -84,53 +89,48 @@ local showUIErrorMessage = function(textureName, playSound, size, offsetX, offse
   setErrorFrame(textureName, playSound, size, offsetX, offsetY)
 end
 
-local targetFrame = _G['TargetFrame']
-local targetFramePortrait = _G['TargetFramePortrait']
-local targetFrameTextureFrame = _G['TargetFrameTextureFrame']
-
 local errorFrameAnchoringTable = {}
 -- These have to be in the same order as in the ENUM_ANCHOR_OPTIONS. Skipping 1.
 errorFrameAnchoringTable[2] = function() -- 'Top Left'
-  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', 0, 0)
-  errorFrame:SetPoint('BOTTOM', targetFramePortrait, 'TOP', 0, 5)
+  errorFrame:SetPoint('LEFT', TargetFrame, 'LEFT', 0, 0)
+  errorFrame:SetPoint('BOTTOM', TargetFrame, 'TOP', 0, 0)
 end
 errorFrameAnchoringTable[3] = function() -- 'Top'
-  local x = (targetFrameTextureFrame:GetRight() - targetFrameTextureFrame:GetLeft()) / 3
+  local offsetX = (TargetFrame:GetRight() - TargetFrame:GetLeft()) / 3
 
-  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', x, 0)
-  errorFrame:SetPoint('BOTTOM', targetFramePortrait, 'TOP', 0, 5)
+  errorFrame:SetPoint('LEFT', TargetFrame, 'LEFT', offsetX, 0)
+  errorFrame:SetPoint('BOTTOM', TargetFrame, 'TOP', 0, 0)
 end
 errorFrameAnchoringTable[4] = function() -- 'Top Right'
-  errorFrame:SetPoint('RIGHT', targetFramePortrait, 'RIGHT', 30, 0)
-  errorFrame:SetPoint('BOTTOM', targetFramePortrait, 'TOP', 0, 5)
+  errorFrame:SetPoint('RIGHT', TargetFrame, 'RIGHT', 0, 0)
+  errorFrame:SetPoint('BOTTOM', TargetFrame, 'TOP', 0, 0)
 end
 errorFrameAnchoringTable[5] = function() -- 'Right'
-  errorFrame:SetPoint('LEFT', targetFrame, 'RIGHT', 5, 0)
+  errorFrame:SetPoint('LEFT', TargetFrame, 'RIGHT', 0, 0)
 end
 errorFrameAnchoringTable[6] = function() -- 'Bottom Right'
-  errorFrame:SetPoint('RIGHT', targetFramePortrait, 'RIGHT', 30, 0)
-  errorFrame:SetPoint('TOP', targetFramePortrait, 'BOTTOM', 0, -5)
+  errorFrame:SetPoint('RIGHT', TargetFrame, 'RIGHT', 0, 0)
+  errorFrame:SetPoint('TOP', TargetFrame, 'BOTTOM', 0, 0)
 end
 errorFrameAnchoringTable[7] = function() -- 'Bottom'
-  local x = (targetFrameTextureFrame:GetRight() - targetFrameTextureFrame:GetLeft()) / 3
+  local offsetX = (TargetFrame:GetRight() - TargetFrame:GetLeft()) / 3
 
-  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', x, 0, 0)
-  errorFrame:SetPoint('TOP', targetFramePortrait, 'BOTTOM', 0, -5)
+  errorFrame:SetPoint('LEFT', TargetFrame, 'LEFT', offsetX, 0, 0)
+  errorFrame:SetPoint('TOP', TargetFrame, 'BOTTOM', 0, 0)
 end
 errorFrameAnchoringTable[8] = function() -- 'Bottom Left'
-  errorFrame:SetPoint('LEFT', targetFrame, 'LEFT', 0, 0)
-  errorFrame:SetPoint('TOP', targetFramePortrait, 'BOTTOM', 0, -5)
+  errorFrame:SetPoint('LEFT', TargetFrame, 'LEFT', 0, 0)
+  errorFrame:SetPoint('TOP', TargetFrame, 'BOTTOM', 0, 0)
 end
 errorFrameAnchoringTable[9] = function() -- 'Left'
-  errorFrame:SetPoint('RIGHT', targetFrame, 'LEFT', 0, 3)
+  errorFrame:SetPoint('RIGHT', TargetFrame, 'LEFT', 0, 0)
 end
 
 local anchorToUIErrorsFrame = function()
-  local uiErrorsFrame = _G['UIErrorsFrame']
-  local offsetX = (uiErrorsFrame:GetWidth() / 2) - (errorFrame:GetWidth() / 2)
+  local offsetX = (UIErrorsFrame:GetWidth() / 2) - (errorFrame:GetWidth() / 2)
 
-  errorFrame:SetPoint('BOTTOM', _G['MirrorTimer1'], 'TOP', 0, 15)
-  errorFrame:SetPoint('LEFT', uiErrorsFrame, 'LEFT', offsetX, 0)
+  errorFrame:SetPoint('BOTTOM', UIErrorsFrame, 'BOTTOM', 0, -25)
+  errorFrame:SetPoint('LEFT', UIErrorsFrame, 'LEFT', offsetX, 0)
 end
 
 local anchorErrorFrame = function()

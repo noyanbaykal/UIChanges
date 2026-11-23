@@ -1,6 +1,6 @@
 # UI Changes
 
-UI Changes consists of modules that improve parts of the default UI. The modules and their features can be individually toggled and not all are enabled by default. Please check out the in-game addon options page to see everything UI Changes has to offer.
+UI Changes consists of modules that improve parts of the default UI. The modules and their features can be individually toggled and not all are enabled by default. Please check out the in-game addon options page to see everything UI Changes has to offer. UI Changes supports all available WoW clients!
 
 **General**
 
@@ -36,7 +36,7 @@ Displays a numeric timer next to the breath meter and if the 'Sound' option is e
 
 **Critical Reminders**
 
-This Classic-only module makes the selected types of events / failures more noticeable by displaying an error icon and optionally playing a sound.
+Makes the selected types of events / failures more noticeable by displaying an error icon and optionally playing a sound.
 
 The reminders that are turned on by default are: enter combat event, ability / spell failed due to lack of line of sight and gathering failure. Many other reminders for combat events can be enabled. The error display can be moved with a CTRL click or anchored to the TargetFrame.
 
@@ -74,7 +74,7 @@ Thank you for the translations:
 
 1. Download the code as a zip file from: <https://github.com/noyanbaykal/UIChanges/archive/refs/heads/master.zip>.
 2. The zip file has a folder called "UIChanges-master" at the root.
-Extract this folder & all it's contents into the AddOns folder of the WoW Classic client you're targeting.
+Extract this folder & all it's contents into the AddOns folder of the WoW client you're targeting.
 3. Rename the extracted folder to "UIChanges".
 
 The default installation path for WoW on Windows is:

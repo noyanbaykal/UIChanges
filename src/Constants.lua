@@ -230,10 +230,15 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'AD', -- Used in subframe names
       ['title'] = 'Absorb Display',
       ['description'] = L.AD,
-      ['moduleButton'] = { -- If this entry is present, the module checkbox will have a button next to it
-        ['entryKey'] = 'UIC_AD_FrameInfo', -- Matches the entry in UIChanges_Profile
-        ['title'] = RESET_POSITION,
-        ['updateCallback'] = function() addonTable.AbsorbDisplay:ResetDisplayLocation() end,
+      ['subsettings'] = {
+        {
+          ['entryKey'] = 'UIC_AD_FrameInfo', -- Matches the entry in UIChanges_Profile
+          ['entryType'] = 'button',
+          ['title'] = RESET_POSITION,
+          ['buttonText'] = RESET_POSITION,
+          ['tooltipText'] = L.FRAME_RESET_POSITION,
+          ['updateCallback'] = function() addonTable.AbsorbDisplay:ResetDisplayLocation() end,
+        },
       },
     },
     {
@@ -271,84 +276,86 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'CR',
       ['title'] = 'Critical Reminders',
       ['description'] = L.CR,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_MISTS_OF_PANDARIA and WOW_PROJECT_ID ~= WOW_PROJECT_CAMELOT end,
-      ['moduleButton'] = {
-        ['entryKey'] = 'UIC_CR_ErrorFrameInfo',
-        ['title'] = RESET_POSITION,
-        ['updateCallback'] = function() addonTable.CriticalReminders:ResetErrorFrameLocation() end,
-      },
       ['subsettings'] = { -- If a module is disabled, it's subsetting widgets in the options page will be unavailable.
         {
+          ['entryKey'] = 'UIC_CR_ErrorFrameInfo',
+          ['entryType'] = 'button',
+          ['title'] = RESET_POSITION,
+          ['buttonText'] = RESET_POSITION,
+          ['tooltipText'] = L.FRAME_RESET_POSITION,
+          ['updateCallback'] = function() addonTable.CriticalReminders:ResetErrorFrameLocation() end,
+        },
+        {
           ['entryKey'] = 'UIC_CR_ErrorFrameAnchor',
-          ['entryType'] = 'dropdown',
+          ['entryType'] = 'slider',
           ['defaultValue'] = 1, -- 1 is off
-          ['title'] = L.ERROR_FRAME_ANCHOR_DROPDOWN,
-          ['tooltipText'] = L.ERROR_FRAME_ANCHOR_DROPDOWN_TOOLTIP,
-          ['dropdownEnum'] = C.ENUM_ANCHOR_OPTIONS, -- The dropdown options will be populated from this enum
+          ['title'] = L.ERROR_FRAME_ANCHOR_SLIDER,
+          ['tooltipText'] = L.ERROR_FRAME_ANCHOR_SLIDER_TOOLTIP,
+          ['sliderEnum'] = C.ENUM_ANCHOR_OPTIONS, -- The slider options will be populated from this enum
           ['updateCallback'] = function() addonTable.CriticalReminders:Update() end,
         },
         {
           ['entryKey'] = 'UIC_CR_CombatWarning',
-          ['entryType'] = 'dropdown',
+          ['entryType'] = 'slider',
           ['defaultValue'] = 2,
           ['title'] = L.COMBAT_WARNING,
-          ['dropdownEnum'] = C.CR_SUBSETTING_STATES,
+          ['sliderEnum'] = C.CR_SUBSETTING_STATES,
         },
         {
           ['entryKey'] = 'UIC_CR_GatheringFailure',
-          ['entryType'] = 'dropdown',
+          ['entryType'] = 'slider',
           ['defaultValue'] = 2,
           ['title'] = L.GATHERING_FAILURE,
-          ['dropdownEnum'] = C.CR_SUBSETTING_STATES,
+          ['sliderEnum'] = C.CR_SUBSETTING_STATES,
         },
         {
           ['entryKey'] = 'UIC_CR_CombatLos',
-          ['entryType'] = 'dropdown',
+          ['entryType'] = 'slider',
           ['defaultValue'] = 2,
           ['title'] = L.COMBAT_LOS,
-          ['dropdownEnum'] = C.CR_SUBSETTING_STATES,
+          ['sliderEnum'] = C.CR_SUBSETTING_STATES,
         },
         {
           ['entryKey'] = 'UIC_CR_CombatDirection',
-          ['entryType'] = 'dropdown',
+          ['entryType'] = 'slider',
           ['defaultValue'] = 1,
           ['title'] = L.COMBAT_DIRECTION,
-          ['dropdownEnum'] = C.CR_SUBSETTING_STATES,
+          ['sliderEnum'] = C.CR_SUBSETTING_STATES,
         },
         {
           ['entryKey'] = 'UIC_CR_CombatRange',
-          ['entryType'] = 'dropdown',
+          ['entryType'] = 'slider',
           ['defaultValue'] = 1,
           ['title'] = L.COMBAT_RANGE,
-          ['dropdownEnum'] = C.CR_SUBSETTING_STATES,
+          ['sliderEnum'] = C.CR_SUBSETTING_STATES,
         },
         {
           ['entryKey'] = 'UIC_CR_CombatInterrupted',
-          ['entryType'] = 'dropdown',
+          ['entryType'] = 'slider',
           ['defaultValue'] = 1,
           ['title'] = L.COMBAT_INTERRUPTED,
-          ['dropdownEnum'] = C.CR_SUBSETTING_STATES,
+          ['sliderEnum'] = C.CR_SUBSETTING_STATES,
         },
         {
           ['entryKey'] = 'UIC_CR_CombatCooldown',
-          ['entryType'] = 'dropdown',
+          ['entryType'] = 'slider',
           ['defaultValue'] = 1,
           ['title'] = L.COMBAT_COOLDOWN,
-          ['dropdownEnum'] = C.CR_SUBSETTING_STATES,
+          ['sliderEnum'] = C.CR_SUBSETTING_STATES,
         },
         {
           ['entryKey'] = 'UIC_CR_CombatNoResource',
-          ['entryType'] = 'dropdown',
+          ['entryType'] = 'slider',
           ['defaultValue'] = 1,
           ['title'] = L.COMBAT_NO_RESOURCE,
-          ['dropdownEnum'] = C.CR_SUBSETTING_STATES,
+          ['sliderEnum'] = C.CR_SUBSETTING_STATES,
         },
         {
           ['entryKey'] = 'UIC_CR_InteractionRange',
-          ['entryType'] = 'dropdown',
+          ['entryType'] = 'slider',
           ['defaultValue'] = 1,
           ['title'] = L.INTERACTION_RANGE,
-          ['dropdownEnum'] = C.CR_SUBSETTING_STATES,
+          ['sliderEnum'] = C.CR_SUBSETTING_STATES,
         },
       },
     },
@@ -380,10 +387,15 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'STD',
       ['title'] = 'Spell Target Display',
       ['description'] = L.STD,
-      ['moduleButton'] = {
+      ['subsettings'] = {
+        {
           ['entryKey'] = 'UIC_STD_FrameInfo',
+          ['entryType'] = 'button',
           ['title'] = RESET_POSITION,
+          ['buttonText'] = RESET_POSITION,
+          ['tooltipText'] = L.FRAME_RESET_POSITION,
           ['updateCallback'] = function() addonTable.SpellTargetDisplay:ResetTargetNameFrameLocation() end,
+        },
       },
     },
   }
@@ -410,13 +422,6 @@ C.DEFINE_MODULES = function()
       local moduleKey = moduleEntry['moduleKey']
 
       C.SETTINGS_TABLE[moduleKey] = moduleEntry
-
-      -- Add the moduleButton entryKey if it's present
-      local moduleButtonEntry = moduleEntry['moduleButton']
-
-      if moduleButtonEntry and moduleButtonEntry['entryKey'] then
-        C.SETTINGS_TABLE[moduleButtonEntry['entryKey']] = moduleButtonEntry
-      end
 
       -- Modules will be toggled when their module checboxes are clicked on
       moduleEntry['updateCallback'] = function(newValue)

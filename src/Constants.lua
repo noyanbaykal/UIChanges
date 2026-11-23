@@ -256,7 +256,7 @@ C.DEFINE_MODULES = function()
       ['frameName'] = 'BU',
       ['title'] = 'Bag Utilities',
       ['description'] = L.BU,
-      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_BURNING_CRUSADE and WOW_PROJECT_ID ~= WOW_PROJECT_CAMELOT end,
+      ['checkCompatibility'] = function() return LE_EXPANSION_LEVEL_CURRENT <= LE_EXPANSION_BURNING_CRUSADE end,
     },
     {
       ['moduleName'] = 'BreathWarning',

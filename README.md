@@ -28,7 +28,7 @@ Buyout warning (Old AH UI only): Whenever you select an item from the Browse Tab
 
 **Bag Utilities**
 
-Opens looted bags & clams for convenience and avoiding inventory congestion. Note that once in a while, in certain scenarios, the opening action may fail and you'll end up with an unopened container. The lingering container will be opened when you loot another container. UseContainerItem is protected in WOTLK & onwards so this feature is Classic Era only.
+Opens looted bags & clams for convenience and avoiding inventory congestion. Note that once in a while, in certain scenarios, the opening action may fail and you'll end up with an unopened container. The lingering container will be opened when you loot another container. UseContainerItem is protected in WOTLK & onwards so this feature is Classic Era, TBC and Forever only.
 
 **Breath Warning**
 

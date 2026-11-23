@@ -80,7 +80,6 @@ local createSubsettingOptions = function(category, layout, subsettings)
         end)
 
         subsettingInitializer = Settings.CreateSlider(category, subsetting, sliderOptions, tooltipText)
-
       elseif entryType == 'button' then
         local buttonText = entry['buttonText']
 
